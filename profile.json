@@ -1,0 +1,631 @@
+Statistical profiling result from perf.log, (559 ticks, 3 unaccounted, 0 excluded).
+
+ [Shared libraries]:
+   ticks  total  nonlib   name
+     15    2.7%          /usr/lib/system/libsystem_c.dylib
+     14    2.5%          /usr/lib/system/libsystem_pthread.dylib
+     11    2.0%          /usr/lib/libc++.1.dylib
+     10    1.8%          /usr/lib/system/libsystem_kernel.dylib
+      7    1.3%          /usr/lib/system/libsystem_malloc.dylib
+      1    0.2%          /usr/lib/system/libdyld.dylib
+
+ [JavaScript]:
+   ticks  total  nonlib   name
+      2    0.4%    0.4%  JS: *resolve node:path:1095:10
+      1    0.2%    0.2%  RegExp: ^(?:[^\x00]*?(?=(\{\{)))
+      1    0.2%    0.2%  JS: ^send_bits /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/pako/lib/zlib/trees.js:215:19
+      1    0.2%    0.2%  JS: ^next /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/parser.js:478:32
+      1    0.2%    0.2%  JS: ^exports.numberToString /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/utils/numbers.js:13:35
+      1    0.2%    0.2%  JS: ^closeSync node:fs:526:19
+      1    0.2%    0.2%  JS: ^PDFStream.copyBytesInto /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/objects/PDFStream.js:44:50
+      1    0.2%    0.2%  JS: ^ByteStream.offset /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/ByteStream.js:48:44
+      1    0.2%    0.2%  JS: ^BaseParser.matchKeyword /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/BaseParser.js:97:50
+      1    0.2%    0.2%  JS: ^<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/@pdf-lib/upng/cjs/UPNG.js:689:13
+      1    0.2%    0.2%  JS: *ByteStream.done /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/ByteStream.js:45:42
+
+ [C++]:
+   ticks  total  nonlib   name
+    354   63.3%   70.7%  t node::NgRcBufPointer<node::http2::Http2RcBufferPointerTraits>::SelfSize() const
+     45    8.1%    9.0%  T _posix_spawn_file_actions_adddup2
+     16    2.9%    3.2%  T _semaphore_destroy
+      7    1.3%    1.4%  t _Builtins_LoadIC
+      4    0.7%    0.8%  t _Builtins_KeyedLoadIC
+      3    0.5%    0.6%  t std::__1::ostreambuf_iterator<char, std::__1::char_traits<char> > std::__1::__pad_and_output<char, std::__1::char_traits<char> >(std::__1::ostreambuf_iterator<char, std::__1::char_traits<char> >, char const*, char const*, char const*, std::__1::ios_base&, char)
+      3    0.5%    0.6%  t std::__1::basic_ostream<char, std::__1::char_traits<char> >& std::__1::__put_character_sequence<char, std::__1::char_traits<char> >(std::__1::basic_ostream<char, std::__1::char_traits<char> >&, char const*, unsigned long)
+      3    0.5%    0.6%  t _Builtins_CallFunction_ReceiverIsNotNullOrUndefined
+      3    0.5%    0.6%  T _mach_get_times
+      3    0.5%    0.6%  T _kdebug_trace_string
+      3    0.5%    0.6%  T _host_request_notification
+      3    0.5%    0.6%  T __simple_getenv
+      2    0.4%    0.4%  t _Builtins_LoadIC_NoFeedback
+      2    0.4%    0.4%  t _Builtins_KeyedLoadIC_Megamorphic
+      2    0.4%    0.4%  t _Builtins_GreaterThan_Baseline
+      2    0.4%    0.4%  t _Builtins_FunctionPrototypeHasInstance
+      1    0.2%    0.2%  t _uv__stream_io
+      1    0.2%    0.2%  t _Builtins_StringPrototypeStartsWith
+      1    0.2%    0.2%  t _Builtins_StringIndexOf
+      1    0.2%    0.2%  t _Builtins_StringEqual
+      1    0.2%    0.2%  t _Builtins_StringAdd_CheckNone
+      1    0.2%    0.2%  t _Builtins_StrictEqual_Baseline
+      1    0.2%    0.2%  t _Builtins_ReturnHandler
+      1    0.2%    0.2%  t _Builtins_RegExpPrototypeExec
+      1    0.2%    0.2%  t _Builtins_LoadIC_StringLength
+      1    0.2%    0.2%  t _Builtins_LoadICBaseline
+      1    0.2%    0.2%  t _Builtins_LessThan_Baseline
+      1    0.2%    0.2%  t _Builtins_LessThanOrEqual_Baseline
+      1    0.2%    0.2%  t _Builtins_KeyedStoreIC_Megamorphic
+      1    0.2%    0.2%  t _Builtins_KeyedLoadIC_PolymorphicName
+      1    0.2%    0.2%  t _Builtins_FunctionPrototypeApply
+      1    0.2%    0.2%  t _Builtins_FastNewObject
+      1    0.2%    0.2%  t _Builtins_FastNewClosure
+      1    0.2%    0.2%  t _Builtins_Call_ReceiverIsNullOrUndefined_Baseline_Compact
+      1    0.2%    0.2%  t _Builtins_CallUndefinedReceiver1Handler
+      1    0.2%    0.2%  t _Builtins_BitwiseOrHandler
+      1    0.2%    0.2%  t _Builtins_BaselineOutOfLinePrologue
+      1    0.2%    0.2%  t _Builtins_Add_Baseline
+      1    0.2%    0.2%  T node::cares_wrap::ChannelWrap::New(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.2%    0.2%  T _u_isupper_72
+      1    0.2%    0.2%  T _task_restartable_ranges_synchronize
+      1    0.2%    0.2%  T _read$NOCANCEL
+      1    0.2%    0.2%  T _pthread_rwlockattr_init
+      1    0.2%    0.2%  T _necp_open
+      1    0.2%    0.2%  T __simple_putline
+      1    0.2%    0.2%  T __pthread_workqueue_init_with_workloop
+      1    0.2%    0.2%  T _OSAtomicDecrement32
+
+ [Summary]:
+   ticks  total  nonlib   name
+     12    2.1%    2.4%  JavaScript
+    486   86.9%   97.0%  C++
+     23    4.1%    4.6%  GC
+     58   10.4%          Shared libraries
+      3    0.5%          Unaccounted
+
+ [C++ entry points]:
+   ticks    cpp   total   name
+    348   80.9%   62.3%  t node::NgRcBufPointer<node::http2::Http2RcBufferPointerTraits>::SelfSize() const
+     11    2.6%    2.0%  T _semaphore_destroy
+      7    1.6%    1.3%  t _Builtins_LoadIC
+      4    0.9%    0.7%  t _Builtins_KeyedLoadIC
+      3    0.7%    0.5%  t std::__1::ostreambuf_iterator<char, std::__1::char_traits<char> > std::__1::__pad_and_output<char, std::__1::char_traits<char> >(std::__1::ostreambuf_iterator<char, std::__1::char_traits<char> >, char const*, char const*, char const*, std::__1::ios_base&, char)
+      3    0.7%    0.5%  t std::__1::basic_ostream<char, std::__1::char_traits<char> >& std::__1::__put_character_sequence<char, std::__1::char_traits<char> >(std::__1::basic_ostream<char, std::__1::char_traits<char> >&, char const*, unsigned long)
+      3    0.7%    0.5%  t _Builtins_StringPrototypeReplace
+      3    0.7%    0.5%  t _Builtins_PromiseConstructor
+      3    0.7%    0.5%  t _Builtins_MapPrototypeGet
+      3    0.7%    0.5%  t _Builtins_CallFunction_ReceiverIsNotNullOrUndefined
+      2    0.5%    0.4%  t _Builtins_LoadIC_NoFeedback
+      2    0.5%    0.4%  t _Builtins_KeyedLoadIC_Megamorphic
+      2    0.5%    0.4%  t _Builtins_GreaterThan_Baseline
+      2    0.5%    0.4%  t _Builtins_FunctionPrototypeHasInstance
+      2    0.5%    0.4%  t _Builtins_ArrayForEach
+      2    0.5%    0.4%  T __simple_getenv
+      1    0.2%    0.2%  t _Builtins_TypedArrayConstructor
+      1    0.2%    0.2%  t _Builtins_StringPrototypeStartsWith
+      1    0.2%    0.2%  t _Builtins_StringAdd_CheckNone
+      1    0.2%    0.2%  t _Builtins_StrictEqual_Baseline
+      1    0.2%    0.2%  t _Builtins_ReturnHandler
+      1    0.2%    0.2%  t _Builtins_RegExpPrototypeExec
+      1    0.2%    0.2%  t _Builtins_LoadIC_StringLength
+      1    0.2%    0.2%  t _Builtins_LoadICBaseline
+      1    0.2%    0.2%  t _Builtins_LessThan_Baseline
+      1    0.2%    0.2%  t _Builtins_LessThanOrEqual_Baseline
+      1    0.2%    0.2%  t _Builtins_KeyedStoreIC_Megamorphic
+      1    0.2%    0.2%  t _Builtins_KeyedLoadIC_PolymorphicName
+      1    0.2%    0.2%  t _Builtins_FunctionPrototypeApply
+      1    0.2%    0.2%  t _Builtins_FindOrderedHashSetEntry
+      1    0.2%    0.2%  t _Builtins_FastNewObject
+      1    0.2%    0.2%  t _Builtins_FastNewClosure
+      1    0.2%    0.2%  t _Builtins_CreateShallowArrayLiteral
+      1    0.2%    0.2%  t _Builtins_Call_ReceiverIsNullOrUndefined_Baseline_Compact
+      1    0.2%    0.2%  t _Builtins_CallUndefinedReceiver1Handler
+      1    0.2%    0.2%  t _Builtins_BitwiseOrHandler
+      1    0.2%    0.2%  t _Builtins_BaselineOutOfLinePrologue
+      1    0.2%    0.2%  t _Builtins_ArrayPrototypeJoin
+      1    0.2%    0.2%  t _Builtins_ArrayMap
+      1    0.2%    0.2%  t _Builtins_Add_Baseline
+      1    0.2%    0.2%  T node::cares_wrap::ChannelWrap::New(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.2%    0.2%  T _u_isupper_72
+      1    0.2%    0.2%  T _pthread_rwlockattr_init
+      1    0.2%    0.2%  T __simple_putline
+      1    0.2%    0.2%  T __pthread_workqueue_init_with_workloop
+      1    0.2%    0.2%  T _OSAtomicDecrement32
+
+ [Bottom up (heavy) profile]:
+  Note: percentage shows a share of a particular caller in the total
+  amount of its parent calls.
+  Callers occupying less than 1.0% are not shown.
+
+   ticks parent  name
+    354   63.3%  t node::NgRcBufPointer<node::http2::Http2RcBufferPointerTraits>::SelfSize() const
+    133   37.6%    JS: ^internalCompileFunction node:internal/vm:31:33
+    131   98.5%      JS: ^wrapSafe node:internal/modules/cjs/loader:1139:18
+    131  100.0%        JS: ^Module._compile node:internal/modules/cjs/loader:1200:37
+    127   96.9%          JS: ^Module._extensions..js node:internal/modules/cjs/loader:1255:37
+    127  100.0%            JS: ^Module.load node:internal/modules/cjs/loader:1091:33
+      4    3.1%          JS: ~Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      4  100.0%            JS: ^Module.load node:internal/modules/cjs/loader:1091:33
+      2    1.5%      JS: ~wrapSafe node:internal/modules/cjs/loader:1139:18
+      2  100.0%        JS: ~Module._compile node:internal/modules/cjs/loader:1200:37
+      2  100.0%          JS: ~Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      1   50.0%            JS: ~Module.load node:internal/modules/cjs/loader:1091:33
+      1   50.0%            JS: ^Module.load node:internal/modules/cjs/loader:1091:33
+     57   16.1%    JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+     54   94.7%      JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      4    7.4%        JS: ~<anonymous> node:tty:1:1
+      4  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      4  100.0%            JS: ~compileForPublicLoader node:internal/bootstrap/loaders:263:25
+      4    7.4%        JS: ~<anonymous> node:http2:1:1
+      4  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      4  100.0%            JS: ^compileForPublicLoader node:internal/bootstrap/loaders:263:25
+      4    7.4%        JS: ~<anonymous> node:crypto:1:1
+      4  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      4  100.0%            JS: ^compileForPublicLoader node:internal/bootstrap/loaders:263:25
+      3    5.6%        JS: ~get node:internal/util:531:17
+      3  100.0%          t _Builtins_ReflectGet
+      3  100.0%            JS: ^getOwn node:internal/bootstrap/loaders:187:16
+      3    5.6%        JS: ~<anonymous> node:internal/fs/promises:1:1
+      3  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      3  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      3    5.6%        JS: ~<anonymous> node:http:1:1
+      3  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      3  100.0%            JS: ~compileForPublicLoader node:internal/bootstrap/loaders:263:25
+      3    5.6%        JS: ~<anonymous> node:_http_client:1:1
+      3  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      3  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      2    3.7%        JS: ~<anonymous> node:tls:1:1
+      2  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      2  100.0%            JS: ^compileForPublicLoader node:internal/bootstrap/loaders:263:25
+      2    3.7%        JS: ~<anonymous> node:internal/streams/operators:1:1
+      2  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      2  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      2    3.7%        JS: ~<anonymous> node:internal/streams/duplex:1:1
+      2  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      2  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      2    3.7%        JS: ~<anonymous> node:internal/modules/esm/loader:1:1
+      2  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      2  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      2    3.7%        JS: ~<anonymous> node:internal/http2/core:1:1
+      2  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      2  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      2    3.7%        JS: ~<anonymous> node:child_process:1:1
+      2  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      2  100.0%            JS: ^compileForPublicLoader node:internal/bootstrap/loaders:263:25
+      1    1.9%        JS: ~lookupAndConnect node:net:1204:26
+      1  100.0%          JS: ~Socket.connect node:net:1136:36
+      1  100.0%            JS: ~connect node:net:214:17
+      1    1.9%        JS: ~lazyWebCrypto node:crypto:126:23
+      1  100.0%          JS: ~get node:crypto:379:8
+      1  100.0%            t _Builtins_ReflectGet
+      1    1.9%        JS: ~lazyLoadStreams node:fs:2925:25
+      1  100.0%          JS: ~get ReadStream node:fs:3067:17
+      1  100.0%            t _Builtins_ReflectGet
+      1    1.9%        JS: ~<instance_members_initializer> node:internal/modules/esm/loader:182:1
+      1  100.0%          JS: ~ESMLoader node:internal/modules/esm/loader:238:14
+      1  100.0%            JS: ~<anonymous> node:internal/process/esm_loader:1:1
+      1    1.9%        JS: ~<anonymous> node:stream:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:net:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:internal/streams/readable:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:internal/streams/pipeline:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:internal/readline/interface:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:internal/process/esm_loader:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:internal/http2/compat:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:internal/fs/streams:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:internal/crypto/hkdf:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:internal/child_process:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:internal/blocklist:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:cluster:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:assert:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1    1.9%        JS: ~<anonymous> node:_tls_common:1:1
+      1  100.0%          JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%            JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      3    5.3%      JS: ^compileForPublicLoader node:internal/bootstrap/loaders:263:25
+      3  100.0%        JS: ^loadBuiltinModule node:internal/modules/helpers:54:27
+      3  100.0%          JS: ^Module._load node:internal/modules/cjs/loader:871:24
+      3  100.0%            JS: ^Module.require node:internal/modules/cjs/loader:1119:36
+     39   11.0%    JS: ^readSync node:fs:693:18
+     39  100.0%      JS: ^tryReadSync node:fs:429:21
+     39  100.0%        JS: ^readFileSync node:fs:450:22
+     28   71.8%          JS: ^Module._extensions..js node:internal/modules/cjs/loader:1255:37
+     28  100.0%            JS: ^Module.load node:internal/modules/cjs/loader:1091:33
+      9   23.1%          JS: ~Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      9  100.0%            JS: ^Module.load node:internal/modules/cjs/loader:1091:33
+      2    5.1%          JS: ~Module._extensions..json node:internal/modules/cjs/loader:1305:39
+      2  100.0%            JS: ^Module.load node:internal/modules/cjs/loader:1091:33
+      7    2.0%    JS: ^stat node:internal/modules/cjs/loader:154:14
+      4   57.1%      JS: ^tryFile node:internal/modules/cjs/loader:450:17
+      4  100.0%        JS: ^tryExtensions node:internal/modules/cjs/loader:466:23
+      4  100.0%          JS: ^Module._findPath node:internal/modules/cjs/loader:567:28
+      4  100.0%            JS: ^Module._resolveFilename node:internal/modules/cjs/loader:968:35
+      3   42.9%      JS: ^Module._findPath node:internal/modules/cjs/loader:567:28
+      3  100.0%        JS: ^Module._resolveFilename node:internal/modules/cjs/loader:968:35
+      3  100.0%          JS: ^Module._load node:internal/modules/cjs/loader:871:24
+      3  100.0%            JS: ^Module.require node:internal/modules/cjs/loader:1119:36
+      6    1.7%    JS: ^openSync node:fs:576:18
+      6  100.0%      JS: ^readFileSync node:fs:450:22
+      6  100.0%        JS: ^Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      6  100.0%          JS: ^Module.load node:internal/modules/cjs/loader:1091:33
+      6  100.0%            JS: ^Module._load node:internal/modules/cjs/loader:871:24
+      4    1.1%    JS: ~internalCompileFunction node:internal/vm:31:33
+      4  100.0%      JS: ~wrapSafe node:internal/modules/cjs/loader:1139:18
+      4  100.0%        JS: ~Module._compile node:internal/modules/cjs/loader:1200:37
+      4  100.0%          JS: ~Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      4  100.0%            JS: ~Module.load node:internal/modules/cjs/loader:1091:33
+      4    1.1%    JS: ^read node:internal/modules/package_json_reader:16:14
+      4  100.0%      JS: ^readPackage node:internal/modules/cjs/loader:345:21
+      4  100.0%        JS: ^resolveExports node:internal/modules/cjs/loader:539:24
+      4  100.0%          JS: ^Module._findPath node:internal/modules/cjs/loader:567:28
+      3   75.0%            JS: ^Module._resolveFilename node:internal/modules/cjs/loader:968:35
+      1   25.0%            JS: ~Module._resolveFilename node:internal/modules/cjs/loader:968:35
+
+     45    8.1%  T _posix_spawn_file_actions_adddup2
+
+     16    2.9%  T _semaphore_destroy
+      1    6.3%    JS: ~wrapper /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/internal/wrapHelper.js:12:33
+      1  100.0%      JS: ~<anonymous> :1:20
+      1  100.0%        JS: ~main /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/runtime.js:207:18
+      1  100.0%          JS: ~ret /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/runtime.js:188:15
+      1  100.0%            JS: ~ret /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:515:15
+      1    6.3%    JS: ~readableAddChunk node:internal/streams/readable:242:26
+      1  100.0%      JS: ^Readable.push node:internal/streams/readable:233:35
+      1  100.0%        JS: ^onStreamRead node:internal/stream_base_commons:167:22
+      1    6.3%    JS: ~proto.format /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/date-and-time/date-and-time.js:169:29
+      1  100.0%      JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:72:72
+      1  100.0%        t _Builtins_ArrayMap
+      1  100.0%          JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:70:55
+      1  100.0%            JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/mysql/lib/Connection.js:520:19
+      1    6.3%    JS: ~nextTick node:internal/process/task_queues:103:18
+      1  100.0%      JS: ~resume node:internal/streams/readable:989:16
+      1  100.0%        JS: ~Readable.resume node:internal/streams/readable:975:37
+      1  100.0%          JS: ~Socket.resume node:net:728:35
+      1  100.0%            JS: ~Readable.on node:internal/streams/readable:886:33
+      1    6.3%    JS: ~insert node:internal/timers:359:16
+      1  100.0%      JS: ~setUnrefTimeout node:internal/timers:381:25
+      1  100.0%        JS: ~cache node:internal/http:24:15
+      1  100.0%          JS: ~utcDate node:internal/http:19:17
+      1  100.0%            JS: ~_storeHeader node:_http_outgoing:438:22
+      1    6.3%    JS: ~getResourceName /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/finalhandler/index.js:220:26
+      1  100.0%      JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/finalhandler/index.js:86:19
+      1  100.0%        JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:640:19
+      1  100.0%          JS: ~next /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:177:16
+      1  100.0%            JS: ~cors /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/cors/lib/index.js:159:16
+      1    6.3%    JS: ~emitBeforeScript node:internal/async_hooks:510:26
+      1  100.0%      JS: ~processTicksAndRejections node:internal/process/task_queues:67:35
+      1    6.3%    JS: ~anonymous /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/parser.js:549:49
+      1  100.0%      JS: ^next /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/parser.js:478:32
+      1  100.0%        JS: ~lex /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/parser.js:525:30
+      1  100.0%          JS: ~lex /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/parser.js:295:25
+      1  100.0%            JS: ^parse /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/parser.js:269:30
+      1    6.3%    JS: ~_storeHeader node:_http_outgoing:438:22
+      1  100.0%      JS: ~writeHead node:_http_server:334:19
+      1  100.0%        JS: ~_implicitHeader node:_http_server:329:68
+      1  100.0%          JS: ~write_ node:_http_outgoing:871:16
+      1  100.0%            JS: ~end node:_http_outgoing:991:45
+      1    6.3%    JS: ~Socket._writeGeneric node:net:892:42
+      1  100.0%      JS: ~Socket._write node:net:934:35
+      1  100.0%        JS: ~writeOrBuffer node:internal/streams/writable:368:23
+      1  100.0%          JS: ~_write node:internal/streams/writable:286:16
+      1  100.0%            JS: ~Writable.write node:internal/streams/writable:336:36
+      1    6.3%    JS: ^build_tree /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/pako/lib/zlib/trees.js:677:20
+      1  100.0%      JS: ~_tr_flush_block /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/pako/lib/zlib/trees.js:1073:25
+      1  100.0%        JS: ~flush_block_only /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/pako/lib/zlib/deflate.js:165:26
+      1  100.0%          JS: ^deflate_slow /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/pako/lib/zlib/deflate.js:726:22
+      1  100.0%            JS: ~deflate /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/pako/lib/zlib/deflate.js:1410:17
+
+     15    2.7%  /usr/lib/system/libsystem_c.dylib
+      1    6.7%    JS: ~set /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/application.js:359:23
+      1  100.0%      JS: ~defaultConfiguration /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/application.js:77:57
+      1  100.0%        JS: ~init /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/application.js:64:25
+      1  100.0%          JS: ~createApplication /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/express.js:37:27
+      1  100.0%            JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/index.js:1:1
+      1    6.7%    JS: ~realpathSync node:fs:2492:22
+      1  100.0%      JS: ~toRealPath node:internal/modules/cjs/loader:459:20
+      1  100.0%        JS: ~Module._findPath node:internal/modules/cjs/loader:567:28
+      1  100.0%          JS: ~resolveMainPath node:internal/modules/run_main:10:25
+      1  100.0%            JS: ~executeUserEntryPoint node:internal/modules/run_main:75:31
+      1    6.7%    JS: ~proto.subtract /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/date-and-time/date-and-time.js:357:31
+      1  100.0%      JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:72:72
+      1  100.0%        t _Builtins_ArrayMap
+      1  100.0%          JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:70:55
+      1  100.0%            JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/mysql/lib/Connection.js:520:19
+      1    6.7%    JS: ~patchProcessObject node:internal/process/pre_execution:138:28
+      1  100.0%      JS: ~prepareExecution node:internal/process/pre_execution:54:26
+      1  100.0%        JS: ~prepareMainThreadExecution node:internal/process/pre_execution:38:36
+      1  100.0%          JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      1    6.7%    JS: ~normalizeType /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/type-is/index.js:237:24
+      1  100.0%      JS: ~tryNormalizeType /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/type-is/index.js:256:27
+      1  100.0%        JS: ~typeis /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/type-is/index.js:43:17
+      1  100.0%          JS: ~typeofrequest /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/type-is/index.js:123:24
+      1  100.0%            JS: ~checkType /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/body-parser/lib/types/json.js:244:29
+      1    6.7%    JS: ~mergeSource /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:267:36
+      1  100.0%      JS: ~createFunctionContext /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:216:56
+      1  100.0%        JS: ~compile /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:73:28
+      1  100.0%          JS: ~compileChildren /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:805:44
+      1  100.0%            JS: ~compile /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:73:28
+      1    6.7%    JS: ~fastparse /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/parseurl/index.js:95:20
+      1  100.0%      JS: ~parseurl /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/parseurl/index.js:35:19
+      1  100.0%        JS: ~getPathname /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:537:21
+      1  100.0%          JS: ~next /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:177:16
+      1  100.0%            JS: ~handle /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:136:31
+      1    6.7%    JS: ~exports.decompressJson /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/@pdf-lib/standard-fonts/lib/utils.js:58:35
+      1  100.0%      JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/@pdf-lib/standard-fonts/lib/Encoding.js:1:1
+      1  100.0%        JS: ^Module._compile node:internal/modules/cjs/loader:1200:37
+      1  100.0%          JS: ^Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      1  100.0%            JS: ^Module.load node:internal/modules/cjs/loader:1091:33
+      1    6.7%    JS: ~SourceNode_prepend /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/source-map/lib/source-node.js:197:59
+      1  100.0%      JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:274:31
+      1  100.0%        JS: ^each /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/code-gen.js:91:22
+      1  100.0%          JS: ~mergeSource /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:267:36
+      1  100.0%            JS: ~createFunctionContext /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:216:56
+      1    6.7%    JS: ~Protocol /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/mysql/lib/protocol/Protocol.js:10:18
+      1  100.0%      JS: ~Connection /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/mysql/lib/Connection.js:13:20
+      1  100.0%        JS: ~createConnection /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/mysql/index.js:9:53
+      1  100.0%          JS: ~db_init /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/db_init.js:4:17
+      1  100.0%            JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:1:1
+      1    6.7%    JS: ~Inflate.push /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/@pdf-lib/standard-fonts/node_modules/pako/lib/inflate.js:193:35
+      1  100.0%      JS: ~inflate /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/@pdf-lib/standard-fonts/node_modules/pako/lib/inflate.js:383:17
+      1  100.0%        JS: ~exports.decompressJson /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/@pdf-lib/standard-fonts/lib/utils.js:58:35
+      1  100.0%          JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/@pdf-lib/standard-fonts/lib/Encoding.js:1:1
+      1  100.0%            JS: ^Module._compile node:internal/modules/cjs/loader:1200:37
+      1    6.7%    JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/PDFParser.js:190:55
+      1  100.0%      JS: ~step /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/tslib/tslib.js:123:22
+      1  100.0%        JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/tslib/tslib.js:122:44
+      1  100.0%          JS: ~fulfilled /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/tslib/tslib.js:112:31
+      1    6.7%    JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/runtime.js:360:47
+      1  100.0%      t _Builtins_ArrayForEach
+      1  100.0%        JS: ~wrapHelpersToPassLookupProperty /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/runtime.js:359:41
+      1  100.0%          JS: ~ret._setup /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/runtime.js:217:25
+      1  100.0%            JS: ~ret /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/runtime.js:188:15
+      1    6.7%    JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/helpers/each.js:15:44
+      1  100.0%      JS: ~wrapper /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/internal/wrapHelper.js:12:33
+      1  100.0%        JS: ~<anonymous> :1:20
+      1  100.0%          JS: ~main /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/runtime.js:207:18
+      1  100.0%            JS: ~ret /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/runtime.js:188:15
+      1    6.7%    JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:91:22
+      1  100.0%      t _Builtins_AsyncFunctionAwaitResolveClosure
+      1  100.0%        t node::NgRcBufPointer<node::http2::Http2RcBufferPointerTraits>::SelfSize() const
+      1  100.0%          JS: ^processTicksAndRejections node:internal/process/task_queues:67:35
+
+     14    2.5%  /usr/lib/system/libsystem_pthread.dylib
+      1    7.1%    t node::NgRcBufPointer<node::http2::Http2RcBufferPointerTraits>::SelfSize() const
+      1  100.0%      JS: ~getStack /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/depd/index.js:381:19
+      1  100.0%        JS: ~depd /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/depd/index.js:103:15
+      1  100.0%          JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/node_modules/body-parser/index.js:1:1
+      1  100.0%            JS: ~Module._compile node:internal/modules/cjs/loader:1200:37
+      1    7.1%    t _Builtins_StringPrototypeReplace
+      1  100.0%      JS: ~omitRight /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/whitespace-control.js:188:19
+      1  100.0%        JS: ~WhitespaceControl.Program /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/whitespace-control.js:19:48
+      1  100.0%          JS: ~accept /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/visitor.js:57:26
+      1  100.0%            JS: ~parse /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/base.js:51:15
+      1    7.1%    t _Builtins_PromiseConstructor
+      1  100.0%      JS: ~primordials.SafePromisePrototypeFinally node:internal/per_context/primordials:451:43
+      1  100.0%        JS: ~arrayBuffer node:internal/blob:265:14
+      1  100.0%          JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:123:26
+      1  100.0%            JS: ^emit node:events:459:44
+      1    7.1%    JS: ~toRealPath node:internal/modules/cjs/loader:459:20
+      1  100.0%      JS: ~Module._findPath node:internal/modules/cjs/loader:567:28
+      1  100.0%        JS: ~resolveMainPath node:internal/modules/run_main:10:25
+      1  100.0%          JS: ~executeUserEntryPoint node:internal/modules/run_main:75:31
+      1  100.0%            JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      1    7.1%    JS: ~set node:internal/bootstrap/node:117:8
+      1  100.0%      JS: ~patchProcessObject node:internal/process/pre_execution:138:28
+      1  100.0%        JS: ~prepareExecution node:internal/process/pre_execution:54:26
+      1  100.0%          JS: ~prepareMainThreadExecution node:internal/process/pre_execution:38:36
+      1  100.0%            JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      1    7.1%    JS: ~restore /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:631:17
+      1  100.0%      JS: ~handle /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:136:31
+      1  100.0%        JS: ~handle /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/application.js:165:29
+      1  100.0%          JS: ~app /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/express.js:38:21
+      1  100.0%            JS: ^emit node:events:459:44
+      1    7.1%    JS: ~realpathSync node:fs:2492:22
+      1  100.0%      JS: ~toRealPath node:internal/modules/cjs/loader:459:20
+      1  100.0%        JS: ~Module._findPath node:internal/modules/cjs/loader:567:28
+      1  100.0%          JS: ~resolveMainPath node:internal/modules/run_main:10:25
+      1  100.0%            JS: ~executeUserEntryPoint node:internal/modules/run_main:75:31
+      1    7.1%    JS: ~readSync node:fs:693:18
+      1  100.0%      JS: ~tryReadSync node:fs:429:21
+      1  100.0%        JS: ~readFileSync node:fs:450:22
+      1  100.0%          JS: ~Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      1  100.0%            JS: ~Module.load node:internal/modules/cjs/loader:1091:33
+      1    7.1%    JS: ~prepareExecution node:internal/process/pre_execution:54:26
+      1  100.0%      JS: ~prepareMainThreadExecution node:internal/process/pre_execution:38:36
+      1  100.0%        JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      1    7.1%    JS: ~internalCompileFunction node:internal/vm:31:33
+      1  100.0%      JS: ~wrapSafe node:internal/modules/cjs/loader:1139:18
+      1  100.0%        JS: ~Module._compile node:internal/modules/cjs/loader:1200:37
+      1  100.0%          JS: ~Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      1  100.0%            JS: ~Module.load node:internal/modules/cjs/loader:1091:33
+      1    7.1%    JS: ~fastparse /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/parseurl/index.js:95:20
+      1  100.0%      JS: ~parseurl /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/parseurl/index.js:35:19
+      1  100.0%        JS: ~getPathname /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:537:21
+      1  100.0%          JS: ~next /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:177:16
+      1  100.0%            JS: ~handle /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:136:31
+      1    7.1%    JS: ~<anonymous> node:internal/abort_controller:1:1
+      1  100.0%      JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%        JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1  100.0%          JS: ~<anonymous> node:internal/streams/operators:1:1
+      1  100.0%            JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+
+     11    2.0%  /usr/lib/libc++.1.dylib
+      1    9.1%    JS: ~value node:internal/console/constructor:336:20
+      1  100.0%      JS: ~log node:internal/console/constructor:375:6
+      1  100.0%        t node::NgRcBufPointer<node::http2::Http2RcBufferPointerTraits>::SelfSize() const
+      1  100.0%          JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/index.js:180:37
+      1  100.0%            JS: ~onceWrapper node:events:621:21
+      1    9.1%    JS: ~toRealPath node:internal/modules/cjs/loader:459:20
+      1  100.0%      JS: ~Module._findPath node:internal/modules/cjs/loader:567:28
+      1  100.0%        JS: ~resolveMainPath node:internal/modules/run_main:10:25
+      1  100.0%          JS: ~executeUserEntryPoint node:internal/modules/run_main:75:31
+      1  100.0%            JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      1    9.1%    JS: ~setupDebugEnv node:internal/process/pre_execution:361:23
+      1  100.0%      JS: ~prepareExecution node:internal/process/pre_execution:54:26
+      1  100.0%        JS: ~prepareMainThreadExecution node:internal/process/pre_execution:38:36
+      1  100.0%          JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      1    9.1%    JS: ~lookupOnContext /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:448:44
+      1  100.0%      JS: ~compile /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:73:28
+      1  100.0%        JS: ~compileChildren /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:805:44
+      1  100.0%          JS: ~compile /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:73:28
+      1  100.0%            JS: ~compileInput /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:507:24
+      1    9.1%    JS: ~attachListener /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/on-finished/index.js:141:25
+      1  100.0%      JS: ~onFinished /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/on-finished/index.js:46:21
+      1  100.0%        JS: ~send /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/finalhandler/index.js:272:15
+      1  100.0%          JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/finalhandler/index.js:86:19
+      1  100.0%            JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:640:19
+      1    9.1%    JS: ~ReadableState node:internal/streams/readable:83:23
+      1  100.0%      JS: ~Readable node:internal/streams/readable:186:18
+      1  100.0%        JS: ~Duplex node:internal/streams/duplex:54:16
+      1  100.0%          JS: ~Socket node:net:332:16
+      1  100.0%            JS: ~WriteStream node:tty:84:21
+      1    9.1%    JS: ~PDFCatalog.insertLeafNode /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/structures/PDFCatalog.js:59:52
+      1  100.0%      JS: ~PDFDocument.insertPage /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/api/PDFDocument.js:599:49
+      1  100.0%        JS: ~PDFDocument.addPage /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/api/PDFDocument.js:563:46
+      1  100.0%          JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:164:25
+      1  100.0%            t _Builtins_ArrayForEach
+      1    9.1%    JS: ~ContentStatement /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:228:46
+      1  100.0%      JS: ~accept /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:101:26
+      1  100.0%        JS: ~Program /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:113:28
+      1  100.0%          JS: ~accept /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:101:26
+      1  100.0%            JS: ~compile /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:63:28
+      1    9.1%    JS: ~<anonymous> node:internal/crypto/util:1:1
+      1  100.0%      JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+      1  100.0%        JS: ^requireBuiltin node:internal/bootstrap/loaders:355:24
+      1  100.0%          JS: ~<anonymous> node:internal/crypto/pbkdf2:1:1
+      1  100.0%            JS: ^compileForInternalLoader node:internal/bootstrap/loaders:318:27
+
+     10    1.8%  /usr/lib/system/libsystem_kernel.dylib
+      1   10.0%    JS: ~setStreamTimeout node:internal/stream_base_commons:237:26
+      1  100.0%      JS: ~connect /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/mysql/lib/Connection.js:64:48
+      1  100.0%        JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:1:1
+      1  100.0%          JS: ^Module._compile node:internal/modules/cjs/loader:1200:37
+      1  100.0%            JS: ^Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      1   10.0%    JS: ~initializeCJSLoader node:internal/process/pre_execution:573:29
+      1  100.0%      JS: ~setupUserModules node:internal/process/pre_execution:124:26
+      1  100.0%        JS: ~prepareExecution node:internal/process/pre_execution:54:26
+      1  100.0%          JS: ~prepareMainThreadExecution node:internal/process/pre_execution:38:36
+      1  100.0%            JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      1   10.0%    JS: ~initializeCJS node:internal/modules/cjs/loader:284:23
+      1  100.0%      JS: ~initializeCJSLoader node:internal/process/pre_execution:573:29
+      1  100.0%        JS: ~setupUserModules node:internal/process/pre_execution:124:26
+      1  100.0%          JS: ~prepareExecution node:internal/process/pre_execution:54:26
+      1  100.0%            JS: ~prepareMainThreadExecution node:internal/process/pre_execution:38:36
+      1   10.0%    JS: ~getCharset /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/body-parser/lib/types/json.js:203:21
+      1  100.0%      JS: ~jsonParser /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/body-parser/lib/types/json.js:101:30
+      1  100.0%        JS: ~handle /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/layer.js:86:49
+      1  100.0%          JS: ~trim_prefix /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:293:23
+      1  100.0%            JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/index.js:280:64
+      1   10.0%    JS: ~createFunctionContext /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:216:56
+      1  100.0%      JS: ~compile /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:73:28
+      1  100.0%        JS: ~compileInput /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:507:24
+      1  100.0%          JS: ~ret /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:515:15
+      1  100.0%            JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:91:22
+      1   10.0%    JS: ~accept /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/visitor.js:57:26
+      1  100.0%      JS: ~parse /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/base.js:51:15
+      1  100.0%        JS: ~compileInput /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:507:24
+      1  100.0%          JS: ~ret /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/compiler.js:515:15
+      1  100.0%            JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:91:22
+      1   10.0%    JS: ~PDFParser.skipBinaryHeaderComment /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/PDFParser.js:338:60
+      1  100.0%      JS: ~PDFParser.parseHeader /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/PDFParser.js:89:48
+      1  100.0%        JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/PDFParser.js:42:55
+      1  100.0%          JS: ~step /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/tslib/tslib.js:123:22
+      1  100.0%            JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/tslib/tslib.js:122:44
+      1   10.0%    JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/@pdf-lib/upng/cjs/UPNG.js:1696:19
+      1  100.0%      JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/@pdf-lib/upng/cjs/UPNG.js:1:1
+      1  100.0%        JS: ^Module._compile node:internal/modules/cjs/loader:1200:37
+      1  100.0%          JS: ^Module._extensions..js node:internal/modules/cjs/loader:1255:37
+      1  100.0%            JS: ^Module.load node:internal/modules/cjs/loader:1091:33
+      1   10.0%    JS: ^step /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/tslib/tslib.js:123:22
+      1  100.0%      JS: ^<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/tslib/tslib.js:122:44
+      1  100.0%        JS: ^<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/tslib/tslib.js:111:50
+      1  100.0%          t _Builtins_PromiseConstructor
+      1  100.0%            JS: ^__awaiter /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/node_modules/tslib/tslib.js:109:26
+
+      7    1.3%  t _Builtins_LoadIC
+      1   14.3%    JS: ^onStreamRead node:internal/stream_base_commons:167:22
+      1   14.3%    JS: ^nextTick node:internal/process/task_queues:103:18
+      1  100.0%      JS: ~onwrite node:internal/streams/writable:428:17
+      1  100.0%        JS: ~afterWriteDispatched node:internal/stream_base_commons:155:30
+      1  100.0%          JS: ~writevGeneric node:internal/stream_base_commons:122:23
+      1  100.0%            JS: ~Socket._writeGeneric node:net:892:42
+      1   14.3%    JS: ^get node:net:664:16
+      1  100.0%      JS: ~onStreamRead node:internal/stream_base_commons:167:22
+      1   14.3%    JS: ^_destroy node:internal/streams/destroy:77:18
+      1  100.0%      JS: ^destroy node:internal/streams/destroy:39:17
+      1  100.0%        JS: ^finish node:internal/streams/writable:741:16
+      1  100.0%          JS: ^processTicksAndRejections node:internal/process/task_queues:67:35
+      1   14.3%    JS: ^PDFNumber.sizeInBytes /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/objects/PDFNumber.js:27:48
+      1  100.0%      JS: ^PDFArray.sizeInBytes /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/objects/PDFArray.js:86:47
+      1  100.0%        JS: ^PDFArray.sizeInBytes /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/objects/PDFArray.js:86:47
+      1  100.0%          JS: ^PDFDict.sizeInBytes /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/objects/PDFDict.js:105:46
+      1  100.0%            JS: ^PDFObjectStream.computeObjectOffsets /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/structures/PDFObjectStream.js:60:63
+      1   14.3%    JS: ^Module._findPath node:internal/modules/cjs/loader:567:28
+      1  100.0%      JS: ^Module._resolveFilename node:internal/modules/cjs/loader:968:35
+      1  100.0%        JS: ^Module._load node:internal/modules/cjs/loader:871:24
+      1  100.0%          JS: ^Module.require node:internal/modules/cjs/loader:1119:36
+      1  100.0%            JS: ^require node:internal/modules/helpers:111:31
+      1   14.3%    JS: ^BaseParser.skipWhitespaceAndComments /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/BaseParser.js:92:63
+      1  100.0%      JS: ^PDFObjectParser.parseNumberOrRef /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js:61:59
+      1  100.0%        JS: ^PDFObjectParser.parseObject /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js:36:54
+      1  100.0%          JS: ^PDFObjectParser.parseArray /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js:129:53
+      1  100.0%            JS: ^PDFObjectParser.parseObject /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/pdf-lib/cjs/core/parser/PDFObjectParser.js:36:54
+
+      7    1.3%  /usr/lib/system/libsystem_malloc.dylib
+      1   14.3%    t _Builtins_TypedArrayConstructor
+      1  100.0%      JS: ^FastBuffer node:internal/buffer:960:14
+      1  100.0%        JS: ^createUnsafeBuffer node:internal/buffer:1061:28
+      1  100.0%          JS: ^allocate node:buffer:401:18
+      1  100.0%            JS: ^allocUnsafe node:buffer:376:42
+      1   14.3%    t _Builtins_StringPrototypeReplace
+      1  100.0%      JS: ~omitRight /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/whitespace-control.js:188:19
+      1  100.0%        JS: ^WhitespaceControl.Program /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/whitespace-control.js:19:48
+      1  100.0%          JS: ^accept /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/visitor.js:57:26
+      1  100.0%            JS: ~parse /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/base.js:51:15
+      1   14.3%    JS: ~reportModuleToWatchMode node:internal/modules/cjs/loader:186:33
+      1  100.0%      JS: ~Module._load node:internal/modules/cjs/loader:871:24
+      1  100.0%        JS: ~executeUserEntryPoint node:internal/modules/run_main:75:31
+      1  100.0%          JS: ~<anonymous> node:internal/main/run_main_module:1:1
+      1   14.3%    JS: ~proto.compile /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/date-and-time/date-and-time.js:153:30
+      1  100.0%      JS: ~<anonymous> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/db_api/employeeHelper.js:91:22
+      1  100.0%        t _Builtins_AsyncFunctionAwaitResolveClosure
+      1  100.0%          t node::NgRcBufPointer<node::http2::Http2RcBufferPointerTraits>::SelfSize() const
+      1  100.0%            JS: ^processTicksAndRejections node:internal/process/task_queues:67:35
+      1   14.3%    JS: ~pathtoRegexp /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/path-to-regexp/index.js:28:22
+      1  100.0%      JS: ^Layer /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/layer.js:33:15
+      1  100.0%        JS: ^Layer /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/layer.js:33:15
+      1  100.0%          JS: ~Route.<computed> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/router/route.js:202:37
+      1  100.0%            JS: ~app.<computed> /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/express/lib/application.js:490:25
+      1   14.3%    JS: ~objectLiteral /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/code-gen.js:123:40
+      1  100.0%      JS: ~objectLiteral /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:1002:40
+      1  100.0%        JS: ~setupHelperArgs /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:1104:44
+      1  100.0%          JS: ~setupHelper /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:1020:36
+      1  100.0%            JS: ~invokeKnownHelper /Users/oscy/Documents/ZUMA/ZUMA_EMPLOYEE_API/node_modules/handlebars/dist/cjs/handlebars/compiler/javascript-compiler.js:682:48
+      1   14.3%    JS: ~Readable.on node:internal/streams/readable:886:33
+      1  100.0%      JS: ~connectionListenerInternal node:_http_server:607:36
+      1  100.0%        JS: ~defaultTriggerAsyncIdScope node:internal/async_hooks:456:36
+      1  100.0%          JS: ~connectionListener node:_http_server:601:28
+      1  100.0%            JS: ~onconnection node:net:1966:22
+
