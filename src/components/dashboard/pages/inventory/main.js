@@ -1,6 +1,6 @@
 import React from "react";
 import tw from "tailwind-styled-components";
-
+import Chart from "chart.js";
 
 const Overlay = tw.div`
 
@@ -72,84 +72,57 @@ const SubComponent = tw.div`
   p-4
 `;
 
-
-export default function Inventory(){
-
-
-    return (
-        <>
-        <Overlay>
-        <Blur>Coming Soon</Blur>
-      
-      <CardGrid>  
-        <Card>
-          <h2>Card Title 1</h2>
-          <p>Card content goes here.</p>
+export default function Inventory() {
+  return (
+    <>
+      <CardGrid>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">View Inventory</h2>
           <SubComponent>
-            <h3>Sub-component Title 1</h3>
-            <p>Sub-component content goes here.</p>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              View Inventory of all products in the database.
+            </p>
           </SubComponent>
         </Card>
-        <Card>
-          <h2>Card Title 2</h2>
-          <p>Card content goes here.</p>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">Label Generator</h2>
           <SubComponent>
-            <h3>Sub-component Title 2</h3>
-            <p>Sub-component content goes here.</p>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Generate labels for products in the database.
+            </p>
           </SubComponent>
         </Card>
-        <Card>
-          <h2>Card Title 3</h2>
-          <p>Card content goes here.</p>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">Product Storage Schematic</h2>
           <SubComponent>
-            <h3>Sub-component Title 3</h3>
-            <p>Sub-component content goes here.</p>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Display where product is stored in the warehouse, whether in
+              active status or passive status(meaning its in garage)
+            </p>
           </SubComponent>
         </Card>
-        <Card>
-          <h2>Card Title 4</h2>
-          <p>Card content goes here.</p>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">Shipment</h2>
           <SubComponent>
-            <h3>Sub-component Title 4</h3>
-            <p>Sub-component content goes here.</p>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Allows you to update shipment stock quantity for product
+            </p>
           </SubComponent>
         </Card>
-        <Card>
-          <h2>Card Title 5</h2>
-          <p>Card content goes here.</p>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">Predict Product Quantity</h2>
           <SubComponent>
-            <h3>Sub-component Title 5</h3>
-            <p>Sub-component content goes here.</p>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Predicts the quantity of product needed for a given time period
+            </p>
           </SubComponent>
         </Card>
-        <Card>
-          <h2>Card Title 4</h2>
-          <p>Card content goes here.</p>
-          <SubComponent>
-            <h3>Sub-component Title 4</h3>
-            <p>Sub-component content goes here.</p>
-          </SubComponent>
-        </Card>
-        <Card>
-          <h2>Card Title 4</h2>
-          <p>Card content goes here.</p>
-          <SubComponent>
-            <h3>Sub-component Title 4</h3>
-            <p>Sub-component content goes here.</p>
-          </SubComponent>
-        </Card>
-        <Card>
-          <h2>Card Title 4</h2>
-          <p>Card content goes here.</p>
-          <SubComponent>
-            <h3>Sub-component Title 4</h3>
-            <p>Sub-component content goes here.</p>
-          </SubComponent>
-        </Card>
-        
       </CardGrid>
-      </Overlay>
-       </>
-      
-    )
+    </>
+  );
 }

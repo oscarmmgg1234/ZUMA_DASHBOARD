@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { Disclosure, Menu, Transition } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { signOut, useSession } from "next-auth/react";
+// import { signOut, useSession } from "next-auth/react";
 import Employee from "./pages/employee/main";
 import Inventory from "./pages/inventory/main";
 import Dashboard from "./pages/dashboard/main";
@@ -50,12 +50,12 @@ export default function Index(props) {
     setNavigation(newNav);
   }
 
-  const { data: session, status } = useSession();
-  const user = {
-    name: session.user_json_data[0].NAME,
-    email: session.user_json_data[0].EMAIL,
-    imageUrl: session.user_json_data[0].IMG_URL,
-  };
+  // const { data: session, status } = useSession();
+  // const user = {
+  //   name: session.user_json_data[0].NAME,
+  //   email: session.user_json_data[0].EMAIL,
+  //   imageUrl: session.user_json_data[0].IMG_URL,
+  // };
   return (
     <>
       {/*
@@ -114,11 +114,11 @@ export default function Index(props) {
                         <div>
                           <Menu.Button className="flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                             <span className="sr-only">Open user menu</span>
-                            <img
+                            {/* <img
                               className="h-12 w-12 rounded-full "
                               src={user.imageUrl}
                               alt=""
-                            />
+                            /> */}
                           </Menu.Button>
                         </div>
                         <Transition
@@ -139,11 +139,11 @@ export default function Index(props) {
                                     onClick={
                                       item.name == "Sign out"
                                         ? () =>
-                                            signOut({
-                                              redirect: true,
-                                              path: "/",
-                                            })
-                                        : null
+                                            // signOut({
+                                            //   redirect: true,
+                                            //   path: "/",
+                                            // })
+                                    {console.log("sign out")} : null
                                     }
                                     className={classNames(
                                       active ? "bg-gray-100" : "",
@@ -203,20 +203,20 @@ export default function Index(props) {
                 <div className="border-t border-gray-700 pb-3 pt-4">
                   <div className="flex items-center px-5">
                     <div className="flex-shrink-0">
-                      <img
+                      {/* {/* <img
                         className="h-10 w-10 rounded-full"
                         src={user.imageUrl}
                         alt=""
-                      />
-                    </div>
+                      /> */}
+                    {/* </div>
                     <div className="ml-3">
                       <div className="text-base font-medium leading-none text-white">
                         {user.name}
                       </div>
                       <div className="text-sm font-medium leading-none text-white">
                         {user.email}
-                      </div>
-                    </div>
+                    </div> */}
+                    </div>  
                     <button
                       type="button"
                       className="ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-white hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
