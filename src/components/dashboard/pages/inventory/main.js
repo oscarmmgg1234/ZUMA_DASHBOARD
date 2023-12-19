@@ -1,6 +1,6 @@
-import React from "react";
+import React, {useState} from "react";
 import tw from "tailwind-styled-components";
-import Chart from "chart.js";
+import ViewInventoryModal from "./Modals/ViewInventory";
 
 const Overlay = tw.div`
 
@@ -60,7 +60,8 @@ const CardGrid = tw.div`
 `;
 
 const Card = tw.div`
-  bg-white
+bg-gradient-to-br from-white to-gray-100
+hover:to-gray-500
   shadow-md
   rounded-md
   p-4
@@ -73,10 +74,29 @@ const SubComponent = tw.div`
 `;
 
 export default function Inventory() {
+
+  const [viewInvModalVisible, setViewInvModalVisible] = useState(false);
+  
+
+  
+  const closeHandler = (args) => {
+    if(args === "viewInv"){
+      setViewInvModalVisible(false);
+    }
+  } 
+
+  const openHandler = (args) => {
+    if(args === "viewInv"){
+      setViewInvModalVisible(true);
+    }
+  }
+
+
+
   return (
     <>
       <CardGrid>
-        <Card onClick={() => {}}>
+        <Card onClick={() => openHandler("viewInv")}>
           <h2 className="text-black mb-3">View Inventory</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -122,7 +142,17 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">Add Product</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Predicts the quantity of product needed for a given time period
+            </p>
+          </SubComponent>
+        </Card>
       </CardGrid>
+      <ViewInventoryModal visible={viewInvModalVisible} closeHandler={closeHandler} />
     </>
   );
 }
