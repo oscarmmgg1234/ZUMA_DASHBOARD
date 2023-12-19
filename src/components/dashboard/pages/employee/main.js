@@ -308,7 +308,7 @@ const Employee = () => {
       selectedDate != null &&
       shiftOption != "Select Shift"
     ) {
-      const data = await GET_Preview(args);
+      const data = await https.preview_transform_shift(args);
       setPreviewData(data);
     }
   };
@@ -318,7 +318,7 @@ const Employee = () => {
       selectedDate != null &&
       shiftOption != "Select Shift"
     ) {
-      const data = await transform_shift(args);
+      const data = await https.transform_shift(args);
       setStatus(data);
     }
   };
@@ -327,13 +327,13 @@ const Employee = () => {
   const [revert, setRevert] = useState(false);
   const removePreviewData = async (args) => {
     if (selEmployeeData != "Select Employee" && selectedDate != null) {
-      const data = await previewRemoveShift(args);
+      const data = await https.previewRemoveShift(args);
       setPreviewData(data);
     }
   };
   const submitRemove = async (args) => {
     if (selEmployeeData != "Select Employee" && selectedDate != null) {
-      const data = await removeShift(args);
+      const data = await https.removeShift(args);
       setStatus(data);
     }
   };
@@ -366,7 +366,7 @@ const Employee = () => {
       selectedDate2 != null &&
       emp != "Select Employee"
     ) {
-      const data = await pdf_get(args);
+      const data = await https.pdf_get(args);
       setPdfBlob(data);
     }
   };

@@ -1,3 +1,6 @@
+
+const base_url = "http://192.168.1.176:3002";
+
 export const Add_Assigment = async (args) => {
   const data = JSON.stringify({
     e_id: args.e_id,
@@ -14,7 +17,7 @@ export const Add_Assigment = async (args) => {
     body: data,
   };
   const response = await fetch(
-    `http:///35.163.109.26:3000/EmployeeResourcesAPI/addAssignment`,
+    `${base_url}/EmployeeResourcesAPI/addAssignment`,
     options
   );
 
@@ -40,7 +43,7 @@ export const GET_Preview = async (args) => {
     },
     body: data,
   };
-  const response = await fetch(`http://35.163.109.26:3000/${url_end}`, options);
+  const response = await fetch(`${base_url}/${url_end}`, options);
   const responseData = await response.json();
   return responseData;
 };
@@ -65,7 +68,7 @@ export const transform_shift = async (args) => {
     body: data,
   };
 
-  const response = await fetch(`http://35.163.109.26:3000${url_end}`, options);
+  const response = await fetch(`${base_url}/${url_end}`, options);
   const responseData = await response.json();
   return responseData;
 };
@@ -91,12 +94,12 @@ export const pdf_get = async (args) => {
     body: data,
   };
 
-  const response = await fetch(`http://35.163.109.26:3000${url_end}`, options);
+  const response = await fetch(`${base_url}${url_end}`, options);
   return response.blob();
 };
 
 
-const removeShift = async (args) => {
+export const removeShift = async (args) => {
   //args = {shiftOption: "end", e_id: 00001, date: "2023-04-30", hours: 8}
   const data = JSON.stringify({
     e_id: args.e_id,
@@ -113,7 +116,7 @@ const removeShift = async (args) => {
   };
 
   const response = await fetch(
-    `http://35.163.109.26:3000/EmployeeResourcesAPI/RemoveShift`,
+    `${base_url}/EmployeeResourcesAPI/RemoveShift`,
     options
   );
   const responseData = await response.json();
@@ -141,7 +144,7 @@ export const previewRemoveShift = async (args) => {
   };
 
   const response = await fetch(
-    `http://35.163.109.26:3000/EmployeeResourcesAPI/PreviewRemoveShift`,
+    `${base_url}/EmployeeResourcesAPI/PreviewRemoveShift`,
     options
   );
   const responseData = await response.json();

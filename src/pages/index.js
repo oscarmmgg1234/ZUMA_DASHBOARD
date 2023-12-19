@@ -1,7 +1,6 @@
 
 import {useSession} from 'next-auth/react'
 import Dashboard from '@/components/dashboard'
-import Login from '@/components/login/login';
 
 
 export default function Home() {
