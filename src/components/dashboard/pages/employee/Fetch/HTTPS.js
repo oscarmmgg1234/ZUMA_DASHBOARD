@@ -1,4 +1,3 @@
-
 const base_url = "http://192.168.1.176:3002";
 
 export const Add_Assigment = async (args) => {
@@ -97,7 +96,6 @@ export const pdf_get = async (args) => {
   const response = await fetch(`${base_url}${url_end}`, options);
   return response.blob();
 };
-
 
 export const removeShift = async (args) => {
   //args = {shiftOption: "end", e_id: 00001, date: "2023-04-30", hours: 8}
