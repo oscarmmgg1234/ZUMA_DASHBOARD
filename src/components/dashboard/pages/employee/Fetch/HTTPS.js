@@ -1,4 +1,5 @@
-const base_url = "http://192.168.1.176:3002";
+// const base_url = "http://192.168.1.176:3002";
+const base_url = "http://localhost:3002"
 
 export const Add_Assigment = async (args) => {
   const data = JSON.stringify({
@@ -48,11 +49,11 @@ export const GET_Preview = async (args) => {
 };
 
 export const transform_shift = async (args) => {
-  //args = {shiftOption: "end", e_id: 00001, date: "2023-04-30", hours: 8}
+  //args = {shiftOption: "end", e_id: 00001, date: "2023-04-30", hours: 8};
   const url_end =
     args.shiftOption == "end"
-      ? "/EmployeeResourcesAPI/TansformEndShift"
-      : "/EmployeeResourcesAPI/TansformStartShift";
+      ? "EmployeeResourcesAPI/TansformEndShift"
+      : "EmployeeResourcesAPI/TansformStartShift";
   const data = JSON.stringify({
     e_id: args.e_id,
     date: args.date,
