@@ -1,4 +1,4 @@
-const base_url = "http://localhost:3001";
+const base_url = "http://192.168.1.176:3001";
 // http://192.168.1.176:3002
 
 export const Get_Products = async () => {
@@ -23,6 +23,4 @@ export const getProductAnalytics = async (args) => {
   };
   const response = await fetch(`${base_url}/get_product_analytics`, options);
   return await response.json();
-}
-
-
+};
