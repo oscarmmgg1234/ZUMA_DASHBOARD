@@ -265,7 +265,7 @@ export default function ViewInventoryModal(props) {
                             : "No Data"}
                         </td>
                         <td className="px-4 py-2 border text-black">
-                          {productAnalytics.shipment.length > 0
+                          {productAnalytics.reduction.length > 0
                             ? productAnalytics.reduction[0].EMPLOYEE_ID
                             : "No Data"}
                         </td>
