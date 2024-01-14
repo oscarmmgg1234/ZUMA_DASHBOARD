@@ -100,6 +100,7 @@ const local_data = {
     "Juan Pablo",
     "Maria Maldonado",
     "Jose Adalberto Enciso",
+    "Jesus Garcia"
   ],
   gen_emps: [
     "Oscar Maldonado",
@@ -107,6 +108,7 @@ const local_data = {
     "Juan Pablo",
     "Maria Maldonado",
     "Jose Adalberto Enciso",
+    "Jesus Garcia",
     "PRINT_ALL",
   ],
   emp_option: ["start", "end"],
