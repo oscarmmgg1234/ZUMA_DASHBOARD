@@ -58,8 +58,10 @@ export default function ViewInventoryModal(props) {
       http
         .getProductAnalytics({ PRODUCT_ID: selectedProduct.PRODUCT_ID })
         .then((res) => {
+          console.log(res.data);
           setProductAnalytics(res.data);
         });
+
     }
   }, [selectedProduct]);
 
