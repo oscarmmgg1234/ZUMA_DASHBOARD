@@ -84,6 +84,7 @@ const local_data = {
     { name: "Maria Maldonado", e_id: "003222" },
     { name: "Jose Adalberto Enciso", e_id: "230114" },
     { name: "PRINT_ALL", e_id: "PRINT_ALL" },
+    { name: "Jesus Garcia", e_id: "451113" },
   ],
   emp_data: [
     { name: "Oscar Maldonado", e_id: "000002" },
@@ -91,6 +92,7 @@ const local_data = {
     { name: "Juan Pablo", e_id: "001111" },
     { name: "Maria Maldonado", e_id: "003222" },
     { name: "Jose Adalberto Enciso", e_id: "230114" },
+    { name: "Jesus Garcia", e_id: "451113" },
   ],
   emps: [
     "Oscar Maldonado",
