@@ -1,6 +1,7 @@
-import React, {useState} from "react";
+import React, { useState } from "react";
 import tw from "tailwind-styled-components";
 import ViewInventoryModal from "./Modals/ViewInventory";
+import ShipmentLog from "./Modals/ShipmentLog";
 
 const Overlay = tw.div`
 
@@ -74,24 +75,26 @@ const SubComponent = tw.div`
 `;
 
 export default function Inventory() {
-
   const [viewInvModalVisible, setViewInvModalVisible] = useState(false);
-  
+  const [shipmentLogModalVisible, setShipmentLogModalVisible] = useState(false);
 
-  
   const closeHandler = (args) => {
-    if(args === "viewInv"){
+    if (args === "viewInv") {
       setViewInvModalVisible(false);
     }
-  } 
+    if (args === "shipment") {
+      setShipmentLogModalVisible(false);
+    }
+  };
 
   const openHandler = (args) => {
-    if(args === "viewInv"){
+    if (args === "viewInv") {
       setViewInvModalVisible(true);
     }
-  }
-
-
+    if (args === "shipment") {
+      setShipmentLogModalVisible(true);
+    }
+  };
 
   return (
     <>
@@ -105,26 +108,7 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-        <Card onClick={() => {}}>
-          <h2 className="text-black mb-3">Label Generator</h2>
-          <SubComponent>
-            <h3 className="text-gray-800/50">Utility</h3>
-            <p className="text-gray-800/50">
-              Generate labels for products in the database.
-            </p>
-          </SubComponent>
-        </Card>
-        <Card onClick={() => {}}>
-          <h2 className="text-black mb-3">Product Storage Schematic</h2>
-          <SubComponent>
-            <h3 className="text-gray-800/50">Utility</h3>
-            <p className="text-gray-800/50">
-              Display where product is stored in the warehouse, whether in
-              active status or passive status(meaning its in garage)
-            </p>
-          </SubComponent>
-        </Card>
-        <Card onClick={() => {}}>
+        <Card onClick={() => openHandler("shipment")}>
           <h2 className="text-black mb-3">Shipment</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -152,7 +136,14 @@ export default function Inventory() {
           </SubComponent>
         </Card>
       </CardGrid>
-      <ViewInventoryModal visible={viewInvModalVisible} closeHandler={closeHandler} />
+      <ViewInventoryModal
+        visible={viewInvModalVisible}
+        closeHandler={closeHandler}
+      />
+      <ShipmentLog
+        visible={shipmentLogModalVisible}
+        closeHandler={closeHandler}
+      />
     </>
   );
 }

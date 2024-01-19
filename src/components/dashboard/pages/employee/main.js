@@ -82,7 +82,6 @@ const local_data = {
     { name: "Jennifer Maldonado", e_id: "00001" },
     { name: "Juan Pablo", e_id: "001111" },
     { name: "Maria Maldonado", e_id: "003222" },
-    { name: "Jose Adalberto Enciso", e_id: "230114" },
     { name: "PRINT_ALL", e_id: "PRINT_ALL" },
     { name: "Jesus Garcia", e_id: "451113" },
   ],
@@ -91,7 +90,6 @@ const local_data = {
     { name: "Jennifer Maldonado", e_id: "00001" },
     { name: "Juan Pablo", e_id: "001111" },
     { name: "Maria Maldonado", e_id: "003222" },
-    { name: "Jose Adalberto Enciso", e_id: "230114" },
     { name: "Jesus Garcia", e_id: "451113" },
   ],
   emps: [
@@ -99,15 +97,13 @@ const local_data = {
     "Jennifer Maldonado",
     "Juan Pablo",
     "Maria Maldonado",
-    "Jose Adalberto Enciso",
-    "Jesus Garcia"
+    "Jesus Garcia",
   ],
   gen_emps: [
     "Oscar Maldonado",
     "Jennifer Maldonado",
     "Juan Pablo",
     "Maria Maldonado",
-    "Jose Adalberto Enciso",
     "Jesus Garcia",
     "PRINT_ALL",
   ],

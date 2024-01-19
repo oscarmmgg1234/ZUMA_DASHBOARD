@@ -51,11 +51,11 @@ export default function BaseModal(props) {
     <>
       {props.visible ? (
         <>
-          <ModalBackground onClick={() => props.closeHandler("viewInv")} />
+          <ModalBackground onClick={() => props.closeHandler(props.closeName)} />
           <ModalContainer>
             <ModalHeader className="sticky top-0 z-10 bg-white">
               <ModalTitle className="text-black">{props.title}</ModalTitle>
-              <ModalCloseButton onClick={() => props.closeHandler("viewInv")}>
+              <ModalCloseButton onClick={() => props.closeHandler(props.closeName)}>
                 <FaTimes className="w-5 h-5 mr-2" />
               </ModalCloseButton>
             </ModalHeader>

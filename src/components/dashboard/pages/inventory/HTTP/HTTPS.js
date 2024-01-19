@@ -24,3 +24,15 @@ export const getProductAnalytics = async (args) => {
   const response = await fetch(`${base_url}/get_product_analytics`, options);
   return await response.json();
 };
+
+export const getShipmentByDate = async (args) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(args),
+  };
+  const response = await fetch(`${base_url}/get_shipment_by_date`, options);
+  return await response.json();
+};
