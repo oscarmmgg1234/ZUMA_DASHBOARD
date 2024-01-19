@@ -30,16 +30,16 @@ export default function ShipmentLog(props) {
 
   const shipmentRows = filteredShipments.map((shipment) => (
     <tr key={shipment.ID} className="bg-white border">
-      <td className="px-4 py-2">{shipment.PRODUCT_ID}</td>
-      <td className="px-4 py-2">
+      <td className="px-4 py-2 text-black">{shipment.PRODUCT_ID}</td>
+      <td className="px-4 py-2 text-black">
         {shipment.PRODUCT_NAME ? shipment.PRODUCT_NAME : "N/A"}
       </td>
-      <td className="px-4 py-2">{shipment.QUANTITY}</td>
-      <td className="px-4 py-2">
+      <td className="px-4 py-2 text-black">{shipment.QUANTITY}</td>
+      <td className="px-4 py-2 text-black">
         {new Date(shipment.SHIPMENT_DATE).toDateString()}
       </td>
-      <td className="px-4 py-2">{shipment.COMPANY_ID}</td>
-      <td className="px-4 py-2">{shipment.EMPLOYEE_ID}</td>
+      <td className="px-4 py-2 text-black">{shipment.COMPANY_ID}</td>
+      <td className="px-4 py-2 text-black">{shipment.EMPLOYEE_ID}</td>
     </tr>
   ));
 
@@ -56,18 +56,18 @@ export default function ShipmentLog(props) {
             type="date"
             value={filterDate}
             onChange={handleDateFilterChange}
-            className="mb-4 p-2 border rounded-lg"
+            className="mb-4 p-2 border rounded-lg text-black"
           />
           <div className="overflow-y-auto max-h-96 mx-auto">
             <table className="min-w-full border-collapse text-center">
               <thead className="bg-gray-300">
                 <tr>
-                  <th className="px-4 py-2 border">Product ID</th>
-                  <th className="px-4 py-2 border">Product Name</th>
-                  <th className="px-4 py-2 border">Quantity</th>
-                  <th className="px-4 py-2 border">Date</th>
-                  <th className="px-4 py-2 border">Company ID</th>
-                  <th className="px-4 py-2 border">Employee ID</th>
+                  <th className="px-4 py-2 border text-black">Product ID</th>
+                  <th className="px-4 py-2 border text-black">Product Name</th>
+                  <th className="px-4 py-2 border text-black">Quantity</th>
+                  <th className="px-4 py-2 border text-black">Date</th>
+                  <th className="px-4 py-2 border text-black">Company ID</th>
+                  <th className="px-4 py-2 border text-black">Employee ID</th>
                 </tr>
               </thead>
               <tbody>{shipmentRows}</tbody>
