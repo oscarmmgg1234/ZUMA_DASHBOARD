@@ -92,7 +92,7 @@ export default function ViewInventoryModal(props) {
     { label: "Jarrow", value: false, typeID: "321" },
     { label: "Healthy Origins", value: false, typeID: "344" },
     { label: "Atlas", value: false, typeID: "3892" },
-    { label: "Wizard Label", value: false, typeID: "433" },
+    { label: "Wizard Label", value: false, typeID: "443" },
     { label: "Essential Wholesale", value: false, typeID: "4920" },
     { label: "Montiff", value: false, typeID: "7320" },
     { label: "Omica", value: false, typeID: "888" },
