@@ -109,11 +109,29 @@ export default function Inventory() {
           </SubComponent>
         </Card>
         <Card onClick={() => openHandler("shipment")}>
-          <h2 className="text-black mb-3">Shipment</h2>
+          <h2 className="text-black mb-3">Shipment Product Log</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
             <p className="text-gray-800/50">
               Allows you to update shipment stock quantity for product
+            </p>
+          </SubComponent>
+        </Card>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">Product Activation Log</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              View all logs of product activation
+            </p>
+          </SubComponent>
+        </Card>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">Product Reduction Log</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              View all logs of product reduction
             </p>
           </SubComponent>
         </Card>
@@ -127,15 +145,32 @@ export default function Inventory() {
           </SubComponent>
         </Card>
         <Card onClick={() => {}}>
-          <h2 className="text-black mb-3">Add Product</h2>
+          <h2 className="text-black mb-3">Manage Products</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
-            <p className="text-gray-800/50">
-              Predicts the quantity of product needed for a given time period
-            </p>
+            <p className="text-gray-800/50">Manage products in the database</p>
           </SubComponent>
         </Card>
       </CardGrid>
+      <Card onClick={() => {}}>
+        <h2 className="text-black mb-3">System Analytics</h2>
+        <SubComponent>
+          <h3 className="text-gray-800/50">Utility</h3>
+          <p className="text-gray-800/50">
+            View analytics of the system and its components
+          </p>
+        </SubComponent>
+      </Card>
+      <Card onClick={() => {}}>
+        <h2 className="text-black mb-3">Manage System Info</h2>
+        <SubComponent>
+          <h3 className="text-gray-800/50">Utility</h3>
+          <p className="text-gray-800/50">
+            Manage system information such as name, address, etc.
+          </p>
+        </SubComponent>
+      </Card>
+
       <ViewInventoryModal
         visible={viewInvModalVisible}
         closeHandler={closeHandler}
