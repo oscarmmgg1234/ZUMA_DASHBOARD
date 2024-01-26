@@ -1,4 +1,9 @@
-import { Get_Products, getProductAnalytics, getShipmentByDate } from "./HTTPS";
+import {
+  Get_Products,
+  getProductAnalytics,
+  getShipmentByDate,
+  getProductsInventory,
+} from "./HTTPS";
 
 export default class http_handler {
   getProducts = async () => {
@@ -9,5 +14,8 @@ export default class http_handler {
   };
   getShipmentByDate = async (args) => {
     return await getShipmentByDate(args);
+  };
+  getProductsInventory = async () => {
+    return await getProductsInventory();
   };
 }

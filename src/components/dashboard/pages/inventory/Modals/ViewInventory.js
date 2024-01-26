@@ -143,6 +143,7 @@ export default function ViewInventoryModal(props) {
   };
 
   const init = async () => {
+    const productInventory = await http.getProductsInventory();
     const products = await http.getProducts();
     const formatted_data = products.data.map((data) => {
       return { ...data, focus: false };
