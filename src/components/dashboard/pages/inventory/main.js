@@ -55,7 +55,7 @@ const AlertCard = tw.div`
 
 const CardGrid = tw.div`
   grid
-  grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6
+  grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4
   gap-4
   px-4 py-6
 `;
@@ -151,25 +151,25 @@ export default function Inventory() {
             <p className="text-gray-800/50">Manage products in the database</p>
           </SubComponent>
         </Card>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">System Analytics</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              View analytics of the system and its components
+            </p>
+          </SubComponent>
+        </Card>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">Manage System Info</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Manage system information such as name, address, etc.
+            </p>
+          </SubComponent>
+        </Card>
       </CardGrid>
-      <Card onClick={() => {}}>
-        <h2 className="text-black mb-3">System Analytics</h2>
-        <SubComponent>
-          <h3 className="text-gray-800/50">Utility</h3>
-          <p className="text-gray-800/50">
-            View analytics of the system and its components
-          </p>
-        </SubComponent>
-      </Card>
-      <Card onClick={() => {}}>
-        <h2 className="text-black mb-3">Manage System Info</h2>
-        <SubComponent>
-          <h3 className="text-gray-800/50">Utility</h3>
-          <p className="text-gray-800/50">
-            Manage system information such as name, address, etc.
-          </p>
-        </SubComponent>
-      </Card>
 
       <ViewInventoryModal
         visible={viewInvModalVisible}
