@@ -55,7 +55,7 @@ const AlertCard = tw.div`
 
 const CardGrid = tw.div`
   grid
-  grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4
+  grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6
   gap-4
   px-4 py-6
 `;
