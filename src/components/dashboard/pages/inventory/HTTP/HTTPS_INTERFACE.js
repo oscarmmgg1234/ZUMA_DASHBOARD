@@ -3,6 +3,8 @@ import {
   getProductAnalytics,
   getShipmentByDate,
   getProductsInventory,
+  getActivationByDate,
+  getReductionbyDate
 } from "./HTTPS";
 
 export default class http_handler {
@@ -18,4 +20,11 @@ export default class http_handler {
   getProductsInventory = async () => {
     return await getProductsInventory();
   };
+  getActivationByDate = async (args) => {
+    return await getActivationByDate(args);
+  }
+  getReductionbyDate = async (args) => {
+    return await getReductionbyDate(args);
+  }
+
 }

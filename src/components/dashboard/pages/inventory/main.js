@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import tw from "tailwind-styled-components";
 import ViewInventoryModal from "./Modals/ViewInventory";
 import ShipmentLog from "./Modals/ShipmentLog";
+import ActivationLog from "./Modals/ActivationLog";
+import ReductionLog from "./Modals/ReductionLog";
 
 const Overlay = tw.div`
 
@@ -77,6 +79,9 @@ const SubComponent = tw.div`
 export default function Inventory() {
   const [viewInvModalVisible, setViewInvModalVisible] = useState(false);
   const [shipmentLogModalVisible, setShipmentLogModalVisible] = useState(false);
+  const [activationLogModalVisible, setActivationLogModalVisible] = useState(false);
+  const [reductionLogModalVisible, setReductionLogModalVisible] = useState(false);
+
 
   const closeHandler = (args) => {
     if (args === "viewInv") {
@@ -84,6 +89,12 @@ export default function Inventory() {
     }
     if (args === "shipment") {
       setShipmentLogModalVisible(false);
+    }
+    if (args === "activation"){
+      setActivationLogModalVisible(false);
+    }
+    if (args === "reduction"){
+      setReductionLogModalVisible(false);
     }
   };
 
@@ -93,6 +104,12 @@ export default function Inventory() {
     }
     if (args === "shipment") {
       setShipmentLogModalVisible(true);
+    }
+    if(args === "activation"){
+      setActivationLogModalVisible(true);
+    }
+    if(args === "reduction"){
+      setReductionLogModalVisible(true);
     }
   };
 
@@ -117,7 +134,7 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-        <Card onClick={() => {}}>
+        <Card onClick={() => openHandler("activation")}>
           <h2 className="text-black mb-3">Product Activation Log</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -126,7 +143,7 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-        <Card onClick={() => {}}>
+        <Card onClick={() => openHandler("reduction")}>
           <h2 className="text-black mb-3">Product Reduction Log</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -178,6 +195,14 @@ export default function Inventory() {
       <ShipmentLog
         visible={shipmentLogModalVisible}
         closeHandler={closeHandler}
+      />
+      <ActivationLog
+      visible={activationLogModalVisible}
+      closeHandler={closeHandler}
+      />
+      <ReductionLog
+      visible={reductionLogModalVisible}
+      closeHandler={closeHandler}
       />
     </>
   );

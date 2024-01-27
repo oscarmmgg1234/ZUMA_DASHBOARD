@@ -48,3 +48,27 @@ export const getShipmentByDate = async (args) => {
   const response = await fetch(`${base_url}/get_shipment_by_date`, options);
   return await response.json();
 };
+
+export const getActivationByDate = async (args) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(args),
+  };
+  const response = await fetch(`${base_url}/getActivationByDate`, options);
+  return await response.json();
+}
+
+export const getReductionbyDate = async (args) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(args),
+  };
+  const response = await fetch(`${base_url}/getReductionByDate`, options);
+  return await response.json();
+}

@@ -3,24 +3,24 @@ import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
 const http = new http_handler();
 
-export default function ShipmentLog(props) {
-  const [filteredShipments, setFilteredShipments] = useState([]);
+export default function ReductionLog(props) {
+  const [filteredReduction, setFilteredReduction] = useState([]);
   const [filterDate, setFilterDate] = useState(
     new Date().toISOString().split("T")[0] 
   );
 
-  const fetchShipments = async () => {
-    const response = await http.getShipmentByDate({ date: filterDate }); // Assuming getShipments is a method in your http_handler
-    setFilteredShipments(response.data);
+  const fetchReduction= async () => {
+    const response = await http.getReductionbyDate({ date: filterDate }); // Assuming getShipments is a method in your http_handler
+    setFilteredReduction(response.data);
   };
 
   useEffect(() => {
-    fetchShipments();
+    fetchReduction();
   }, []);
 
   useEffect(() => {
     if (filterDate) {
-      fetchShipments();
+      fetchReduction();
     }
   }, [filterDate]);
 
@@ -29,18 +29,18 @@ export default function ShipmentLog(props) {
   };
 
   
-  const shipmentRows = filteredShipments.map((shipment, index) => (
-    <tr key={shipment.ID} className={index%2===0?"bg-white border":"bg-gray-200 border"}>
-      <td className="px-4 py-2 text-black bg-rose-300">{shipment.PRODUCT_ID}</td>
+  const shipmentRows = filteredReduction.map((reduction, index) => (
+    <tr key={reduction.CONSUMP_ID} className={index%2===0?"bg-white border":"bg-gray-200 border"}>
+      <td className="px-4 py-2 text-black bg-rose-300">{reduction.PRODUCT_ID}</td>
       <td className="px-4 py-2 text-black">
-        {shipment.PRODUCT_NAME ? shipment.PRODUCT_NAME : "N/A"}
+        {reduction.PRODUCT_NAME ? reduction.PRODUCT_NAME : "N/A"}
       </td>
-      <td className="px-4 py-2 text-black">{shipment.QUANTITY}</td>
+      <td className="px-4 py-2 text-black">{reduction.QUANTITY}</td>
       <td className="px-4 py-2 text-black">
-        {new Date(shipment.SHIPMENT_DATE).toDateString()}
+        {new Date(reduction.DATETIME).toDateString()}
       </td>
-      <td className="px-4 py-2 text-black">{shipment.COMPANY_ID}</td>
-      <td className="px-4 py-2 text-black">{shipment.EMPLOYEE_NAME ? shipment.EMPLOYEE_NAME : "N/A"}</td>
+      <td className="px-4 py-2 text-black">{"N/A"}</td>
+      <td className="px-4 py-2 text-black">{reduction.EMPLOYEE_NAME ? reduction.EMPLOYEE_NAME : "N/A"}</td>
     </tr>
     
   ));
@@ -50,8 +50,8 @@ export default function ShipmentLog(props) {
       <BaseModal
         visible={props.visible}
         closeHandler={props.closeHandler}
-        title={"View Shipments"}
-        closeName={"shipment"}
+        title={"View Product Reductions"}
+        closeName={"reduction"}
       >
         <div className="container mx-auto p-4">
           <input
@@ -62,7 +62,7 @@ export default function ShipmentLog(props) {
           />
           <div className="overflow-y-auto max-h-130 mx-auto">
             <table className="min-w-full border-collapse text-center">
-              {filteredShipments.length > 0 ?  
+              {filteredReduction.length > 0 ?  
                 <>
               <thead className="bg-gray-400">
                 <tr>
@@ -75,7 +75,7 @@ export default function ShipmentLog(props) {
                 </tr>
               </thead>
               <tbody>{shipmentRows}</tbody> </> : 
-              <h1 className="text-black text-3xl">No Shipments for this date</h1>}
+              <h1 className="text-black text-3xl">No Product Reductions for this date</h1>}
             </table>
           </div>
         </div>
