@@ -121,6 +121,48 @@ export default function ViewInventoryModal(props) {
 
   const [productAnalytics, setProductAnalytics] = useState(null);
 
+  const productFilterMap = new Map([
+    ["c2343944", { min_limit: 100, product: "L-Lysine" }],
+    ["31be679b", { min_limit: 100, product: "L-Proline" }],
+    ["44cab451", { min_limit: 100, product: "Stress B-Complex & Vtm C" }],
+    ["5ab8b9ae", { min_limit: 100, product: "L-Theanine" }],
+  ]);
+
+  const [filterProductIDs, setFilterProductIDs] = useState([
+    "c2343944",
+    "31be679b",
+    "44cab451",
+    "5ab8b9ae",
+    "3209f0c5",
+    "f52591c4",
+    "a18b9970",
+    "412a2629",
+    "c4f32bf9",
+    "4dc18b78",
+    "1e0f78f0",
+    "54dff538",
+    "de711bdc",
+    "7041e59c",
+    "248af4b8",
+    "4bdcb95e",
+    "2098a61d",
+    "55230435",
+    "a14d05dd",
+    "2a531d63",
+    "f8f8d895",
+    "1b09f3dd",
+    "428207ab",
+    "ff6ec949",
+    "d588ca27",
+    "70a2b315",
+    "398bddd5",
+    "6a2ea167",
+    "fb3b898d",
+    "ddc96cda",
+    "234grddd",
+    "dr33esdg",
+  ]);
+
   const refresh_handler = () => {
     setRefresh(true);
     setTimeout(() => {
@@ -144,10 +186,17 @@ export default function ViewInventoryModal(props) {
 
   const init = async () => {
     const productInventory = await http.getProductsInventory();
+
     const products = await http.getProducts();
     const formatted_data = products.data.map((data) => {
-      return { ...data, focus: false };
+      productInventory.data.forEach((item) => {
+        if (item.PRODUCT_ID == data.PRODUCT_ID && item.STOCK <= 500) {
+          return { ...data, focus: false, alert: false };
+        }
+      });
+      return { ...data, focus: false, alert: false };
     });
+
     if (selectedFilter != "ALL PRODUCTS") {
       const filtered_type = filter.filter((item) => {
         return item.label == selectedFilter;
