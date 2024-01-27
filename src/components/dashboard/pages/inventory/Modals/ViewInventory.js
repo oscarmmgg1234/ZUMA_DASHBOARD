@@ -122,46 +122,40 @@ export default function ViewInventoryModal(props) {
   const [productAnalytics, setProductAnalytics] = useState(null);
 
   const productFilterMap = new Map([
-    ["c2343944", { min_limit: 100, product: "L-Lysine" }],
+    ["c2343944", { min_limit: 100, product: "L-Lysine"}],
     ["31be679b", { min_limit: 100, product: "L-Proline" }],
     ["44cab451", { min_limit: 100, product: "Stress B-Complex & Vtm C" }],
     ["5ab8b9ae", { min_limit: 100, product: "L-Theanine" }],
+    ["3209f0c5", {min_limit: 100, product: "Digestive Enzyme"}],
+    ["f52591c4", {min_limit: 100, product: "coezyme b-complex"}],
+    ["a18b9970", {min_limit: 100, product: "Colostrum"}],
+    ["412a2629", {min_limit: 100, product: "Arabinogalactan"}],
+    ["c4f32bf9", {min_limit: 100, product: "Butyric Acid"}],
+    ["4dc18b78", {min_limit: 100, product: "Amino Acid"}],
+    ["1e0f78f0", {min_limit: 100, product: "Pet_Agaricus"}],
+    ["54dff538", {min_limit: 100, product: "Matcha"}],
+    ["de711bdc", {min_limit: 100, product: "ProbioticLg"}],
+    ["7041e59c", {min_limit: 100, product: "ProbioticSm"}],
+    ["248af4b8", {min_limit: 100, product: "EnvLg"}],
+    ["4bdcb95e", {min_limit: 100, product: "EnvSM"}],
+    ["2098a61d", {min_limit: 100, product: "PILLLidSm"}],
+    ["55230435", {min_limit: 100, product: "PillLidLg"}],
+    ["a14d05dd", {min_limit: 100, product: "PillBottleSm"}],
+    ["2a531d63", {min_limit: 100, product: "PillBottleLg"}],
+    ["f8f8d895", {min_limit: 100, product: "LiquidBottle50ml"}],
+    ["1b09f3dd", {min_limit: 100, product: "LiquidBottle30ml"}],
+    ["428207ab", {min_limit: 100, product: "LiquidBottle60ml"}],
+    ["ff6ec949", {min_limit: 100, product: "LiquidDropper60ml"}],
+    ["d588ca27", {min_limit: 100, product: "LiquidDropper30ml"}],
+    ["70a2b315", {min_limit: 100, product: "LiquidDropper50ml"}],
+    ["398bddd5", {min_limit: 100, product: "LiquidPump50ml"}],    
+    ["6a2ea167", {min_limit: 100, product: "LiquidPump30ml"}],
+    ["fb3b898d", {min_limit: 100, product: "CreamBottle"}],
+    ["ddc96cda", {min_limit: 100, product: "CreamLid"}],
+    ["234grddd", {min_limit: 100, product: "PillBottleXs"}],
+    ["dr33esdg", {min_limit: 100, product: "PillLidXs"}],
   ]);
 
-  const [filterProductIDs, setFilterProductIDs] = useState([
-    "c2343944",
-    "31be679b",
-    "44cab451",
-    "5ab8b9ae",
-    "3209f0c5",
-    "f52591c4",
-    "a18b9970",
-    "412a2629",
-    "c4f32bf9",
-    "4dc18b78",
-    "1e0f78f0",
-    "54dff538",
-    "de711bdc",
-    "7041e59c",
-    "248af4b8",
-    "4bdcb95e",
-    "2098a61d",
-    "55230435",
-    "a14d05dd",
-    "2a531d63",
-    "f8f8d895",
-    "1b09f3dd",
-    "428207ab",
-    "ff6ec949",
-    "d588ca27",
-    "70a2b315",
-    "398bddd5",
-    "6a2ea167",
-    "fb3b898d",
-    "ddc96cda",
-    "234grddd",
-    "dr33esdg",
-  ]);
 
   const refresh_handler = () => {
     setRefresh(true);
@@ -186,15 +180,22 @@ export default function ViewInventoryModal(props) {
 
   const init = async () => {
     const productInventory = await http.getProductsInventory();
-
+    const inventoryMap = new Map(productInventory.data.map(item=>[item.PRODUCT_ID, item]));
     const products = await http.getProducts();
     const formatted_data = products.data.map((data) => {
-      productInventory.data.forEach((item) => {
-        if (item.PRODUCT_ID == data.PRODUCT_ID && item.STOCK <= 500) {
+      const productInventory = inventoryMap.get(data.PRODUCT_ID);
+      if(productFilterMap.has(data.PRODUCT_ID)){
+        const productLimit = productFilterMap.get(data.PRODUCT_ID);
+         if(productInventory.STORED_STOCK <= productLimit.min_limit){
+          return { ...data, focus: false, alert: true };
+         }
+         else{
           return { ...data, focus: false, alert: false };
-        }
-      });
+         }
+      }
+      else {
       return { ...data, focus: false, alert: false };
+      }
     });
 
     if (selectedFilter != "ALL PRODUCTS") {
@@ -269,7 +270,7 @@ export default function ViewInventoryModal(props) {
   const tableRows = filteredInventory.map((product, index) => (
     <tr
       key={product.PRODUCT_ID}
-      className={`${index % 2 === 0 ? "bg-gray-100" : "bg-white"}`}
+      className={`${index % 2 === 0 ? product.alert ? "bg-rose-600" : "bg-gray-100" : product.alert ? "bg-rose-600" : "bg-white"}`}
       onClick={() => onFocusProduct(product)}
     >
       <td
