@@ -178,11 +178,11 @@ export default function Inventory() {
           </SubComponent>
         </Card>
         <Card onClick={() => {}}>
-          <h2 className="text-black mb-3">System Analytics</h2>
+          <h2 className="text-black mb-3">Manual Stock Override</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
             <p className="text-gray-800/50">
-              View analytics of the system and its components
+              Manually adjust stock for product
             </p>
           </SubComponent>
         </Card>
@@ -195,6 +195,16 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">System Analytics</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              View analytics of the system and its components
+            </p>
+          </SubComponent>
+        </Card>
+       
       </CardGrid>
 
       <ViewInventoryModal

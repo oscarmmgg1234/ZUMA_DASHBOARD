@@ -1,6 +1,19 @@
 const base_url = "http://localhost:3001";
 // http://192.168.1.176:3002
 
+export const manageProducts = async (action, data) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  
+  const response = action == "add" ? await fetch(`${base_url}/addProduct`, options) : await fetch(`${base_url}/deleteProduct`, options);
+  return await response.json();
+}
+
 export const getProductsInventory = async () => {
   const options = {
     method: "POST",

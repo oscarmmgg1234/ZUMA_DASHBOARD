@@ -35,7 +35,7 @@ export default function ReductionLog(props) {
       <td className="px-4 py-2 text-black">
         {reduction.PRODUCT_NAME ? reduction.PRODUCT_NAME : "N/A"}
       </td>
-      <td className="px-4 py-2 text-black">{reduction.QUANTITY}</td>
+      <td className="px-4 py-2 text-black">{reduction.QUANTITY.toFixed(2)}</td>
       <td className="px-4 py-2 text-black">
         {new Date(reduction.DATETIME).toDateString()}
       </td>
@@ -60,7 +60,7 @@ export default function ReductionLog(props) {
             onChange={handleDateFilterChange}
             className="mb-4 p-2 border rounded-lg text-black"
           />
-          <div className="overflow-y-auto max-h-130 mx-auto">
+          <div className="overflow-y-auto max-h-96 mx-auto">
             <table className="min-w-full border-collapse text-center">
               {filteredReduction.length > 0 ?  
                 <>
