@@ -1,6 +1,18 @@
 const base_url = "http://localhost:3001";
 // http://192.168.1.176:3002
 
+export const updateStock = async (data, option) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }
+  const response = option ? await fetch(`${base_url}/modify_stored_stock`, options) : await fetch(`${base_url}/modify_active_stock`, options);
+  return await response.json();
+}
+
 export const manageProducts = async (action, data) => {
   const options = {
     body: JSON.stringify(data),

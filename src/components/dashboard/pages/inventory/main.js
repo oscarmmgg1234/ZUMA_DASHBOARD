@@ -5,6 +5,7 @@ import ShipmentLog from "./Modals/ShipmentLog";
 import ActivationLog from "./Modals/ActivationLog";
 import ReductionLog from "./Modals/ReductionLog";
 import ManageProducts from "./Modals/ManageProducts";
+import OverrideStock from "./Modals/OverrideStock";
 
 const Overlay = tw.div`
 
@@ -85,6 +86,7 @@ export default function Inventory() {
   const [reductionLogModalVisible, setReductionLogModalVisible] =
     useState(false);
   const [manageLogModalVisible, setManageLogModalVisible] = useState(false);
+  const [overrrideLogModalVisible, setOverrideLogModalVisible] = useState(false);
 
   const closeHandler = (args) => {
     if (args === "viewInv") {
@@ -101,6 +103,9 @@ export default function Inventory() {
     }
     if (args === "manage") {
       setManageLogModalVisible(false);
+    }
+    if(args === "manual"){
+      setOverrideLogModalVisible(false)
     }
   };
 
@@ -119,6 +124,9 @@ export default function Inventory() {
     }
     if (args === "manage") {
       setManageLogModalVisible(true);
+    }
+    if(args === "manual"){
+      setOverrideLogModalVisible(true)
     }
   };
 
@@ -177,7 +185,7 @@ export default function Inventory() {
             <p className="text-gray-800/50">Manage products in the database</p>
           </SubComponent>
         </Card>
-        <Card onClick={() => {}}>
+        <Card onClick={() => openHandler("manual")}>
           <h2 className="text-black mb-3">Manual Stock Override</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -226,6 +234,10 @@ export default function Inventory() {
       <ManageProducts
         visible={manageLogModalVisible}
         closeHandler={closeHandler}
+      />
+      <OverrideStock 
+      visible={overrrideLogModalVisible}
+      closeHandler={closeHandler}
       />
     </>
   );

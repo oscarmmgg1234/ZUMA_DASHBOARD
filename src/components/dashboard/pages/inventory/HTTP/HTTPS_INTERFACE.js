@@ -5,7 +5,8 @@ import {
   getProductsInventory,
   getActivationByDate,
   getReductionbyDate,
-  manageProducts
+  manageProducts,
+  updateStock
 } from "./HTTPS";
 
 export default class http_handler {
@@ -30,5 +31,8 @@ export default class http_handler {
   manageProducts = async (action, data) => {
     return await manageProducts(action, data);
   } 
+  updateStock = async (data, option) => {
+    return await updateStock(data, option);
+  }
 
 }
