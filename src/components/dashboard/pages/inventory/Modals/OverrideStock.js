@@ -38,7 +38,7 @@ export default function OverrideStock(props){
         }
         const data = {
             PRODUCT_ID: product.PRODUCT_ID,
-            QUANTITY: parseInt(quantity)
+            QUANTITY: parseFloat(quantity)
         }
         http.updateStock(data, action)
         alert(`Stocked Changed for ${product.NAME}`)
