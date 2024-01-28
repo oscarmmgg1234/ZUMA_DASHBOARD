@@ -4,6 +4,7 @@ import ViewInventoryModal from "./Modals/ViewInventory";
 import ShipmentLog from "./Modals/ShipmentLog";
 import ActivationLog from "./Modals/ActivationLog";
 import ReductionLog from "./Modals/ReductionLog";
+import ManageProducts from "./Modals/ManageProducts";
 
 const Overlay = tw.div`
 
@@ -79,9 +80,11 @@ const SubComponent = tw.div`
 export default function Inventory() {
   const [viewInvModalVisible, setViewInvModalVisible] = useState(false);
   const [shipmentLogModalVisible, setShipmentLogModalVisible] = useState(false);
-  const [activationLogModalVisible, setActivationLogModalVisible] = useState(false);
-  const [reductionLogModalVisible, setReductionLogModalVisible] = useState(false);
-
+  const [activationLogModalVisible, setActivationLogModalVisible] =
+    useState(false);
+  const [reductionLogModalVisible, setReductionLogModalVisible] =
+    useState(false);
+  const [manageLogModalVisible, setManageLogModalVisible] = useState(false);
 
   const closeHandler = (args) => {
     if (args === "viewInv") {
@@ -90,11 +93,14 @@ export default function Inventory() {
     if (args === "shipment") {
       setShipmentLogModalVisible(false);
     }
-    if (args === "activation"){
+    if (args === "activation") {
       setActivationLogModalVisible(false);
     }
-    if (args === "reduction"){
+    if (args === "reduction") {
       setReductionLogModalVisible(false);
+    }
+    if (args === "manage") {
+      setManageLogModalVisible(false);
     }
   };
 
@@ -105,11 +111,14 @@ export default function Inventory() {
     if (args === "shipment") {
       setShipmentLogModalVisible(true);
     }
-    if(args === "activation"){
+    if (args === "activation") {
       setActivationLogModalVisible(true);
     }
-    if(args === "reduction"){
+    if (args === "reduction") {
       setReductionLogModalVisible(true);
+    }
+    if (args === "manage") {
+      setManageLogModalVisible(true);
     }
   };
 
@@ -161,7 +170,7 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-        <Card onClick={() => {}}>
+        <Card onClick={() => openHandler("manage")}>
           <h2 className="text-black mb-3">Manage Products</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -197,12 +206,16 @@ export default function Inventory() {
         closeHandler={closeHandler}
       />
       <ActivationLog
-      visible={activationLogModalVisible}
-      closeHandler={closeHandler}
+        visible={activationLogModalVisible}
+        closeHandler={closeHandler}
       />
       <ReductionLog
-      visible={reductionLogModalVisible}
-      closeHandler={closeHandler}
+        visible={reductionLogModalVisible}
+        closeHandler={closeHandler}
+      />
+      <ManageProducts
+        visible={manageLogModalVisible}
+        closeHandler={closeHandler}
       />
     </>
   );

@@ -50,7 +50,7 @@ export default function ShipmentLog(props) {
       <BaseModal
         visible={props.visible}
         closeHandler={props.closeHandler}
-        title={"View Shipments"}
+        title={"View Product Shipments"}
         closeName={"shipment"}
       >
         <div className="container mx-auto p-4">
