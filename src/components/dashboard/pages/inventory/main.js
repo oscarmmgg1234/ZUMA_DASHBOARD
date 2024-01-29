@@ -6,6 +6,7 @@ import ActivationLog from "./Modals/ActivationLog";
 import ReductionLog from "./Modals/ReductionLog";
 import ManageProducts from "./Modals/ManageProducts";
 import OverrideStock from "./Modals/OverrideStock";
+import ManageSystem from "./Modals/ManageSystem";
 
 const Overlay = tw.div`
 
@@ -87,6 +88,7 @@ export default function Inventory() {
     useState(false);
   const [manageLogModalVisible, setManageLogModalVisible] = useState(false);
   const [overrrideLogModalVisible, setOverrideLogModalVisible] = useState(false);
+  const [systemModalVisible, setSystemModalVisible] = useState(false);
 
   const closeHandler = (args) => {
     if (args === "viewInv") {
@@ -106,6 +108,9 @@ export default function Inventory() {
     }
     if(args === "manual"){
       setOverrideLogModalVisible(false)
+    }
+    if(args === "system"){
+      setSystemModalVisible(false);
     }
   };
 
@@ -127,6 +132,9 @@ export default function Inventory() {
     }
     if(args === "manual"){
       setOverrideLogModalVisible(true)
+    }
+    if(args === "system"){
+      setSystemModalVisible(true)
     }
   };
 
@@ -194,7 +202,7 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-        <Card onClick={() => {}}>
+        <Card onClick={() => openHandler("system")}>
           <h2 className="text-black mb-3">Manage System Info</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -238,6 +246,10 @@ export default function Inventory() {
       <OverrideStock 
       visible={overrrideLogModalVisible}
       closeHandler={closeHandler}
+      />
+      <ManageSystem 
+        visible={systemModalVisible}
+        closeHandler={closeHandler}
       />
     </>
   );
