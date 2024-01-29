@@ -202,6 +202,15 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
+        <Card onClick={() => {}}>
+          <h2 className="text-black mb-3">Product Tracking</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Allows you to specify mininimum amount limits for products
+            </p>
+          </SubComponent>
+        </Card>
         <Card onClick={() => openHandler("system")}>
           <h2 className="text-black mb-3">Manage System Info</h2>
           <SubComponent>

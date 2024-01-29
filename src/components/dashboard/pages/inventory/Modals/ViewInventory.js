@@ -100,6 +100,8 @@ export default function ViewInventoryModal(props) {
     { label: "Bumble Mailers", value: false, typeID: "1903" },
   ]);
 
+  
+
   const [filterOptions, setFilterOptions] = useState([
     "ALL PRODUCTS",
     "Kukista",
@@ -121,40 +123,6 @@ export default function ViewInventoryModal(props) {
 
   const [productAnalytics, setProductAnalytics] = useState(null);
 
-  const productFilterMap = new Map([
-    ["c2343944", { min_limit: 100, product: "L-Lysine"}],
-    ["31be679b", { min_limit: 100, product: "L-Proline" }],
-    ["44cab451", { min_limit: 100, product: "Stress B-Complex & Vtm C" }],
-    ["5ab8b9ae", { min_limit: 100, product: "L-Theanine" }],
-    ["3209f0c5", {min_limit: 100, product: "Digestive Enzyme"}],
-    ["f52591c4", {min_limit: 100, product: "coezyme b-complex"}],
-    ["a18b9970", {min_limit: 100, product: "Colostrum"}],
-    ["412a2629", {min_limit: 100, product: "Arabinogalactan"}],
-    ["c4f32bf9", {min_limit: 100, product: "Butyric Acid"}],
-    ["4dc18b78", {min_limit: 100, product: "Amino Acid"}],
-    ["1e0f78f0", {min_limit: 100, product: "Pet_Agaricus"}],
-    ["54dff538", {min_limit: 100, product: "Matcha"}],
-    ["de711bdc", {min_limit: 100, product: "ProbioticLg"}],
-    ["7041e59c", {min_limit: 100, product: "ProbioticSm"}],
-    ["248af4b8", {min_limit: 100, product: "EnvLg"}],
-    ["4bdcb95e", {min_limit: 100, product: "EnvSM"}],
-    ["2098a61d", {min_limit: 100, product: "PILLLidSm"}],
-    ["55230435", {min_limit: 100, product: "PillLidLg"}],
-    ["a14d05dd", {min_limit: 100, product: "PillBottleSm"}],
-    ["2a531d63", {min_limit: 100, product: "PillBottleLg"}],
-    ["f8f8d895", {min_limit: 100, product: "LiquidBottle50ml"}],
-    ["1b09f3dd", {min_limit: 100, product: "LiquidBottle30ml"}],
-    ["428207ab", {min_limit: 100, product: "LiquidBottle60ml"}],
-    ["ff6ec949", {min_limit: 100, product: "LiquidDropper60ml"}],
-    ["d588ca27", {min_limit: 100, product: "LiquidDropper30ml"}],
-    ["70a2b315", {min_limit: 100, product: "LiquidDropper50ml"}],
-    ["398bddd5", {min_limit: 100, product: "LiquidPump50ml"}],    
-    ["6a2ea167", {min_limit: 100, product: "LiquidPump30ml"}],
-    ["fb3b898d", {min_limit: 100, product: "CreamBottle"}],
-    ["ddc96cda", {min_limit: 100, product: "CreamLid"}],
-    ["234grddd", {min_limit: 100, product: "PillBottleXs"}],
-    ["dr33esdg", {min_limit: 100, product: "PillLidXs"}],
-  ]);
 
 
   const refresh_handler = () => {
@@ -182,11 +150,12 @@ export default function ViewInventoryModal(props) {
     const productInventory = await http.getProductsInventory();
     const inventoryMap = new Map(productInventory.data.map(item=>[item.PRODUCT_ID, item]));
     const products = await http.getProducts();
+    const productFilterMap = new Map(products.data.map(product=>[product.PRODUCT_ID, product]))
     const formatted_data = products.data.map((data) => {
       const productInventory = inventoryMap.get(data.PRODUCT_ID);
       if(productFilterMap.has(data.PRODUCT_ID)){
         const productLimit = productFilterMap.get(data.PRODUCT_ID);
-         if(productInventory.STORED_STOCK <= productLimit.min_limit){
+         if(productLimit.MIN_LIMIT != null && productInventory.STORED_STOCK <= productLimit.MIN_LIMIT){
           return { ...data, focus: false, alert: true };
          }
          else{

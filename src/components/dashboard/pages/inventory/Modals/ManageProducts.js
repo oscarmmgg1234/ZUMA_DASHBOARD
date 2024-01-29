@@ -18,6 +18,7 @@ export default function ManageProducts(props) {
     const [reductionType, setReductionType] = useState('');
     const [shipmentType, setShipmentType] = useState('');
     const [unitBundle, setUnitBundle] = useState('BUNDLE');
+    const [min_limit, set_min_limit] = useState("");
     const [searchQuery, setSearchQuery] = useState('')
 
     const [products, setProducts] = useState([]);
@@ -37,6 +38,7 @@ export default function ManageProducts(props) {
       setSearchQuery("");
       setDescription("");
       setLocation("");
+      set_min_limit("");
       setSelectedProduct(null);
     }
 
@@ -109,6 +111,7 @@ export default function ManageProducts(props) {
         processComponentType: parseInt(processComponentType),
         reductionType: parseInt(reductionType),
         shipmentType: parseInt(shipmentType),
+        minLimit: parseInt(min_limit),
         unitType: unitBundle,
       }
 
@@ -174,7 +177,8 @@ export default function ManageProducts(props) {
 
                         <label className="font-semibold text-gray-700">Shipment Type</label>
                         <input type="text" placeholder="Shipment Type" value={shipmentType} onChange={(e) => setShipmentType(e.target.value)} className="h-10 px-3 rounded border border-gray-300  text-black"/>
-
+                        <label className="font-semibold text-gray-700">Product Track Limit</label>
+                        <input type="text" placeholder="minimum amount limit" value={min_limit} onChange={(e) => set_min_limit(e.target.value)} className="h-10 px-3 rounded border border-gray-300  text-black"/>
                         <label className="font-semibold text-gray-700">Unit Bundle</label>
                         <select value={unitBundle} onChange={(e) => setUnitBundle(e.target.value)} className="h-10 px-3 rounded border border-gray-300  text-black">
                             <option value="BUNDLE">BUNDLE</option>
