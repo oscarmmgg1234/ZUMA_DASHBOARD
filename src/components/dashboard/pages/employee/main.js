@@ -76,39 +76,8 @@ const SubComponent = tw.div`
   p-4
 `;
 
-const local_data = {
-  gen_emp_all: [
-    { name: "Oscar Maldonado", e_id: "000002" },
-    { name: "Jennifer Maldonado", e_id: "00001" },
-    { name: "Juan Pablo", e_id: "001111" },
-    { name: "Maria Maldonado", e_id: "003222" },
-    { name: "PRINT_ALL", e_id: "PRINT_ALL" },
-    { name: "Jesus Garcia", e_id: "451113" },
-  ],
-  emp_data: [
-    { name: "Oscar Maldonado", e_id: "000002" },
-    { name: "Jennifer Maldonado", e_id: "00001" },
-    { name: "Juan Pablo", e_id: "001111" },
-    { name: "Maria Maldonado", e_id: "003222" },
-    { name: "Jesus Garcia", e_id: "451113" },
-  ],
-  emps: [
-    "Oscar Maldonado",
-    "Jennifer Maldonado",
-    "Juan Pablo",
-    "Maria Maldonado",
-    "Jesus Garcia",
-  ],
-  gen_emps: [
-    "Oscar Maldonado",
-    "Jennifer Maldonado",
-    "Juan Pablo",
-    "Maria Maldonado",
-    "Jesus Garcia",
-    "PRINT_ALL",
-  ],
-  emp_option: ["start", "end"],
-};
+
+
 
 //third party components
 
@@ -287,7 +256,37 @@ const DropdownButton = (props) => {
   );
 };
 
+
+
 const Employee = () => {
+
+  const [local_data, set_local_data] = useState({gen_emp_all: [], emp_data: [], emps: [], gen_emps: [], emp_option: []});
+
+  const getEmployees = async () => {
+    const employees = await https.getEmployees();
+    const run1 = employees.map(employee=>{
+      return {name: employee.NAME, e_id: employee.EMPLOYEE_ID}
+    })
+    run1[run1.length] = { name: "PRINT_ALL", e_id: "PRINT_ALL" };
+    const run2 = employees.map(employee=>{
+      return {name: employee.NAME, e_id: employee.EMPLOYEE_ID}
+    })
+    const run3 = employees.map(employee=>{
+      return `${employee.NAME}`
+    })
+    const run4 = employees.map(employee=>{
+      return `${employee.NAME}`
+    })
+    run4[run4.length] = "PRINT_ALL";
+    set_local_data({gen_emp_all: run1, emp_data: run2, emps: run3, gen_emps: run4, emp_option: ["start", "end"]})
+  }
+
+  useEffect(()=>{
+    getEmployees();
+  }, [])
+
+
+
   // states
   const [isModalRmOpen, setIsModalRmOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
@@ -342,22 +341,7 @@ const Employee = () => {
   const [selectedDate1, setSelectedDate1] = useState(Date.now()); //request option
   const [selectedDate2, setSelectedDate2] = useState(Date.now()); //request option
   const [pdfBlob, setPdfBlob] = useState(null); //request option
-  const EmpDataA = [
-    { name: "Oscar Maldonado", e_id: "000002" },
-    { name: "Jennifer Maldonado", e_id: "00001" },
-    { name: "Juan Pablo", e_id: "001111" },
-    { name: "Maria Maldonado", e_id: "003222" },
-    { name: "Jose Adalberto Enciso", e_id: "230114" },
-    { name: "PRINT_ALL", e_id: "PRINT_ALL" },
-  ];
-  const EmpData = [
-    "Oscar Maldonado",
-    "Jennifer Maldonado",
-    "Juan Pablo",
-    "Maria Maldonado",
-    "Jose Adalberto Enciso",
-    "PRINT_ALL",
-  ];
+
   const [emp, setEmp] = useState("Select Employee");
   const [empData, setEmpData] = useState(""); //request option
   const gen_pdf = async (args) => {

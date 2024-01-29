@@ -1,5 +1,20 @@
 // const base_url = "http://192.168.1.176:3002";
-const base_url = "http://192.168.1.176:3002"
+const base_url = "http://localhost:3002"
+
+export const getEmployees = async () => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(
+    `${base_url}/EmployeeResourcesAPI/Zuma_Employees`,
+    options
+  );
+  return await response.json();
+}
+
 
 export const Add_Assigment = async (args) => {
   const data = JSON.stringify({
