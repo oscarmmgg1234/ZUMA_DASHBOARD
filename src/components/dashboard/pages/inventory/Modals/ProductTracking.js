@@ -50,7 +50,7 @@ export default function ProductTracking(props) {
       setTimeout(() => {
         init();
       }, 500);
-    } 
+    }
     if (!product) {
       alert("Please select a product");
     }
@@ -137,7 +137,7 @@ export default function ProductTracking(props) {
               >
                 Remove Product Limit
               </button>
-            ) : product != null  ? (
+            ) : product != null ? (
               <button
                 className="mt-4 ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
                 onClick={() => handleTrackingSubmit(true)}

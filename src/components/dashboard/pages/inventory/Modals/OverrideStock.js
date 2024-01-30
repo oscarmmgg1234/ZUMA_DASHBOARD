@@ -134,10 +134,22 @@ export default function OverrideStock(props) {
                       <th className="px-4 py-2 border text-black">
                         Product ID
                       </th>
-                      <th className="px-4 py-2 border text-black">
+                      <th
+                        className={
+                          action
+                            ? "px-4 py-2 border text-black bg-orange-400"
+                            : "px-4 py-2 border text-black"
+                        }
+                      >
                         Stored Stock
                       </th>
-                      <th className="px-4 py-2 border text-black">
+                      <th
+                        className={
+                          !action
+                            ? "px-4 py-2 border text-black bg-orange-400"
+                            : "px-4 py-2 border text-black"
+                        }
+                      >
                         Active Stock
                       </th>
                     </tr>
