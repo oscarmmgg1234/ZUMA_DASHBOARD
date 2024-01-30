@@ -6,15 +6,24 @@ import {
   getActivationByDate,
   getReductionbyDate,
   manageProducts,
-  updateStock, 
+  updateStock,
   getCompanies,
-  updateTracking
+  updateTracking,
+  deleteCompany,
+  addCompany
 } from "./HTTPS";
 
 export default class http_handler {
+  addCompany = async (data) => {
+    await addCompany( data);
+  };
+  deleteCompany = async (data) => {
+    await deleteCompany(data);
+  };
+
   updateTracking = async (data) => {
     updateTracking(data);
-  }
+  };
   getProducts = async () => {
     return await Get_Products();
   };
@@ -29,18 +38,17 @@ export default class http_handler {
   };
   getActivationByDate = async (args) => {
     return await getActivationByDate(args);
-  }
+  };
   getReductionbyDate = async (args) => {
     return await getReductionbyDate(args);
-  }
+  };
   manageProducts = async (action, data) => {
     return await manageProducts(action, data);
-  } 
+  };
   updateStock = async (data, option) => {
     return await updateStock(data, option);
-  }
-  getPartnerCompanies = async () => { 
+  };
+  getPartnerCompanies = async () => {
     return await getCompanies();
-  }
-
+  };
 }

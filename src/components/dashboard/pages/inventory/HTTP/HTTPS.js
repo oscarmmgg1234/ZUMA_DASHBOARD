@@ -1,6 +1,28 @@
 const base_url = "http://192.168.1.176:3001";
 // http://192.168.1.176:3002
 
+export const addCompany = async (data) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  await fetch(`${base_url}/addCompany`, options);
+};
+
+export const deleteCompany = async (data) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  await fetch(`${base_url}/deleteCompany`, options);
+};
+
 export const updateTracking = async (data) => {
   const options = {
     body: JSON.stringify(data),

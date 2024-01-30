@@ -222,11 +222,11 @@ export default function Inventory() {
           </SubComponent>
         </Card>
         <Card onClick={() => openHandler("system")}>
-          <h2 className="text-black mb-3">Manage System Info</h2>
+          <h2 className="text-black mb-3">Manage Partnered Companies</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
             <p className="text-gray-800/50">
-              Manage system information such as name, address, etc.
+              Manage partnered companies, add or delete them.
             </p>
           </SubComponent>
         </Card>
