@@ -1,17 +1,27 @@
-const base_url = "http://localhost:3001";
+const base_url = "http://192.168.1.176:3001";
 // http://192.168.1.176:3002
 
-export const getCompanies = async () => {
-const options = {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
+export const updateTracking = async (data) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  await fetch(`${base_url}/trackProduct`, options);
 };
-const response = await fetch(`${base_url}/getPartnerCompanies`, options);
-return await response.json();
-}
 
+export const getCompanies = async () => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${base_url}/getPartnerCompanies`, options);
+  return await response.json();
+};
 
 export const updateStock = async (data, option) => {
   const options = {

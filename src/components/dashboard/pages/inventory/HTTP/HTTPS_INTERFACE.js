@@ -7,10 +7,14 @@ import {
   getReductionbyDate,
   manageProducts,
   updateStock, 
-  getCompanies
+  getCompanies,
+  updateTracking
 } from "./HTTPS";
 
 export default class http_handler {
+  updateTracking = async (data) => {
+    updateTracking(data);
+  }
   getProducts = async () => {
     return await Get_Products();
   };

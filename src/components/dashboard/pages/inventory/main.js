@@ -7,6 +7,7 @@ import ReductionLog from "./Modals/ReductionLog";
 import ManageProducts from "./Modals/ManageProducts";
 import OverrideStock from "./Modals/OverrideStock";
 import ManageSystem from "./Modals/ManageSystem";
+import ProductTracking from "./Modals/ProductTracking";
 
 const Overlay = tw.div`
 
@@ -87,8 +88,11 @@ export default function Inventory() {
   const [reductionLogModalVisible, setReductionLogModalVisible] =
     useState(false);
   const [manageLogModalVisible, setManageLogModalVisible] = useState(false);
-  const [overrrideLogModalVisible, setOverrideLogModalVisible] = useState(false);
+  const [overrrideLogModalVisible, setOverrideLogModalVisible] =
+    useState(false);
   const [systemModalVisible, setSystemModalVisible] = useState(false);
+  const [productTrackingModalVisible, setProductTrackingModalVisible] =
+    useState(false);
 
   const closeHandler = (args) => {
     if (args === "viewInv") {
@@ -106,11 +110,14 @@ export default function Inventory() {
     if (args === "manage") {
       setManageLogModalVisible(false);
     }
-    if(args === "manual"){
-      setOverrideLogModalVisible(false)
+    if (args === "manual") {
+      setOverrideLogModalVisible(false);
     }
-    if(args === "system"){
+    if (args === "system") {
       setSystemModalVisible(false);
+    }
+    if (args === "tracking") {
+      setProductTrackingModalVisible(false);
     }
   };
 
@@ -130,11 +137,14 @@ export default function Inventory() {
     if (args === "manage") {
       setManageLogModalVisible(true);
     }
-    if(args === "manual"){
-      setOverrideLogModalVisible(true)
+    if (args === "manual") {
+      setOverrideLogModalVisible(true);
     }
-    if(args === "system"){
-      setSystemModalVisible(true)
+    if (args === "system") {
+      setSystemModalVisible(true);
+    }
+    if (args === "tracking") {
+      setProductTrackingModalVisible(true);
     }
   };
 
@@ -202,7 +212,7 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-        <Card onClick={() => {}}>
+        <Card onClick={() => openHandler("tracking")}>
           <h2 className="text-black mb-3">Product Tracking</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -229,7 +239,6 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-       
       </CardGrid>
 
       <ViewInventoryModal
@@ -252,12 +261,13 @@ export default function Inventory() {
         visible={manageLogModalVisible}
         closeHandler={closeHandler}
       />
-      <OverrideStock 
-      visible={overrrideLogModalVisible}
-      closeHandler={closeHandler}
+      <OverrideStock
+        visible={overrrideLogModalVisible}
+        closeHandler={closeHandler}
       />
-      <ManageSystem 
-        visible={systemModalVisible}
+      <ManageSystem visible={systemModalVisible} closeHandler={closeHandler} />
+      <ProductTracking
+        visible={productTrackingModalVisible}
         closeHandler={closeHandler}
       />
     </>

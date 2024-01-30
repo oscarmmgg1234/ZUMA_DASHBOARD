@@ -6,10 +6,10 @@ const http = new http_handler();
 export default function ReductionLog(props) {
   const [filteredReduction, setFilteredReduction] = useState([]);
   const [filterDate, setFilterDate] = useState(
-    new Date().toISOString().split("T")[0] 
+    new Date().toISOString().split("T")[0]
   );
 
-  const fetchReduction= async () => {
+  const fetchReduction = async () => {
     const response = await http.getReductionbyDate({ date: filterDate }); // Assuming getShipments is a method in your http_handler
     setFilteredReduction(response.data);
   };
@@ -28,10 +28,14 @@ export default function ReductionLog(props) {
     setFilterDate(e.target.value);
   };
 
-  
   const shipmentRows = filteredReduction.map((reduction, index) => (
-    <tr key={reduction.CONSUMP_ID} className={index%2===0?"bg-white border":"bg-gray-200 border"}>
-      <td className="px-4 py-2 text-black bg-rose-300">{reduction.PRODUCT_ID}</td>
+    <tr
+      key={reduction.CONSUMP_ID}
+      className={index % 2 === 0 ? "bg-white border" : "bg-gray-200 border"}
+    >
+      <td className="px-4 py-2 text-black bg-rose-300">
+        {reduction.PRODUCT_ID}
+      </td>
       <td className="px-4 py-2 text-black">
         {reduction.PRODUCT_NAME ? reduction.PRODUCT_NAME : "N/A"}
       </td>
@@ -40,9 +44,10 @@ export default function ReductionLog(props) {
         {new Date(reduction.DATETIME).toDateString()}
       </td>
       <td className="px-4 py-2 text-black">{"N/A"}</td>
-      <td className="px-4 py-2 text-black">{reduction.EMPLOYEE_NAME ? reduction.EMPLOYEE_NAME : "N/A"}</td>
+      <td className="px-4 py-2 text-black">
+        {reduction.EMPLOYEE_NAME ? reduction.EMPLOYEE_NAME : "N/A"}
+      </td>
     </tr>
-    
   ));
 
   return (
@@ -62,20 +67,31 @@ export default function ReductionLog(props) {
           />
           <div className="overflow-y-auto max-h-96 mx-auto">
             <table className="min-w-full border-collapse text-center">
-              {filteredReduction.length > 0 ?  
+              {filteredReduction.length > 0 ? (
                 <>
-              <thead className="bg-gray-400">
-                <tr>
-                  <th className="px-4 py-2 border text-black">Product ID</th>
-                  <th className="px-4 py-2 border text-black">Product Name</th>
-                  <th className="px-4 py-2 border text-black">Quantity</th>
-                  <th className="px-4 py-2 border text-black">Date</th>
-                  <th className="px-4 py-2 border text-black">Company ID</th>
-                  <th className="px-4 py-2 border text-black">Employee</th>
-                </tr>
-              </thead>
-              <tbody>{shipmentRows}</tbody> </> : 
-              <h1 className="text-black text-3xl">No Product Reductions for this date</h1>}
+                  <thead className="bg-gray-400">
+                    <tr>
+                      <th className="px-4 py-2 border text-black">
+                        Product ID
+                      </th>
+                      <th className="px-4 py-2 border text-black">
+                        Product Name
+                      </th>
+                      <th className="px-4 py-2 border text-black">Quantity</th>
+                      <th className="px-4 py-2 border text-black">Date</th>
+                      <th className="px-4 py-2 border text-black">
+                        Company ID
+                      </th>
+                      <th className="px-4 py-2 border text-black">Employee</th>
+                    </tr>
+                  </thead>
+                  <tbody>{shipmentRows}</tbody>{" "}
+                </>
+              ) : (
+                <h1 className="text-black text-3xl">
+                  No Product Reductions for this date
+                </h1>
+              )}
             </table>
           </div>
         </div>
