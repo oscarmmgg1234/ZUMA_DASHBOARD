@@ -83,47 +83,13 @@ export default function ViewInventoryModal(props) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [refresh, setRefresh] = useState(false);
-  const [filter, setFilter] = useState([
-    { label: "ALL PRODUCTS", value: true, typeID: "0" },
-    { label: "Kukista", value: false, typeID: "199" },
-    { label: "Mirron Glass", value: false, typeID: "222" },
-    { label: "Swanson", value: false, typeID: "225" },
-    { label: "Papermart", value: false, typeID: "233" },
-    { label: "Jarrow", value: false, typeID: "321" },
-    { label: "Healthy Origins", value: false, typeID: "344" },
-    { label: "Atlas", value: false, typeID: "3892" },
-    { label: "Wizard Label", value: false, typeID: "443" },
-    { label: "Essential Wholesale", value: false, typeID: "4920" },
-    { label: "Montiff", value: false, typeID: "7320" },
-    { label: "Omica", value: false, typeID: "888" },
-    { label: "Ecological", value: false, typeID: "992" },
-    { label: "Bumble Mailers", value: false, typeID: "1903" },
-  ]);
+  const [filter, setFilter] = useState([]);
 
-  
-
-  const [filterOptions, setFilterOptions] = useState([
-    "ALL PRODUCTS",
-    "Kukista",
-    "Mirron Glass",
-    "Swanson",
-    "Papermart",
-    "Jarrow",
-    "Healthy Origins",
-    "Atlas",
-    "Wizard Label",
-    "Essential Wholesale",
-    "Montiff",
-    "Omica",
-    "Ecological",
-    "Bumble Mailers",
-  ]);
+  const [filterOptions, setFilterOptions] = useState([]);
 
   const [selectedFilter, setSelectedFilter] = useState("ALL PRODUCTS");
 
   const [productAnalytics, setProductAnalytics] = useState(null);
-
-
 
   const refresh_handler = () => {
     setRefresh(true);
@@ -148,22 +114,27 @@ export default function ViewInventoryModal(props) {
 
   const init = async () => {
     const productInventory = await http.getProductsInventory();
-    const inventoryMap = new Map(productInventory.data.map(item=>[item.PRODUCT_ID, item]));
+    const inventoryMap = new Map(
+      productInventory.data.map((item) => [item.PRODUCT_ID, item])
+    );
     const products = await http.getProducts();
-    const productFilterMap = new Map(products.data.map(product=>[product.PRODUCT_ID, product]))
+    const productFilterMap = new Map(
+      products.data.map((product) => [product.PRODUCT_ID, product])
+    );
     const formatted_data = products.data.map((data) => {
       const productInventory = inventoryMap.get(data.PRODUCT_ID);
-      if(productFilterMap.has(data.PRODUCT_ID)){
+      if (productFilterMap.has(data.PRODUCT_ID)) {
         const productLimit = productFilterMap.get(data.PRODUCT_ID);
-         if(productLimit.MIN_LIMIT != null && productInventory.STORED_STOCK <= productLimit.MIN_LIMIT){
+        if (
+          productLimit.MIN_LIMIT != null &&
+          productInventory.STORED_STOCK <= productLimit.MIN_LIMIT
+        ) {
           return { ...data, focus: false, alert: true };
-         }
-         else{
+        } else {
           return { ...data, focus: false, alert: false };
-         }
-      }
-      else {
-      return { ...data, focus: false, alert: false };
+        }
+      } else {
+        return { ...data, focus: false, alert: false };
       }
     });
 
@@ -179,6 +150,24 @@ export default function ViewInventoryModal(props) {
       setInventory(formatted_data);
     }
   };
+
+  const getCompanies = async () => {
+    const companies = await http.getPartnerCompanies();
+    const initRun1 = companies.data.map((company) => {
+      return { label: company.NAME, value: false, typeID: company.COMPANY_ID };
+    });
+    initRun1.unshift({ label: "ALL PRODUCTS", value: true, typeID: "0" });
+    const initRun2 = initRun1.map((item) => {
+      return `${item.label}`;
+    });
+
+    setFilter(initRun1);
+    setFilterOptions(initRun2);
+  };
+
+  useEffect(() => {
+    getCompanies();
+  }, []);
 
   useEffect(() => {
     setSearchQuery("");
@@ -239,7 +228,15 @@ export default function ViewInventoryModal(props) {
   const tableRows = filteredInventory.map((product, index) => (
     <tr
       key={product.PRODUCT_ID}
-      className={`${index % 2 === 0 ? product.alert ? "bg-rose-600" : "bg-gray-100" : product.alert ? "bg-rose-600" : "bg-white"}`}
+      className={`${
+        index % 2 === 0
+          ? product.alert
+            ? "bg-rose-600"
+            : "bg-gray-100"
+          : product.alert
+          ? "bg-rose-600"
+          : "bg-white"
+      }`}
       onClick={() => onFocusProduct(product)}
     >
       <td

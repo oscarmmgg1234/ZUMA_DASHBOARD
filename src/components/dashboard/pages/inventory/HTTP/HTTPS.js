@@ -1,5 +1,17 @@
-const base_url = "http://192.168.1.176:3001";
+const base_url = "http://localhost:3001";
 // http://192.168.1.176:3002
+
+export const getCompanies = async () => {
+const options = {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+};
+const response = await fetch(`${base_url}/getPartnerCompanies`, options);
+return await response.json();
+}
+
 
 export const updateStock = async (data, option) => {
   const options = {
@@ -8,10 +20,12 @@ export const updateStock = async (data, option) => {
     headers: {
       "Content-Type": "application/json",
     },
-  }
-  const response = option ? await fetch(`${base_url}/modify_stored_stock`, options) : await fetch(`${base_url}/modify_active_stock`, options);
+  };
+  const response = option
+    ? await fetch(`${base_url}/modify_stored_stock`, options)
+    : await fetch(`${base_url}/modify_active_stock`, options);
   return await response.json();
-}
+};
 
 export const manageProducts = async (action, data) => {
   const options = {
@@ -21,10 +35,13 @@ export const manageProducts = async (action, data) => {
       "Content-Type": "application/json",
     },
   };
-  
-  const response = action == "add" ? await fetch(`${base_url}/addProduct`, options) : await fetch(`${base_url}/deleteProduct`, options);
+
+  const response =
+    action == "add"
+      ? await fetch(`${base_url}/addProduct`, options)
+      : await fetch(`${base_url}/deleteProduct`, options);
   return await response.json();
-}
+};
 
 export const getProductsInventory = async () => {
   const options = {
@@ -84,7 +101,7 @@ export const getActivationByDate = async (args) => {
   };
   const response = await fetch(`${base_url}/getActivationByDate`, options);
   return await response.json();
-}
+};
 
 export const getReductionbyDate = async (args) => {
   const options = {
@@ -96,4 +113,4 @@ export const getReductionbyDate = async (args) => {
   };
   const response = await fetch(`${base_url}/getReductionByDate`, options);
   return await response.json();
-}
+};
