@@ -10,7 +10,7 @@ export default function ManageProducts(props) {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [type, setType] = useState("");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState("4322");
   const [company, setCompany] = useState("");
   const [processComponentType, setProcessComponentType] = useState("");
   const [processType, setProcessType] = useState("");
