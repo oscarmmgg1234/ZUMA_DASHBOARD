@@ -1328,7 +1328,7 @@ const Employee = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="Product Name"
+                        placeholder="Name"
                         value={employeeName}
                         onChange={(e) => setEmployeeName(e.target.value)}
                         className="h-10 px-3 rounded border border-gray-300 text-black"
@@ -1339,7 +1339,7 @@ const Employee = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="Description"
+                        placeholder="Email Adress"
                         value={employeeEmail}
                         onChange={(e) => setEmployeeEmail(e.target.value)}
                         className="h-10 px-3 rounded border border-gray-300  text-black"
@@ -1350,7 +1350,7 @@ const Employee = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="Price"
+                        placeholder="Phone#"
                         value={employeePhone}
                         onChange={(e) => setEmployeePhone(e.target.value)}
                         className="h-10 px-3 rounded border border-gray-300  text-black"
@@ -1361,7 +1361,7 @@ const Employee = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="Type"
+                        placeholder="Title"
                         value={employeeTitle}
                         onChange={(e) => setEmployeeTitle(e.target.value)}
                         className="h-10 px-3 rounded border border-gray-300  text-black"
@@ -1372,7 +1372,7 @@ const Employee = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="Type"
+                        placeholder="Wage"
                         value={employeeWage}
                         onChange={(e) => setEmployeeWage(e.target.value)}
                         className="h-10 px-3 rounded border border-gray-300  text-black"
@@ -1383,7 +1383,7 @@ const Employee = () => {
                       </label>
                       <input
                         type="text"
-                        placeholder="Type"
+                        placeholder="Location# (4322)"
                         value={employeeLocation}
                         onChange={(e) => setEmployeeLocation(e.target.value)}
                         className="h-10 px-3 rounded border border-gray-300  text-black"
