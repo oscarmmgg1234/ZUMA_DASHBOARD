@@ -1525,7 +1525,7 @@ const Employee = () => {
                 <FaTimes className="w-5 h-5 mr-2" />
               </ModalCloseButton>
             </ModalHeader>
-            <div className="flex flex-1 justify-center items-center">
+            <div className="flex flex-1 justify-center items-center w-full">
               <div className="p-6 bg-white rounded-lg shadow max-w-4xl w-full">
                 <div className="mb-4">
                   <label
@@ -1561,7 +1561,7 @@ const Employee = () => {
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white divide-y divide-gray-200 ">
                       <tr>
                         {daysOfWeek.map((day) => (
                           <td key={day} className="px-6 py-4 whitespace-nowrap">
