@@ -618,7 +618,7 @@ const Employee = () => {
             <p className="text-gray-800/50">Generate pdf files for employess</p>
           </SubComponent>
         </Card>
-        <Card onClick={() => handleModalOpen("add")}>
+        {/* <Card onClick={() => handleModalOpen("add")}>
           <h2 className="text-black mb-3">Add Employee Assignment</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -626,8 +626,8 @@ const Employee = () => {
               Add employee assignment to keep track of orders
             </p>
           </SubComponent>
-        </Card>
-        <Card onClick={() => handleModalOpen("editAssign")}>
+        </Card> */}
+        {/* <Card onClick={() => handleModalOpen("editAssign")}>
           <h2 className="text-black mb-3">Edit Employee Assignment</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -653,7 +653,7 @@ const Employee = () => {
               View given employee assignment within a range
             </p>
           </SubComponent>
-        </Card>
+        </Card> */}
         <Card onClick={() => handleModalOpen("manage")}>
           <h2 className="text-black mb-3">Manage Employees</h2>
           <SubComponent>
