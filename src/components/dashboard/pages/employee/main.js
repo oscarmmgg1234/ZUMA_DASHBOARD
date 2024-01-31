@@ -76,9 +76,6 @@ const SubComponent = tw.div`
   p-4
 `;
 
-
-
-
 //third party components
 
 function Slider({ value, onChange }) {
@@ -256,41 +253,49 @@ const DropdownButton = (props) => {
   );
 };
 
-
-
 const Employee = () => {
-
-  const [local_data, set_local_data] = useState({gen_emp_all: [], emp_data: [], emps: [], gen_emps: [], emp_option: []});
+  const [local_data, set_local_data] = useState({
+    gen_emp_all: [],
+    emp_data: [],
+    emps: [],
+    gen_emps: [],
+    emp_option: [],
+  });
 
   const getEmployees = async () => {
     const employees = await https.getEmployees();
-    const run1 = employees.map(employee=>{
-      return {name: employee.NAME, e_id: employee.EMPLOYEE_ID}
-    })
+    const run1 = employees.map((employee) => {
+      return { name: employee.NAME, e_id: employee.EMPLOYEE_ID };
+    });
     run1[run1.length] = { name: "PRINT_ALL", e_id: "PRINT_ALL" };
-    const run2 = employees.map(employee=>{
-      return {name: employee.NAME, e_id: employee.EMPLOYEE_ID}
-    })
-    const run3 = employees.map(employee=>{
-      return `${employee.NAME}`
-    })
-    const run4 = employees.map(employee=>{
-      return `${employee.NAME}`
-    })
+    const run2 = employees.map((employee) => {
+      return { name: employee.NAME, e_id: employee.EMPLOYEE_ID };
+    });
+    const run3 = employees.map((employee) => {
+      return `${employee.NAME}`;
+    });
+    const run4 = employees.map((employee) => {
+      return `${employee.NAME}`;
+    });
     run4[run4.length] = "PRINT_ALL";
-    set_local_data({gen_emp_all: run1, emp_data: run2, emps: run3, gen_emps: run4, emp_option: ["start", "end"]})
-  }
+    set_local_data({
+      gen_emp_all: run1,
+      emp_data: run2,
+      emps: run3,
+      gen_emps: run4,
+      emp_option: ["start", "end"],
+    });
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
     getEmployees();
-  }, [])
-
-
+  }, []);
 
   // states
   const [isModalRmOpen, setIsModalRmOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
   const [isModalGenOpen, setIsModalGenOpen] = useState(false);
+  const [manageEmployeeModal, setManageEmployeeModal] = useState(false);
 
   //edit modal states
   const shiftDefault = ["start", "end"];
@@ -405,6 +410,88 @@ const Employee = () => {
   const [previewEditAdd, setPreviewEditAdd] = useState({}); //request option
   const [transitionEdit, setTransitionEdit] = useState(false); //use this to make buttom ask to pull employee entrys => then select one and populate preview edit add with chosen entry button at this point says modify entry => then val 3 for tahnks for modifying...on close set to 0
 
+  //manage employee modal states
+  const [action, setAction] = useState(false);
+  const [employeeName, setEmployeeName] = useState("");
+  const [employeeEmail, setEmployeeEmail] = useState("");
+  const [employeePhone, setEmployeePhone] = useState("");
+  const [employeeLocation, setEmployeeLocation] = useState("");
+  const [employeeTitle, setEmployeeTitle] = useState("");
+  const [employeeWage, setEmployeeWage] = useState("");
+  const [employeeList, setEmployeeList] = useState([]);
+
+  const [clickedEmployee, setClickedEmployee] = useState(null);
+
+  const init = async () => {
+    const employee_list = await https.getEmployees();
+    const formatted_employee_list = employee_list.map((employee) => {
+      return { ...employee, focus: false };
+    });
+    setEmployeeList(formatted_employee_list);
+  };
+
+  const handleEmployeeAdd = async () => {
+    const data = {
+      name: employeeName,
+      email: employeeEmail,
+      phone: employeePhone,
+      location: employeeLocation,
+      title: employeeTitle,
+      wage: employeeWage,
+    };
+    await https.addEmployee(data);
+    setTimeout(() => {
+      init();
+    }, 500);
+    alert("Employee Added");
+  };
+
+  const handleEmployeeDelete = async () => {
+    const data = {
+      employee_id: clickedEmployee.EMPLOYEE_ID,
+    };
+    await https.deleteEmployee(data);
+    alert("Employee Deleted");
+    setTimeout(() => {
+      init();
+    }, 500);
+  };
+
+  const onFocusEmployee = (emp) => {
+    const focusEvent = employeeList.map((employee) => {
+      if (employee.EMPLOYEE_ID === emp.EMPLOYEE_ID) {
+        return { ...employee, focus: !employee.focus };
+      } else {
+        return { ...employee, focus: false };
+      }
+    });
+    setClickedEmployee(emp.focus ? null : emp);
+    setEmployeeList(focusEvent);
+  };
+  const tableRows = employeeList.map((employee, index) => (
+    <tr
+      key={employee.EMPLOYEE_ID}
+      className={`${
+        employee.focus
+          ? "bg-orange-300"
+          : index % 2 === 0
+          ? "bg-gray-100"
+          : "bg-white"
+      }`}
+      onClick={() => onFocusEmployee(employee)}
+    >
+      <td className="px-4 py-2 border text-black">{employee.NAME}</td>
+      <td className="px-4 py-2 border text-black bg-rose-400">
+        {employee.EMPLOYEE_ID}
+      </td>
+      <td className="px-4 py-2 border text-black">{employee.TITLE}</td>
+    </tr>
+  ));
+
+  useEffect(() => {
+    init();
+  }, []);
+
   //remove assignment modal states
   const [isModalRmAssignOpen, setIsModalRmAssignOpen] = useState(false);
 
@@ -432,6 +519,9 @@ const Employee = () => {
     }
     if (val == "gen") {
       setIsModalGenOpen(true);
+    }
+    if (val == "manage") {
+      setManageEmployeeModal(true);
     }
   };
 
@@ -486,6 +576,17 @@ const Employee = () => {
       setSelectedDate1(Date.now());
       setSelectedDate2(Date.now());
       setIsModalGenOpen(false);
+    }
+    if (val == "manage") {
+      setManageEmployeeModal(false);
+      setEmployeeEmail("");
+      setEmployeeLocation("");
+      setEmployeeName("");
+      setEmployeePhone("");
+      setEmployeeTitle("");
+      setEmployeeWage("");
+      setAction(false);
+      setClickedEmployee(null);
     }
   };
   // component init
@@ -551,6 +652,13 @@ const Employee = () => {
             <p className="text-gray-800/50">
               View given employee assignment within a range
             </p>
+          </SubComponent>
+        </Card>
+        <Card onClick={() => handleModalOpen("manage")}>
+          <h2 className="text-black mb-3">Manage Employees</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">Add, Delete, or View Employees</p>
           </SubComponent>
         </Card>
       </CardGrid>
@@ -1185,6 +1293,141 @@ const Employee = () => {
               >
                 Change Shift Entry
               </button>
+            </div>
+          </ModalContainer>
+        </>
+      )}
+      {/* {"manageEmployee"} */}
+      {manageEmployeeModal && (
+        <>
+          <ModalBackground onClick={() => handleModalClose("manage")} />
+          <ModalContainer>
+            <ModalHeader className="sticky top-0 z-10 bg-white">
+              <ModalTitle className="text-black">Manage Employees</ModalTitle>
+              <ModalCloseButton onClick={() => handleModalClose("manage")}>
+                <FaTimes className="w-5 h-5 mr-2" />
+              </ModalCloseButton>
+            </ModalHeader>
+            <div className="h-full w-full">
+              <button
+                onClick={() => setAction(!action)}
+                className="w-32 h-24 bg-orange-300"
+              >
+                <p className="text-xs">Click to toggle</p>
+                <p className="font-bold">
+                  {action ? "Add Employee" : "Delete Employee"}
+                </p>
+              </button>
+
+              <div className="flex flex-1 justify-center items-center">
+                <div className="p-6 bg-white rounded-lg shadow max-w-2xl w-full">
+                  {action ? (
+                    <div className="flex flex-col space-y-3">
+                      <label className="font-semibold text-gray-700">
+                        Employee Full Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Product Name"
+                        value={employeeName}
+                        onChange={(e) => setEmployeeName(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300 text-black"
+                      />
+
+                      <label className="font-semibold text-gray-700">
+                        Employee Email
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Description"
+                        value={employeeEmail}
+                        onChange={(e) => setEmployeeEmail(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <label className="font-semibold text-gray-700">
+                        Employee Phone
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Price"
+                        value={employeePhone}
+                        onChange={(e) => setEmployeePhone(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <label className="font-semibold text-gray-700">
+                        Employee Title
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Type"
+                        value={employeeTitle}
+                        onChange={(e) => setEmployeeTitle(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <label className="font-semibold text-gray-700">
+                        Employee Wage
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Type"
+                        value={employeeWage}
+                        onChange={(e) => setEmployeeWage(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <label className="font-semibold text-gray-700">
+                        Employee Work Facility Location ID
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Type"
+                        value={employeeLocation}
+                        onChange={(e) => setEmployeeLocation(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <button
+                        onClick={() => handleEmployeeAdd()}
+                        className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                      >
+                        Add Employee
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="max-h-96 overflow-y-auto">
+                        <table className="min-w-full border-collapse ">
+                          <thead>
+                            <tr className="bg-gray-300">
+                              <th className="px-4 py-2 border text-black">
+                                Employee Name
+                              </th>
+                              <th className="px-4 py-2 border text-black">
+                                Employee ID
+                              </th>
+                              <th className="px-4 py-2 border text-black">
+                                Employee Title
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>{tableRows}</tbody>
+                        </table>
+                      </div>
+                      {clickedEmployee !== null && (
+                        <button
+                          className="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
+                          onClick={() => handleEmployeeDelete()}
+                        >
+                          Delete Employee
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </ModalContainer>
         </>

@@ -15,6 +15,28 @@ export const getEmployees = async () => {
   return await response.json();
 };
 
+export const addEmployee = async (data) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  await fetch(`${base_url}/addEmployee`, options);
+};
+
+export const deleteEmployee = async (data) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  await fetch(`${base_url}/deleteEmployee`, options);
+};
+
 export const Add_Assigment = async (args) => {
   const data = JSON.stringify({
     e_id: args.e_id,

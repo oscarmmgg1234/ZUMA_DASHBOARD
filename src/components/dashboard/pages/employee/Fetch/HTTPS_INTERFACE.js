@@ -6,14 +6,22 @@ import {
   removeShift,
   Edit_Assignment_Get_Preview,
   previewRemoveShift,
-  getEmployees
+  getEmployees,
+  addEmployee,
+  deleteEmployee,
 } from "./HTTPS.js";
 
 export default class http_handler {
   constructor() {}
+  addEmployee = async (data) => {
+    await addEmployee(data);
+  };
+  deleteEmployee = async (data) => {
+    await deleteEmployee(data);
+  };
   getEmployees = async () => {
     return await getEmployees();
-  }
+  };
   add_assign = async (args) => {
     return await Add_Assigment(args);
   };
