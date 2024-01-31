@@ -73,77 +73,77 @@ const SubComponent = tw.div`
 const DashboardBody = () => {
   return (
     <>
-   <Overlay>
-      <Blur>Coming Soon</Blur>
-    
-    <CardGrid>  
-      <Card>
-        <h2>Card Title 1</h2>
-        <p>Card content goes here.</p>
-        <SubComponent>
-          <h3>Sub-component Title 1</h3>
-          <p>Sub-component content goes here.</p>
-        </SubComponent>
-      </Card>
-      <Card>
-        <h2>Card Title 2</h2>
-        <p>Card content goes here.</p>
-        <SubComponent>
-          <h3>Sub-component Title 2</h3>
-          <p>Sub-component content goes here.</p>
-        </SubComponent>
-      </Card>
-      <Card>
-        <h2>Card Title 3</h2>
-        <p>Card content goes here.</p>
-        <SubComponent>
-          <h3>Sub-component Title 3</h3>
-          <p>Sub-component content goes here.</p>
-        </SubComponent>
-      </Card>
-      <Card>
-        <h2>Card Title 4</h2>
-        <p>Card content goes here.</p>
-        <SubComponent>
-          <h3>Sub-component Title 4</h3>
-          <p>Sub-component content goes here.</p>
-        </SubComponent>
-      </Card>
-      <Card>
-        <h2>Card Title 5</h2>
-        <p>Card content goes here.</p>
-        <SubComponent>
-          <h3>Sub-component Title 5</h3>
-          <p>Sub-component content goes here.</p>
-        </SubComponent>
-      </Card>
-      <Card>
-        <h2>Card Title 4</h2>
-        <p>Card content goes here.</p>
-        <SubComponent>
-          <h3>Sub-component Title 4</h3>
-          <p>Sub-component content goes here.</p>
-        </SubComponent>
-      </Card>
-      <Card>
-        <h2>Card Title 4</h2>
-        <p>Card content goes here.</p>
-        <SubComponent>
-          <h3>Sub-component Title 4</h3>
-          <p>Sub-component content goes here.</p>
-        </SubComponent>
-      </Card>
-      <Card>
-        <h2>Card Title 4</h2>
-        <p>Card content goes here.</p>
-        <SubComponent>
-          <h3>Sub-component Title 4</h3>
-          <p>Sub-component content goes here.</p>
-        </SubComponent>
-      </Card>
-    </CardGrid>
-    </Overlay>
-     </>
+      <Overlay>
+        <Blur>Coming Soon</Blur>
+
+        <CardGrid>
+          <Card>
+            <h2>Card Title 1</h2>
+            <p>Card content goes here.</p>
+            <SubComponent>
+              <h3>Sub-component Title 1</h3>
+              <p>Sub-component content goes here.</p>
+            </SubComponent>
+          </Card>
+          <Card>
+            <h2>Card Title 2</h2>
+            <p>Card content goes here.</p>
+            <SubComponent>
+              <h3>Sub-component Title 2</h3>
+              <p>Sub-component content goes here.</p>
+            </SubComponent>
+          </Card>
+          <Card>
+            <h2>Card Title 3</h2>
+            <p>Card content goes here.</p>
+            <SubComponent>
+              <h3>Sub-component Title 3</h3>
+              <p>Sub-component content goes here.</p>
+            </SubComponent>
+          </Card>
+          <Card>
+            <h2>Card Title 4</h2>
+            <p>Card content goes here.</p>
+            <SubComponent>
+              <h3>Sub-component Title 4</h3>
+              <p>Sub-component content goes here.</p>
+            </SubComponent>
+          </Card>
+          <Card>
+            <h2>Card Title 5</h2>
+            <p>Card content goes here.</p>
+            <SubComponent>
+              <h3>Sub-component Title 5</h3>
+              <p>Sub-component content goes here.</p>
+            </SubComponent>
+          </Card>
+          <Card>
+            <h2>Card Title 4</h2>
+            <p>Card content goes here.</p>
+            <SubComponent>
+              <h3>Sub-component Title 4</h3>
+              <p>Sub-component content goes here.</p>
+            </SubComponent>
+          </Card>
+          <Card>
+            <h2>Card Title 4</h2>
+            <p>Card content goes here.</p>
+            <SubComponent>
+              <h3>Sub-component Title 4</h3>
+              <p>Sub-component content goes here.</p>
+            </SubComponent>
+          </Card>
+          <Card>
+            <h2>Card Title 4</h2>
+            <p>Card content goes here.</p>
+            <SubComponent>
+              <h3>Sub-component Title 4</h3>
+              <p>Sub-component content goes here.</p>
+            </SubComponent>
+          </Card>
+        </CardGrid>
+      </Overlay>
+    </>
   );
 };
 

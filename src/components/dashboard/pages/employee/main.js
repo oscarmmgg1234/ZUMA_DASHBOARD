@@ -296,6 +296,7 @@ const Employee = () => {
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
   const [isModalGenOpen, setIsModalGenOpen] = useState(false);
   const [manageEmployeeModal, setManageEmployeeModal] = useState(false);
+  const [scheduleEmployeeModal, setScheduleEmployeeModal] = useState(false);
 
   //edit modal states
   const shiftDefault = ["start", "end"];
@@ -306,6 +307,70 @@ const Employee = () => {
   const [hours, setHours] = useState(1); //request option
   const [previewData, setPreviewData] = useState([]); //request option
   const [status, setStatus] = useState(null); //request option
+
+  const [scheduleEmployees, setScheduleEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState("");
+
+  const getScheduleEmployees = async () => {
+    const employees = await https.getEmployees();
+    const formatted_employees = employees.map((employee) => {
+      return { id: employee.EMPLOYEE_ID, name: employee.NAME };
+    });
+    setScheduleEmployees(formatted_employees);
+    setSelectedEmployee(formatted_employees[0].name);
+  };
+
+  useEffect(() => {
+    getScheduleEmployees();
+  }, []);
+
+  const [schedule, setSchedule] = useState({
+    monday: { start: "", end: "" },
+    tuesday: { start: "", end: "" },
+    wednesday: { start: "", end: "" },
+    thursday: { start: "", end: "" },
+    friday: { start: "", end: "" },
+    // ... initialize the rest of the days similarly
+  });
+
+  const handleScheduleChange = (day, type) => (event) => {
+    setSchedule({
+      ...schedule,
+      [day]: { ...schedule[day], [type]: event.target.value },
+    });
+  };
+
+  const handleSubmit = () => {
+    if(!selectedEmployee && !schedule.monday.start && !schedule.monday.end && !schedule.tuesday.start && !schedule.tuesday.end && !schedule.wednesday.start && !schedule.wednesday.end && !schedule.thursday.start && !schedule.thursday.end && !schedule.friday.start && !schedule.friday.end){
+      alert("Please fill out all fields")
+      return;
+    }
+    const employee = scheduleEmployees.filter((employee) => {
+      return employee.name === selectedEmployee;
+    })[0];
+    const data = {
+      employee_id: employee.id,
+      schedule: {
+        mon: [parseInt(schedule.monday.start), parseInt(schedule.monday.end)],
+        tue: [parseInt(schedule.tuesday.start), parseInt(schedule.tuesday.end)],
+        wed: [
+          parseInt(schedule.wednesday.start),
+          parseInt(schedule.wednesday.end),
+        ],
+        thu: [
+          parseInt(schedule.thursday.start),
+          parseInt(schedule.thursday.end),
+        ],
+        fri: [parseInt(schedule.friday.start), parseInt(schedule.friday.end)],
+      },
+    };
+    https.setSchedule(data);
+    alert("Schedule Set");
+    // Here you would typically send the data to the server
+  };
+
+  const daysOfWeek = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+
   const editPreviewData = async (args) => {
     if (
       selEmployeeData != "Select Employee" &&
@@ -523,6 +588,9 @@ const Employee = () => {
     if (val == "manage") {
       setManageEmployeeModal(true);
     }
+    if (val == "schedule") {
+      setScheduleEmployeeModal(true);
+    }
   };
 
   const handleModalClose = (val) => {
@@ -587,6 +655,9 @@ const Employee = () => {
       setEmployeeWage("");
       setAction(false);
       setClickedEmployee(null);
+    }
+    if (val == "schedule") {
+      setScheduleEmployeeModal(false);
     }
   };
   // component init
@@ -661,7 +732,17 @@ const Employee = () => {
             <p className="text-gray-800/50">Add, Delete, or View Employees</p>
           </SubComponent>
         </Card>
+        <Card onClick={() => handleModalOpen("schedule")}>
+          <h2 className="text-black mb-3">Manage Employee Schedule</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Create weekly schedule for employee{" "}
+            </p>
+          </SubComponent>
+        </Card>
       </CardGrid>
+
       {/* <div className="hidden lg:block fixed bottom-0 left-0 w-full bg-red-500 py-2">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -1427,6 +1508,93 @@ const Employee = () => {
                     </>
                   )}
                 </div>
+              </div>
+            </div>
+          </ModalContainer>
+        </>
+      )}
+      {scheduleEmployeeModal && (
+        <>
+          <ModalBackground onClick={() => handleModalClose("schedule")} />
+          <ModalContainer>
+            <ModalHeader className="sticky top-0 z-10 bg-white">
+              <ModalTitle className="text-black">
+                Manage Employee Schedule
+              </ModalTitle>
+              <ModalCloseButton onClick={() => handleModalClose("schedule")}>
+                <FaTimes className="w-5 h-5 mr-2" />
+              </ModalCloseButton>
+            </ModalHeader>
+            <div className="flex flex-1 justify-center items-center">
+              <div className="p-6 bg-white rounded-lg shadow max-w-4xl w-full">
+                <div className="mb-4">
+                  <label
+                    htmlFor="employee-select"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Select Employee
+                  </label>
+                  <select
+                    id="employee-select"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    value={selectedEmployee}
+                    onChange={(e) => setSelectedEmployee(e.target.value)}
+                  >
+                    {scheduleEmployees.map((employee) => (
+                      <option key={employee.id} value={employee.name}>
+                        {employee.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {daysOfWeek.map((day) => (
+                          <th
+                            key={day}
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            {day.charAt(0).toUpperCase() + day.slice(1)}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      <tr>
+                        {daysOfWeek.map((day) => (
+                          <td key={day} className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex flex-col">
+                                <input
+                                  type="number"
+                                  placeholder="Start"
+                                  value={schedule[day].start}
+                                  onChange={handleScheduleChange(day, "start")}
+                                  className="mb-2 mt-1 h-10 px-3 rounded border border-gray-300 text-black"
+                                />
+                                <input
+                                  type="number"
+                                  placeholder="End"
+                                  value={schedule[day].end}
+                                  onChange={handleScheduleChange(day, "end")}
+                                  className="mb-1 h-10 px-3 rounded border border-gray-300 text-black"
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <button
+                  onClick={() => handleSubmit()}
+                  className="mt-4 w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                >
+                  Submit Schedule
+                </button>
               </div>
             </div>
           </ModalContainer>
