@@ -97,9 +97,9 @@ const DashboardBody = () => {
     <>
       <CardGrid>
         <Card>
-          <h2 className="text-black">Top Employee of the week: {topEmployee.EMPLOYEE_NAME}</h2>
+          <h2 className="text-black">Top Employee of the week: <h2 className="bg-orange-300 rounded-sm">{topEmployee.EMPLOYEE_NAME}</h2></h2>
           <SubComponent>
-            <p className="text-black">Consumption Log for employee: {topEmployee.EntryCount}</p>
+            <p className="text-black">With and outstanding consumption of: {topEmployee.EntryCount}</p>
           </SubComponent>
         </Card>
       </CardGrid>
