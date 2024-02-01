@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import tw from "tailwind-styled-components";
+import http_handler from "./HTTP/HTTPS_INTERFACE";
+const http = new http_handler();
 
 const Overlay = tw.div`
 
@@ -71,78 +73,36 @@ const SubComponent = tw.div`
 `;
 
 const DashboardBody = () => {
+  //states modals
+
+  //states
+  const [topEmployee, setTopEmployee] = useState({});
+
+  //handlers
+  const closeHandler = (args) => {};
+
+  const openHandler = (args) => {};
+
+  const getTopEmployee = async () => {
+    const topEmployee = await http.getTopEmployee();
+    const topEmployeeData = topEmployee.data[0][0];
+    setTopEmployee(topEmployeeData);
+  };
+
+  useEffect(() => {
+    getTopEmployee();
+  }, []);
+
   return (
     <>
-      <Overlay>
-        <Blur>Coming Soon</Blur>
-
-        <CardGrid>
-          <Card>
-            <h2>Card Title 1</h2>
-            <p>Card content goes here.</p>
-            <SubComponent>
-              <h3>Sub-component Title 1</h3>
-              <p>Sub-component content goes here.</p>
-            </SubComponent>
-          </Card>
-          <Card>
-            <h2>Card Title 2</h2>
-            <p>Card content goes here.</p>
-            <SubComponent>
-              <h3>Sub-component Title 2</h3>
-              <p>Sub-component content goes here.</p>
-            </SubComponent>
-          </Card>
-          <Card>
-            <h2>Card Title 3</h2>
-            <p>Card content goes here.</p>
-            <SubComponent>
-              <h3>Sub-component Title 3</h3>
-              <p>Sub-component content goes here.</p>
-            </SubComponent>
-          </Card>
-          <Card>
-            <h2>Card Title 4</h2>
-            <p>Card content goes here.</p>
-            <SubComponent>
-              <h3>Sub-component Title 4</h3>
-              <p>Sub-component content goes here.</p>
-            </SubComponent>
-          </Card>
-          <Card>
-            <h2>Card Title 5</h2>
-            <p>Card content goes here.</p>
-            <SubComponent>
-              <h3>Sub-component Title 5</h3>
-              <p>Sub-component content goes here.</p>
-            </SubComponent>
-          </Card>
-          <Card>
-            <h2>Card Title 4</h2>
-            <p>Card content goes here.</p>
-            <SubComponent>
-              <h3>Sub-component Title 4</h3>
-              <p>Sub-component content goes here.</p>
-            </SubComponent>
-          </Card>
-          <Card>
-            <h2>Card Title 4</h2>
-            <p>Card content goes here.</p>
-            <SubComponent>
-              <h3>Sub-component Title 4</h3>
-              <p>Sub-component content goes here.</p>
-            </SubComponent>
-          </Card>
-          <Card>
-            <h2>Card Title 4</h2>
-            <p>Card content goes here.</p>
-            <SubComponent>
-              <h3>Sub-component Title 4</h3>
-              <p>Sub-component content goes here.</p>
-            </SubComponent>
-          </Card>
-        </CardGrid>
-      </Overlay>
+      <CardGrid>
+        <Card>
+          <h2>Top Employee of the week: {topEmployee.EMPLOYEE_NAME}</h2>
+          <SubComponent>
+            <p>Consumption Log for employee: {topEmployee.EntryCount}</p>
+          </SubComponent>
+        </Card>
+      </CardGrid>
     </>
   );
 };
