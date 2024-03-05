@@ -1,5 +1,5 @@
 // const base_url = "http://192.168.1.176:3002";
-const base_url = "http://172.31.2.183:3002";
+const base_url = "http://192.168.1.176:3002";
 
 export const setSchedule = async (data) => {
   const options = {
