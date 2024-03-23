@@ -10,12 +10,20 @@ import {
   getCompanies,
   updateTracking,
   deleteCompany,
-  addCompany
+  addCompany,
+  getGlobalGlycerin,
+  setGlycerinGlobal,
 } from "./HTTPS";
 
 export default class http_handler {
+  setGlobalGlycerin = async (data) => {
+    await setGlycerinGlobal(data);
+  };
+  getGlobalGlycerin = async () => {
+    return await getGlobalGlycerin();
+  };
   addCompany = async (data) => {
-    await addCompany( data);
+    await addCompany(data);
   };
   deleteCompany = async (data) => {
     await deleteCompany(data);

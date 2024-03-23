@@ -1,6 +1,26 @@
-const base_url = "http://192.168.1.176:3001";
+const base_url = "http://192.168.0.166:3001";
 // http://192.168.1.176:3002
 
+export const setGlycerinGlobal = async (data) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  await fetch(`${base_url}/setGlycerinGlobal`, options);
+};
+export const getGlobalGlycerin = async () => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${base_url}/getGlycerinGlobal`, options);
+  return await response.json();
+};
 export const addCompany = async (data) => {
   const options = {
     body: JSON.stringify(data),

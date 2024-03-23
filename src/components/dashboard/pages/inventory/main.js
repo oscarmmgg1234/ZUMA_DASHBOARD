@@ -8,6 +8,7 @@ import ManageProducts from "./Modals/ManageProducts";
 import OverrideStock from "./Modals/OverrideStock";
 import ManageSystem from "./Modals/ManageSystem";
 import ProductTracking from "./Modals/ProductTracking";
+import SetGlobalGlycerin from "./Modals/SetGlobalGlycerin";
 
 const Overlay = tw.div`
 
@@ -93,6 +94,8 @@ export default function Inventory() {
   const [systemModalVisible, setSystemModalVisible] = useState(false);
   const [productTrackingModalVisible, setProductTrackingModalVisible] =
     useState(false);
+  const [GlobalGlycerinModalVisible, setGlobalGlycerinModalVisible] =
+    useState(false);
 
   const closeHandler = (args) => {
     if (args === "viewInv") {
@@ -118,6 +121,9 @@ export default function Inventory() {
     }
     if (args === "tracking") {
       setProductTrackingModalVisible(false);
+    }
+    if (args === "GlobalGlycerin") {
+      setGlobalGlycerinModalVisible(false);
     }
   };
 
@@ -145,6 +151,9 @@ export default function Inventory() {
     }
     if (args === "tracking") {
       setProductTrackingModalVisible(true);
+    }
+    if (args === "GlobalGlycerin") {
+      setGlobalGlycerinModalVisible(true);
     }
   };
 
@@ -230,6 +239,15 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
+        <Card onClick={() => openHandler("GlobalGlycerin")}>
+          <h2 className="text-black mb-3">Global Glycerin</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Set the global glycerin unit for system
+            </p>
+          </SubComponent>
+        </Card>
         <Card onClick={() => {}}>
           <h2 className="text-black mb-3">System Analytics</h2>
           <SubComponent>
@@ -268,6 +286,10 @@ export default function Inventory() {
       <ManageSystem visible={systemModalVisible} closeHandler={closeHandler} />
       <ProductTracking
         visible={productTrackingModalVisible}
+        closeHandler={closeHandler}
+      />
+      <SetGlobalGlycerin
+        visible={GlobalGlycerinModalVisible}
         closeHandler={closeHandler}
       />
     </>
