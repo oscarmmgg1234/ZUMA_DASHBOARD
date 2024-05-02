@@ -103,34 +103,47 @@ export default function ViewInventoryModal(props) {
   const print_handler = async () => {
     setIsLoading(true); // Start loading
     try {
-      requestData = {};
-      if (selectedProduct == "ALL PRODUCTS") {
-        requestData = { data: {}, template: "INVENTORY_SHEET" };
-      } else {
-        requestData = {
-          data: {
-            company: filterOptions.filter(
-              (item) => item.COMPANY == selectedFilter
-            )[0].COMPANY,
-          },
-          template: "INVENTORY_BY_COMPANY_SHEET",
-        };
-      }
-      const requestOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      };
-      const pdf = await fetch(
-        "http://localhost:3003/PDF/PDFA4_GenerateMultiple",
-        requestOptions
+      let requestData = {};
+      const selectedOption = filter.find(
+        (item) => item.label === selectedFilter
       );
-      const pdfBlob = await pdf.blob();
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      window.open(pdfUrl);
-      URL.revokeObjectURL(pdfUrl);
+
+      if (selectedFilter != "ALL PRODUCTS") {
+        requestData = {
+          company: selectedOption.typeID,
+        };
+        const requestOptions = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        };
+        const pdf = await fetch(
+          "http://localhost:3001/gen_inv_pdf_by_company",
+          requestOptions
+        );
+        const pdfBlob = await pdf.blob();
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl);
+        URL.revokeObjectURL(pdfUrl);
+      } else {
+        // Handle the case where no matching company is found, perhaps default to all inventory
+        const requestOptions = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+        const pdf = await fetch(
+          "http://localhost:3001/gen_inv_pdf_A4",
+          requestOptions
+        );
+        const pdfBlob = await pdf.blob();
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        window.open(pdfUrl);
+        URL.revokeObjectURL(pdfUrl);
+      }
     } catch (err) {
       console.log(err);
     }
@@ -336,13 +349,13 @@ export default function ViewInventoryModal(props) {
             data={{ data: filterOptions }}
           />
           <button
-            onClick={print_handler}
+            onClick={() => (!isLoading ? print_handler() : ()=>{})}
             className="bg-zuma-login text-white px-4 py-2 rounded-md mb-3 ml-3"
           >
             Print
           </button>
           {isLoading && (
-            <p>Loading...</p> // Simple loading indicator
+            <h1>Generating PDF...</h1> // Simple loading indicator
           )}
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-1 p-4 bg-zuma-green rounded-lg ">
