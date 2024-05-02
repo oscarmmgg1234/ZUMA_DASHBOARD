@@ -1,4 +1,4 @@
-const base_url = "http://localhost:3001";
+const base_url = "http://72.132.70.167:3001";
 // http://192.168.1.176:3002
 
 export const setGlycerinGlobal = async (data) => {
