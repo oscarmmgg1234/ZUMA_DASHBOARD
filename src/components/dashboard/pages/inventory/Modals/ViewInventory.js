@@ -98,6 +98,45 @@ export default function ViewInventoryModal(props) {
     }, 300);
   };
 
+  const [isLoading, setIsLoading] = useState(false); // Add a loading state
+
+  const print_handler = async () => {
+    setIsLoading(true); // Start loading
+    try {
+      requestData = {};
+      if (selectedProduct == "ALL PRODUCTS") {
+        requestData = { data: {}, template: "INVENTORY_SHEET" };
+      } else {
+        requestData = {
+          data: {
+            company: filterOptions.filter(
+              (item) => item.COMPANY == selectedFilter
+            )[0].COMPANY,
+          },
+          template: "INVENTORY_BY_COMPANY_SHEET",
+        };
+      }
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+      };
+      const pdf = await fetch(
+        "http://localhost:3003/PDF/PDFA4_GenerateMultiple",
+        requestOptions
+      );
+      const pdfBlob = await pdf.blob();
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl);
+      URL.revokeObjectURL(pdfUrl);
+    } catch (err) {
+      console.log(err);
+    }
+    setIsLoading(false); // End loading
+  };
+
   const prepareChartData = () => {
     const totalStock =
       productAnalytics.stock.length > 0 ? productAnalytics.stock[0].STOCK : 0;
@@ -118,7 +157,11 @@ export default function ViewInventoryModal(props) {
       productInventory.data.map((item) => [item.PRODUCT_ID, item])
     );
     const products = await http.getProducts();
-    const productFilter = products.data.filter((product) => product.PRODUCT_ID != "" && product.PRODUCT_ID != null || product.PRODUCT_ID != "" );
+    const productFilter = products.data.filter(
+      (product) =>
+        (product.PRODUCT_ID != "" && product.PRODUCT_ID != null) ||
+        product.PRODUCT_ID != ""
+    );
     const productFilterMap = new Map(
       products.data.map((product) => [product.PRODUCT_ID, product])
     );
@@ -292,6 +335,15 @@ export default function ViewInventoryModal(props) {
             dataValue={selectedFilter}
             data={{ data: filterOptions }}
           />
+          <button
+            onClick={print_handler}
+            className="bg-zuma-login text-white px-4 py-2 rounded-md mb-3 ml-3"
+          >
+            Print
+          </button>
+          {isLoading && (
+            <p>Loading...</p> // Simple loading indicator
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-1 p-4 bg-zuma-green rounded-lg ">
               <div className="overflow-y-auto max-h-96">
