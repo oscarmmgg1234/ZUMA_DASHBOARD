@@ -118,6 +118,7 @@ export default function ViewInventoryModal(props) {
       productInventory.data.map((item) => [item.PRODUCT_ID, item])
     );
     const products = await http.getProducts();
+    const productFilter = products.data.filter((product) => product.PRODUCT_ID != "" && product.PRODUCT_ID != null || product.PRODUCT_ID != "" );
     const productFilterMap = new Map(
       products.data.map((product) => [product.PRODUCT_ID, product])
     );

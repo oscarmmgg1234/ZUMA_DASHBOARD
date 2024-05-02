@@ -11,6 +11,7 @@ export const setGlycerinGlobal = async (data) => {
   };
   await fetch(`${base_url}/setGlycerinGlobal`, options);
 };
+
 export const getGlobalGlycerin = async () => {
   const options = {
     method: "POST",
@@ -21,6 +22,7 @@ export const getGlobalGlycerin = async () => {
   const response = await fetch(`${base_url}/getGlycerinGlobal`, options);
   return await response.json();
 };
+
 export const addCompany = async (data) => {
   const options = {
     body: JSON.stringify(data),
