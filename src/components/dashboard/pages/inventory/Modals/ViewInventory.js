@@ -120,7 +120,7 @@ export default function ViewInventoryModal(props) {
           body: JSON.stringify(requestData),
         };
         const pdf = await fetch(
-          "http://72.132.70.167:3001/gen_inv_pdf_by_company",
+          "http://192.168.1.176:3001/gen_inv_pdf_by_company",
           requestOptions
         );
         const pdfBlob = await pdf.blob();
@@ -136,7 +136,7 @@ export default function ViewInventoryModal(props) {
           },
         };
         const pdf = await fetch(
-          "http://192.168.1.176:3001/gen_inv_pdf_A4",
+          "http://localhost:3001/gen_inv_pdf_A4",
           requestOptions
         );
         const pdfBlob = await pdf.blob();
@@ -349,7 +349,7 @@ export default function ViewInventoryModal(props) {
             data={{ data: filterOptions }}
           />
           <button
-            onClick={() => (!isLoading ? print_handler() : ()=>{})}
+            onClick={() => (!isLoading ? print_handler() : () => {})}
             className="bg-zuma-login text-white px-4 py-2 rounded-md mb-3 ml-3"
           >
             Print

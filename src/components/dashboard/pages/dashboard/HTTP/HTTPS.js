@@ -1,4 +1,4 @@
-const inv_base_url = "http://72.132.70.167:3001";
+const inv_base_url = "http://192.168.1.176:3001";
 
 export const getTopEmployee = async () => {
     const options = {
