@@ -125,8 +125,10 @@ export default function ViewInventoryModal(props) {
         );
         const pdfBlob = await pdf.blob();
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(pdfUrl);
-        URL.revokeObjectURL(pdfUrl);
+        const pdfWindow = window.open(pdfUrl);
+        pdfWindow.onload = () => {
+          URL.revokeObjectURL(pdfUrl);
+        };
       } else {
         // Handle the case where no matching company is found, perhaps default to all inventory
         const requestOptions = {
@@ -141,8 +143,10 @@ export default function ViewInventoryModal(props) {
         );
         const pdfBlob = await pdf.blob();
         const pdfUrl = URL.createObjectURL(pdfBlob);
-        window.open(pdfUrl);
-        URL.revokeObjectURL(pdfUrl);
+        const pdfWindow = window.open(pdfUrl);
+        pdfWindow.onload = () => {
+          URL.revokeObjectURL(pdfUrl);
+        };
       }
     } catch (err) {
       console.log(err);
