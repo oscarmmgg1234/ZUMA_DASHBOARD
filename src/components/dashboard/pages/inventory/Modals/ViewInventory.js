@@ -136,7 +136,7 @@ export default function ViewInventoryModal(props) {
           },
         };
         const pdf = await fetch(
-          "http://localhost:3001/gen_inv_pdf_A4",
+          "http://192.168.1.176:3001/gen_inv_pdf_A4",
           requestOptions
         );
         const pdfBlob = await pdf.blob();
@@ -355,7 +355,7 @@ export default function ViewInventoryModal(props) {
             Print
           </button>
           {isLoading && (
-            <h1>Generating PDF...</h1> // Simple loading indicator
+            <h1 className="text-black">Generating PDF...</h1> // Simple loading indicator
           )}
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-1 p-4 bg-zuma-green rounded-lg ">
