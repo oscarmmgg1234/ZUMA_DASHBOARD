@@ -81,6 +81,8 @@ const SubComponent = tw.div`
   p-4
 `;
 
+
+
 export default function Inventory() {
   const [viewInvModalVisible, setViewInvModalVisible] = useState(false);
   const [shipmentLogModalVisible, setShipmentLogModalVisible] = useState(false);
@@ -197,6 +199,10 @@ export default function Inventory() {
           </SubComponent>
         </Card>
         <Card onClick={() => {}}>
+          <div className="h-30 bg-black bg-opacity-70 flex justify-center items-center text-white">
+            Update Coming Soon
+          </div>
+
           <h2 className="text-black mb-3">Predict Product Quantity</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -205,7 +211,10 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-        <Card onClick={() => openHandler("manage")}>
+        <Card onClick={() => {}}>
+          <div className="h-30 bg-black bg-opacity-70 flex justify-center items-center text-white">
+            Update Coming Soon
+          </div>
           <h2 className="text-black mb-3">Manage Products</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -230,7 +239,10 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-        <Card onClick={() => openHandler("system")}>
+        <Card onClick={() => {}}>
+          <div className="h-30 bg-black bg-opacity-70 flex justify-center items-center text-white">
+            Update Coming Soon
+          </div>
           <h2 className="text-black mb-3">Manage Partnered Companies</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -249,6 +261,9 @@ export default function Inventory() {
           </SubComponent>
         </Card>
         <Card onClick={() => {}}>
+          <div className="h-30 bg-black bg-opacity-70 flex justify-center items-center text-white">
+            Update Coming Soon
+          </div>
           <h2 className="text-black mb-3">System Analytics</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
