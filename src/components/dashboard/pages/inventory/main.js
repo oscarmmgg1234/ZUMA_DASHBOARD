@@ -81,8 +81,6 @@ const SubComponent = tw.div`
   p-4
 `;
 
-
-
 export default function Inventory() {
   const [viewInvModalVisible, setViewInvModalVisible] = useState(false);
   const [shipmentLogModalVisible, setShipmentLogModalVisible] = useState(false);
