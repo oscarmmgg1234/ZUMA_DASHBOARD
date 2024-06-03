@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
 const http = new http_handler();
@@ -7,8 +7,9 @@ export default function ProductTracking(props) {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [product, setProduct] = useState(null);
+  const [editingProductId, setEditingProductId] = useState(null);
   const [quantity, setQuantity] = useState("");
+  const [changeMessage, setChangeMessage] = useState("");
 
   const init = async () => {
     const products = await http.getProducts();
@@ -19,6 +20,7 @@ export default function ProductTracking(props) {
   useEffect(() => {
     init();
   }, []);
+
   useEffect(() => {
     if (searchQuery === "") return setFilteredProducts(products);
     else {
@@ -29,66 +31,98 @@ export default function ProductTracking(props) {
     }
   }, [searchQuery]);
 
-  const handleTrackingSubmit = (option) => {
-    if (option && product) {
+  const handleTrackingSubmit = async (productId) => {
+    if (productId) {
       const data = {
-        productID: product.PRODUCT_ID,
-        quantity: parseInt(quantity),
+        productID: productId,
+        quantity: quantity === "" ? null : parseInt(quantity),
       };
-      http.updateTracking(data);
-      alert(`Tracking Updated for ${product.NAME}`);
-      setTimeout(() => {
-        init();
-      }, 500);
-    }
-    if (!option && product) {
-      const data = {
-        productID: product.PRODUCT_ID,
-      };
-      http.updateTracking(data);
-      alert(`Tracking Updated for ${product.NAME}`);
-      setTimeout(() => {
-        init();
-      }, 500);
-    }
-    if (!product) {
-      alert("Please select a product");
+      await http.updateTracking(data);
+
+      // Update local state without refetching
+      setProducts((prevProducts) =>
+        prevProducts.map((p) =>
+          p.PRODUCT_ID === productId
+            ? { ...p, MIN_LIMIT: quantity === "" ? null : parseInt(quantity) }
+            : p
+        )
+      );
+      setFilteredProducts((prevFilteredProducts) =>
+        prevFilteredProducts.map((p) =>
+          p.PRODUCT_ID === productId
+            ? { ...p, MIN_LIMIT: quantity === "" ? null : parseInt(quantity) }
+            : p
+        )
+      );
+
+      setChangeMessage(
+        quantity === ""
+          ? `Removed tracking for ${
+              products.find((p) => p.PRODUCT_ID === productId).NAME
+            }`
+          : `Set tracking limit for ${
+              products.find((p) => p.PRODUCT_ID === productId).NAME
+            } to ${quantity}`
+      );
+
+      setEditingProductId(null);
+      setQuantity("");
     }
   };
 
-  const onFocusProduct = (product) => {
-    const focusEvent = filteredProducts.map((item) => {
-      if (item.PRODUCT_ID === product.PRODUCT_ID) {
-        return { ...item, focus: !item.focus };
-      } else {
-        return { ...item, focus: false };
-      }
-    });
-    setProduct(product.focus ? null : product);
-    setFilteredProducts(focusEvent);
+  const handleEditClick = (productId, currentLimit) => {
+    setEditingProductId(productId);
+    setQuantity(currentLimit != null ? currentLimit.toString() : "");
   };
 
   const tableRows = filteredProducts.map((product, index) => (
     <tr
       key={product.PRODUCT_ID}
       className={`${
-        product.focus
+        product.PRODUCT_ID === editingProductId
           ? "bg-orange-300"
           : index % 2 === 0
           ? "bg-gray-100"
           : "bg-white"
       }`}
-      onClick={() => onFocusProduct(product)}
     >
       <td className="px-4 py-2 border text-black">{product.NAME}</td>
       <td className="px-4 py-2 border text-black bg-rose-400">
         {product.PRODUCT_ID}
       </td>
+      <td
+        className={`px-4 py-2 border text-black cursor-pointer ${
+          product.PRODUCT_ID === editingProductId ? "bg-green-400" : ""
+        }`}
+        onClick={() => handleEditClick(product.PRODUCT_ID, product.MIN_LIMIT)}
+      >
+        {product.PRODUCT_ID === editingProductId ? (
+          <input
+            type="text"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            className="w-full p-2"
+            autoFocus
+          />
+        ) : product.MIN_LIMIT != null ? (
+          product.MIN_LIMIT
+        ) : (
+          "Not being tracked"
+        )}
+      </td>
       <td className="px-4 py-2 border text-black">
-        {product.MIN_LIMIT != null ? product.MIN_LIMIT : "Not being tracked"}
+        {product.PRODUCT_ID === editingProductId && (
+          <button
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
+            onClick={() => handleTrackingSubmit(product.PRODUCT_ID)}
+          >
+            Commit Change
+          </button>
+        )}
       </td>
     </tr>
   ));
+
   return (
     <>
       <BaseModal
@@ -97,54 +131,44 @@ export default function ProductTracking(props) {
         title={"Product Tracking"}
         closeName={"tracking"}
       >
-        <div className="flex flex-1 justify-center items-center">
-          <div className="p-6 bg-white rounded-lg shadow max-w-2xl w-full">
-            <div className="max-h-96 overflow-y-auto">
-              <input
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                }}
-                className="w-full mb-4 p-2 border rounded-lg text-black"
-                placeholder="Search..."
-              />
-              <table className="min-w-full border-collapse ">
-                <thead>
-                  <tr className="bg-gray-300">
-                    <th className="px-4 py-2 border text-black">
-                      Product Name
-                    </th>
-                    <th className="px-4 py-2 border text-black">Product ID</th>
-                    <th className="px-4 py-2 border text-black">
-                      Tracking Limit
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>{tableRows}</tbody>
-              </table>
+        <div className="h-full w-full">
+          {changeMessage && (
+            <div className="mb-4 p-4 bg-blue-100 text-blue-800 rounded-lg">
+              {changeMessage}
             </div>
-            <label className="mt-5 mr-5 text-black ">Limit:</label>
-            <input
-              type="text"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              className="h-10 px-10 rounded border border-gray-300 text-black mt-5 "
-            />
-            {product != null && quantity == "" ? (
-              <button
-                className="mt-4 ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
-                onClick={() => handleTrackingSubmit(false)}
-              >
-                Remove Product Limit
-              </button>
-            ) : product != null ? (
-              <button
-                className="mt-4 ml-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
-                onClick={() => handleTrackingSubmit(true)}
-              >
-                Set Product Limit
-              </button>
-            ) : null}
+          )}
+          <div className="flex flex-1 justify-center items-center">
+            <div className="p-6 bg-white rounded-lg shadow max-w-2xl w-full">
+              <div className="sticky top-0 bg-white z-10">
+                <input
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                  }}
+                  className="w-full mb-4 p-2 border rounded-lg text-black"
+                  placeholder="Search..."
+                />
+              </div>
+              <div className="h-[60vh] overflow-y-auto">
+                <table className="min-w-full border-collapse">
+                  <thead className="bg-gray-300">
+                    <tr>
+                      <th className="px-4 py-2 border text-black">
+                        Product Name
+                      </th>
+                      <th className="px-4 py-2 border text-black">
+                        Product ID
+                      </th>
+                      <th className="px-4 py-2 border text-black">
+                        Tracking Limit
+                      </th>
+                      <th className="px-4 py-2 border text-black">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>{tableRows}</tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </BaseModal>

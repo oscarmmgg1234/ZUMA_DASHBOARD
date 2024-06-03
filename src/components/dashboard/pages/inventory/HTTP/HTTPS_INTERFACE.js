@@ -13,9 +13,29 @@ import {
   addCompany,
   getGlobalGlycerin,
   setGlycerinGlobal,
+  getProductTypes,
+  commitChanges,
+  fetchRegistry,
+  runtimeTest,
+  addProductProcess,
 } from "./HTTPS";
 
 export default class http_handler {
+  addProductProcess = async (data) => {
+    return await addProductProcess(data);
+  };
+  runtimeTest = async (data) => {
+    return await runtimeTest(data);
+  };
+  fetchRegistry = async () => {
+    return await fetchRegistry();
+  };
+  commitChanges = async (data) => {
+    return await commitChanges(data);
+  };
+  getProductTypes = async () => {
+    return await getProductTypes();
+  };
   setGlobalGlycerin = async (data) => {
     await setGlycerinGlobal(data);
   };

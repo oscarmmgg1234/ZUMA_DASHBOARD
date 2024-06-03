@@ -1,6 +1,65 @@
 const base_url = "http://192.168.1.176:3001";
 // http://192.168.1.176:3002
 
+
+export const addProductProcess = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/addProdProcess`, options);
+  return await response.json();
+
+}
+
+export const runtimeTest = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/runtimeTest`, options);
+  return await response.json();
+};
+
+export const fetchRegistry = async () => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${base_url}/getFuncRegistry`, options);
+  return await response.json();
+}
+export const commitChanges = async (data) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${base_url}/commitChanges`, options);
+  return await response.json();
+}
+
+export const getProductTypes = async () => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${base_url}/getProductTypes`, options);
+  return await response.json();
+}
+
 export const setGlycerinGlobal = async (data) => {
   const options = {
     body: JSON.stringify(data),

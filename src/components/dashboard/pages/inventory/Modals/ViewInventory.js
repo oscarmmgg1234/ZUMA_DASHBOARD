@@ -1,19 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
-import PieChart from "./Chart";
 
 const http = new http_handler();
 
 const DropdownButton = (props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState(props.data.data);
-
-  // useEffect(() => {
-  //   if (data) {
-  //     setOptions(data);
-  //   }
-  // }, [data]);
 
   const handleButtonClick = () => {
     setIsOpen(!isOpen);
@@ -86,10 +79,9 @@ export default function ViewInventoryModal(props) {
   const [filter, setFilter] = useState([]);
 
   const [filterOptions, setFilterOptions] = useState([]);
-
   const [selectedFilter, setSelectedFilter] = useState("ALL PRODUCTS");
 
-  const [productAnalytics, setProductAnalytics] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const refresh_handler = () => {
     setRefresh(true);
@@ -98,17 +90,15 @@ export default function ViewInventoryModal(props) {
     }, 300);
   };
 
-  const [isLoading, setIsLoading] = useState(false); // Add a loading state
-
   const print_handler = async () => {
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
     try {
       let requestData = {};
       const selectedOption = filter.find(
         (item) => item.label === selectedFilter
       );
 
-      if (selectedFilter != "ALL PRODUCTS") {
+      if (selectedFilter !== "ALL PRODUCTS") {
         requestData = {
           company: selectedOption.typeID,
         };
@@ -130,7 +120,6 @@ export default function ViewInventoryModal(props) {
           URL.revokeObjectURL(pdfUrl);
         };
       } else {
-        // Handle the case where no matching company is found, perhaps default to all inventory
         const requestOptions = {
           method: "POST",
           headers: {
@@ -151,21 +140,7 @@ export default function ViewInventoryModal(props) {
     } catch (err) {
       console.log(err);
     }
-    setIsLoading(false); // End loading
-  };
-
-  const prepareChartData = () => {
-    const totalStock =
-      productAnalytics.stock.length > 0 ? productAnalytics.stock[0].STOCK : 0;
-    const shipmentQuantity =
-      productAnalytics.shipment.length > 0
-        ? productAnalytics.shipment[0].QUANTITY
-        : 0;
-
-    return [
-      { label: "Shipment", value: shipmentQuantity },
-      { label: "Total Stock", value: totalStock },
-    ];
+    setIsLoading(false);
   };
 
   const init = async () => {
@@ -174,11 +149,6 @@ export default function ViewInventoryModal(props) {
       productInventory.data.map((item) => [item.PRODUCT_ID, item])
     );
     const products = await http.getProducts();
-    const productFilter = products.data.filter(
-      (product) =>
-        (product.PRODUCT_ID != "" && product.PRODUCT_ID != null) ||
-        product.PRODUCT_ID != ""
-    );
     const productFilterMap = new Map(
       products.data.map((product) => [product.PRODUCT_ID, product])
     );
@@ -190,21 +160,21 @@ export default function ViewInventoryModal(props) {
           productLimit.MIN_LIMIT != null &&
           productInventory.STORED_STOCK <= productLimit.MIN_LIMIT
         ) {
-          return { ...data, focus: false, alert: true };
+          return { ...data, focus: false, alert: true, ...productInventory };
         } else {
-          return { ...data, focus: false, alert: false };
+          return { ...data, focus: false, alert: false, ...productInventory };
         }
       } else {
-        return { ...data, focus: false, alert: false };
+        return { ...data, focus: false, alert: false, ...productInventory };
       }
     });
 
-    if (selectedFilter != "ALL PRODUCTS") {
+    if (selectedFilter !== "ALL PRODUCTS") {
       const filtered_type = filter.filter((item) => {
-        return item.label == selectedFilter;
+        return item.label === selectedFilter;
       });
       const filtered_company = formatted_data.filter((item) => {
-        return item.COMPANY == filtered_type[0].typeID;
+        return item.COMPANY === filtered_type[0].typeID;
       });
       setInventory(filtered_company);
     } else {
@@ -240,7 +210,7 @@ export default function ViewInventoryModal(props) {
   }, []);
 
   useEffect(() => {
-    if (refresh == true) {
+    if (refresh) {
       init();
     }
   }, [refresh]);
@@ -259,75 +229,22 @@ export default function ViewInventoryModal(props) {
     }
   }, [searchQuery]);
 
-  useEffect(() => {
-    if (selectedProduct != null) {
-      http
-        .getProductAnalytics({ PRODUCT_ID: selectedProduct.PRODUCT_ID })
-        .then((res) => {
-          setProductAnalytics(res.data);
-        });
-    }
-  }, [selectedProduct]);
-
-  const onFocusProduct = (product) => {
-    const focusEvent = filteredInventory.map((item) => {
-      if (item.PRODUCT_ID === product.PRODUCT_ID) {
-        if (item.focus === true) {
-          setSelectedProduct(null);
-          return { ...item, focus: false };
-        } else {
-          setSelectedProduct(product);
-          return { ...item, focus: true };
-        }
-      } else {
-        return { ...item, focus: false };
-      }
-    });
-    setInventory(focusEvent);
-  };
-
   const tableRows = filteredInventory.map((product, index) => (
     <tr
       key={product.PRODUCT_ID}
-      className={`${
-        index % 2 === 0
-          ? product.alert
-            ? "bg-rose-600"
-            : "bg-gray-100"
-          : product.alert
-          ? "bg-rose-600"
-          : "bg-white"
+      className={`${index % 2 === 0 ? "bg-gray-100" : "bg-white"} ${
+        product.alert ? "bg-rose-600" : ""
       }`}
-      onClick={() => onFocusProduct(product)}
+      onClick={() => setSelectedProduct(product)}
     >
-      <td
-        className={`${
-          product.focus
-            ? "bg-orange-300 px-4 py-2 border text-black"
-            : "px-4 py-2 border text-black"
-        }`}
-      >
-        {product.NAME}
+      <td className="px-4 py-2 border text-black">{product.PRODUCT_ID}</td>
+      <td className="px-4 py-2 border text-black">{product.NAME}</td>
+      <td className="px-4 py-2 border text-black">{product.STOCK ?? "N/A"}</td>
+      <td className="px-4 py-2 border text-black">
+        {product.ACTIVE_STOCK ?? "N/A"}
       </td>
-      <td
-        className={`${
-          product.focus
-            ? "bg-orange-300 px-4 py-2 border text-black"
-            : "px-4 py-2 border text-black"
-        }`}
-      >
-        <span className="bg-green-300 rounded-md px-4 py-2 text-black">
-          {product.PRODUCT_ID}
-        </span>
-      </td>
-      <td
-        className={`${
-          product.focus
-            ? "bg-orange-300 px-2 py-1 border text-black"
-            : "px-4 py-2 border text-black"
-        }`}
-      >
-        {product.COMPANY}
+      <td className="px-4 py-2 border text-black">
+        {product.STORED_STOCK ?? "N/A"}
       </td>
     </tr>
   ));
@@ -340,152 +257,47 @@ export default function ViewInventoryModal(props) {
         title={"View Inventory"}
         closeName={"viewInv"}
       >
-        <div className="container mx-auto p-4">
-          <button
-            onClick={() => refresh_handler()}
-            className="bg-zuma-login text-white px-4 py-2 rounded-md mb-3 mr-3"
-          >
-            <p>Refresh</p>
-          </button>
-          <DropdownButton
-            setData={setSelectedFilter}
-            dataValue={selectedFilter}
-            data={{ data: filterOptions }}
-          />
-          <button
-            onClick={() => (!isLoading ? print_handler() : () => {})}
-            className="bg-zuma-login text-white px-4 py-2 rounded-md mb-3 ml-3"
-          >
-            Print
-          </button>
-          {isLoading && (
-            <h1 className="text-black">Generating PDF...</h1> // Simple loading indicator
-          )}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-1 p-4 bg-zuma-green rounded-lg ">
-              <div className="overflow-y-auto max-h-96">
-                <h2 className="text-lg font-semibold mb-4 text-black">
-                  Zuma Products
-                </h2>
-
-                <input
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                  }}
-                  className="w-full mb-4 p-2 border rounded-lg text-black"
-                  placeholder="Search..."
-                />
-
-                <table className="min-w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-300">
-                      <th className="px-4 py-2 border text-black">
-                        Product Name
-                      </th>
-                      <th className="px-4 py-2 border text-black">
-                        Product ID
-                      </th>
-                      <th className="px-4 py-2 border text-black">
-                        Company ID
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>{tableRows}</tbody>
-                </table>
-              </div>
-            </div>
-            <div className="col-span-1 p-4 bg-zuma-green rounded-md">
-              {productAnalytics != null ? (
-                <div>
-                  <h2 className="text-lg font-semibold mb-4 text-black">
-                    Product Analytics
-                  </h2>
-                  <table className="min-w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-300">
-                        <th className="px-4 py-2 border text-black">Stock</th>
-                        <th className="px-4 py-2 border text-black">
-                          Stored Stock
-                        </th>
-                        <th className="px-4 py-2 border text-black">
-                          Active Stock
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white">
-                      <tr>
-                        <td className="px-4 py-2 border text-black">
-                          {Math.floor(productAnalytics.stock[0].STOCK)}
-                        </td>
-                        <td className="px-4 py-2 border text-black">
-                          {Math.floor(productAnalytics.stock[0].STORED_STOCK)}
-                        </td>
-                        <td className="px-4 py-2 border text-black">
-                          {Math.floor(productAnalytics.stock[0].ACTIVE_STOCK)}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <h2 className="text-lg font-semibold mb-4 text-black">
-                    Most Recent Shipment
-                  </h2>
-                  <table className="min-w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-300">
-                        <th className="px-4 py-2 border text-black">
-                          Product Name
-                        </th>
-                        <th className="px-4 py-2 border text-black">
-                          Quantity
-                        </th>
-                        <th className="px-4 py-2 border text-black">Date</th>
-                        <th className="px-4 py-2 borde text-black">Employee</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white">
-                      <tr>
-                        <td className="px-4 py-2 border text-black">
-                          {productAnalytics.shipment.length > 0
-                            ? productAnalytics.shipment[0].PRODUCT_NAME
-                            : "No Data"}
-                        </td>
-                        <td className="px-4 py-2 border text-black">
-                          {productAnalytics.shipment.length > 0
-                            ? Math.floor(productAnalytics.shipment[0].QUANTITY)
-                            : "No Data"}
-                        </td>
-                        <td className="px-4 py-2 border text-black">
-                          {productAnalytics.shipment.length > 0
-                            ? new Date(
-                                productAnalytics.shipment[0].DATE
-                              ).toDateString()
-                            : "No Data"}
-                        </td>
-                        <td className="px-4 py-2 border text-black">
-                          {productAnalytics.shipment.length > 0
-                            ? productAnalytics.shipment[0].EMPLOYEE_ID
-                            : "No Data"}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-black"> No Product Selected </div>
-              )}
-            </div>
+        <div className="container mx-auto p-4 flex flex-col h-full">
+          <div className="flex justify-between mb-3">
+            <button
+              onClick={() => refresh_handler()}
+              className="bg-zuma-login text-white px-4 py-2 rounded-md"
+            >
+              Refresh
+            </button>
+            <DropdownButton
+              setData={setSelectedFilter}
+              dataValue={selectedFilter}
+              data={{ data: filterOptions }}
+            />
+            <button
+              onClick={() => (!isLoading ? print_handler() : () => {})}
+              className="bg-zuma-login text-white px-4 py-2 rounded-md"
+            >
+              Print
+            </button>
           </div>
-          {/* <div className="flex justify-center items-center mt-4 ">
-            <div className="w-full md:w-1/2 bg-gray-200 p-4 text-center px-2 py-2">
-              <h2 className="text-lg font-semibold mb-4 text-black">
-                Product Visual - Shipment/Stock
-              </h2>
-              {productAnalytics != null ? (
-                <PieChart data={prepareChartData()} />
-              ) : null}
-            </div>
-          </div> */}
+          {isLoading && <h1 className="text-black">Generating PDF...</h1>}
+          <div className="h-[72vh] overflow-y-auto">
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full mb-4 p-2 border rounded-lg text-black sticky top-0 bg-white"
+              placeholder="Search..."
+            />
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-300">
+                  <th className="px-4 py-2 border text-black">Product ID</th>
+                  <th className="px-4 py-2 border text-black">Name</th>
+                  <th className="px-4 py-2 border text-black">Stock</th>
+                  <th className="px-4 py-2 border text-black">Active Stock</th>
+                  <th className="px-4 py-2 border text-black">Stored Stock</th>
+                </tr>
+              </thead>
+              <tbody>{tableRows}</tbody>
+            </table>
+          </div>
         </div>
       </BaseModal>
     </>

@@ -22,7 +22,7 @@ const ModalContainer = tw.div`
   h-5/6
   bg-white
   rounded-md
-  overflow-y-auto
+  overflow-y-none
 `;
 
 const ModalHeader = tw.div`

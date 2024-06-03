@@ -209,7 +209,7 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-        <Card onClick={() => {}}>
+        <Card onClick={() => openHandler("manage")}>
           <div className="h-30 bg-black bg-opacity-70 flex justify-center items-center text-white">
             Update Coming Soon
           </div>

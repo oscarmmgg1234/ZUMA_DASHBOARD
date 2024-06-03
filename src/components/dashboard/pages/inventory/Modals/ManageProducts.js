@@ -1,30 +1,26 @@
 import React, { useState } from "react";
 import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
-import NavBar from "./NavBar";
-import LiquidTemplate from "./LiquidTemplate";
-import PillLiquid from "./PillLiquid";
-import CustomProduct from "./CustomProduct";
-import EditProducts from "./EditProducts";
+import CustomProduct from "./manageProdSubViews/CustomProduct";
+import EditView from "./manageProdSubViews/EditProducts";
+import EditTokens from "./manageProdSubViews/EditTokens";
+import Navbar from "./manageProdSubViews/Navbar";
 
 const http = new http_handler();
 
 export default function ManageProducts(props) {
   const [navRoute, setNavRoute] = useState(0);
-  // routes = 0 - liquid template product add, 1 - pill liquid product add, 2 - custom product add, 3 - edit products
 
   const renderContent = () => {
     switch (navRoute) {
-      case 0:
-        return <LiquidTemplate />;
-      case 1:
-        return <PillLiquid />;
       case 2:
-        return <CustomProduct />;
-      case 3:
-        return <EditProducts />;
+        return <EditTokens api={http} />;
+      case 1:
+        return <CustomProduct api={http} />;
+      case 0:
+        return <EditView api={http} />;
       default:
-        return null;
+        return <EditView api={http} />;
     }
   };
 
@@ -35,9 +31,11 @@ export default function ManageProducts(props) {
       title={"Manage Products"}
       closeName={"manage"}
     >
-      <NavBar navRoute={navRoute} setNavRoute={setNavRoute} />
-      <div className="relative overflow-hidden">
-        <div className="transition-opacity duration-500 ease-in-out opacity-0">
+      <div className="relative h-full flex flex-col">
+        <div className="fixed w-full z-10">
+          <Navbar currentRoute={navRoute} onRouteChange={setNavRoute} />
+        </div>
+        <div className="flex-1 mt-24 overflow-y-auto p-4">
           {renderContent()}
         </div>
       </div>
