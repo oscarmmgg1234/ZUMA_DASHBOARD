@@ -1,3 +1,4 @@
+import Tooltip from "@mui/material/Tooltip";
 import React, { useEffect, useState } from "react";
 import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
@@ -39,7 +40,7 @@ const DropdownButton = (props) => {
             >
               <path
                 fillRule="evenodd"
-                d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 011.414 0l.707.707a1 1 0 010 1.414L11.414 10l2.293 2.293a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414 0L10 11.414l-2.293 2.293a1 1 0 01-1.414 0l-.707-.707a1 1 0 010-1.414L8.586 10 6.293 7.707a1 1 0 010-1.414l.707-.707z"
+                d="M6.293 6.293a1 1 0 011.414 0L10 8.586l2.293-2.293a1 1 0 011.414 0l.707.707a1 1 0 010 1.414L11.414 10l2.293 2.293a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414 0L10 11.414l-2.293 2.293a1 1 0 01-1.414 0l-.707-.707z"
                 clipRule="evenodd"
               />
             </svg>
@@ -239,13 +240,21 @@ export default function ViewInventoryModal(props) {
     >
       <td className="px-4 py-2 border text-black">{product.PRODUCT_ID}</td>
       <td className="px-4 py-2 border text-black">{product.NAME}</td>
-      <td className="px-4 py-2 border text-black">{product.STOCK ?? "N/A"}</td>
-      <td className="px-4 py-2 border text-black">
-        {product.ACTIVE_STOCK ?? "N/A"}
-      </td>
-      <td className="px-4 py-2 border text-black">
-        {product.STORED_STOCK ?? "N/A"}
-      </td>
+      <Tooltip title="TOTAL STOCK" placement="left" arrow>
+        <td className="px-4 py-2 border text-black">
+          {product.STOCK ?? "N/A"}
+        </td>
+      </Tooltip>
+      <Tooltip title="Active Stock" placement="left" arrow>
+        <td className="px-4 py-2 border text-black">
+          {product.ACTIVE_STOCK ?? "N/A"}
+        </td>
+      </Tooltip>
+      <Tooltip title="Stored Stock" placement="left" arrow>
+        <td className="px-4 py-2 border text-black">
+          {product.STORED_STOCK ?? "N/A"}
+        </td>
+      </Tooltip>
     </tr>
   ));
 
