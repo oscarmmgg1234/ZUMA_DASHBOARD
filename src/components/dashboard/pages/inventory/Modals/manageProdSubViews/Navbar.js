@@ -23,7 +23,7 @@ export default function Navbar({ currentRoute, onRouteChange }) {
       >
         Create Product
       </button>
-      <button
+      {/* <button
         onClick={() => onRouteChange(2)}
         className={`px-4 py-2 rounded ${
           currentRoute === 2
@@ -32,7 +32,7 @@ export default function Navbar({ currentRoute, onRouteChange }) {
         }`}
       >
         Edit Product Tokens
-      </button>
+      </button> */}
     </nav>
   );
 }

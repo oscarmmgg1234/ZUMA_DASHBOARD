@@ -387,7 +387,7 @@ export default function CustomProduct(props) {
           display: "flex",
           flexDirection: "column",
           width: "100%",
-          maxHeight: "67vh",
+          maxHeight: "62vh",
           overflowY: "auto",
         }}
       >
