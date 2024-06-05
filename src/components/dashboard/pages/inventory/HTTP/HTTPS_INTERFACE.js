@@ -18,9 +18,13 @@ import {
   fetchRegistry,
   runtimeTest,
   addProductProcess,
+  getPastYearShipments
 } from "./HTTPS";
 
 export default class http_handler {
+  getPastYearShipments = async () => {
+    return await getPastYearShipments();
+  };
   addProductProcess = async (data) => {
     return await addProductProcess(data);
   };
