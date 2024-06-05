@@ -1,6 +1,19 @@
-const base_url = "http://localhost:3001";
+const base_url = "http://192.168.1.176:3001";
 // http://192.168.1.176:3002
 
+
+
+export const deleteProduct = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/delProduct`, options);
+  return await response.json();
+};
 export const getPastYearShipments = async () => {
   const options = {
     method: "GET",

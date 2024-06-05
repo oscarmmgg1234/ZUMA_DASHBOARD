@@ -175,6 +175,38 @@ export default function EditView(props) {
     );
   };
 
+  const handleDeleteProduct = async () => {
+    const password = prompt("Enter password to delete the product:");
+    if (password === "zumadelete") {
+      const confirmation = window.confirm(
+        "Are you sure you want to delete this product?"
+      );
+      if (confirmation) {
+        try {
+          const response = await props.api.deleteProduct({
+            PRODUCT_ID: selectedProduct.PRODUCT_ID,
+          });
+          if (response.status === true) {
+            alert("Product deleted successfully");
+            setProductList((prevList) =>
+              prevList.filter(
+                (product) => product.PRODUCT_ID !== selectedProduct.PRODUCT_ID
+              )
+            );
+            setSelectedProduct(null);
+          } else {
+            alert("Product deletion failed");
+          }
+        } catch (error) {
+          console.error("Error deleting product:", error);
+          alert("An error occurred while deleting the product");
+        }
+      }
+    } else {
+      alert("Incorrect password. Deletion cancelled.");
+    }
+  };
+
   return (
     <div className="relative">
       <button
@@ -318,6 +350,12 @@ export default function EditView(props) {
             className="w-full p-4 bg-green-500 text-white rounded text-lg font-semibold"
           >
             Commit Changes
+          </button>
+          <button
+            onClick={handleDeleteProduct}
+            className="w-full mt-2 p-4 bg-red-500 text-white rounded text-lg font-semibold"
+          >
+            Delete Product
           </button>
         </div>
       )}
