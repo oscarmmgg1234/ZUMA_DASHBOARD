@@ -25,7 +25,7 @@ export default function CustomProduct(props) {
     type: "",
     location: "4322",
     company: "",
-    unitType: "", // Add unitType to the form fields
+    unitType: "",
   });
   const [createLabel, setCreateLabel] = useState(false);
   const [actionRows, setActionRows] = useState([]);
@@ -40,7 +40,13 @@ export default function CustomProduct(props) {
   const [companies, setCompanies] = useState([]);
   const [productTypes, setProductTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [notification, setNotification] = useState({ message: "", visible: false });
+  const [notification, setNotification] = useState({
+    message: "",
+    visible: false,
+  });
+  const [selectedProduct, setSelectedProduct] = useState({ id: "", name: "" }); // New state
+  const [isReferenceProductChecked, setIsReferenceProductChecked] =
+    useState(false); // New state
 
   useEffect(() => {
     async function fetchData() {
@@ -72,7 +78,6 @@ export default function CustomProduct(props) {
 
   useEffect(() => {
     if (!createLabel) {
-      // Remove label reference if createLabel is toggled off
       setActionRows((rows) =>
         rows.map((row) =>
           row.product.id === generatedIDs[1]
@@ -264,12 +269,21 @@ export default function CustomProduct(props) {
       );
       setShipmentRows(updatedRows);
       updateShipmentSummary(updatedRows);
+    } else if (currentSection === "reference") {
+      setSelectedProduct({ id: productID, name: productName });
     }
     closeOverlay();
   };
 
+  const handleReferenceProductChange = () => {
+    setIsReferenceProductChecked(!isReferenceProductChecked);
+    if (!isReferenceProductChecked) {
+      setSelectedProduct({ id: "", name: "" });
+    }
+  };
+
   const handleTestProduct = async () => {
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
     console.log("Test Product:", {
       ...formFields,
       createLabel,
@@ -277,6 +291,7 @@ export default function CustomProduct(props) {
       reductionTokens: reductionRows,
       shipmentTokens: shipmentRows,
       generatedIDs: generatedIDs,
+      RefProduct: selectedProduct.id || null, // Include RefProduct or null
     });
 
     const response = await props.api.runtimeTest({
@@ -286,13 +301,17 @@ export default function CustomProduct(props) {
       reductionTokens: reductionRows,
       shipmentTokens: shipmentRows,
       generatedIDs: generatedIDs,
+      RefProduct: selectedProduct.id || null, // Include RefProduct or null
     });
 
-    setIsLoading(false); // End loading
+    setIsLoading(false);
     console.log(response);
 
     if (response.status) {
-      setNotification({ message: "Test completed successfully!", visible: true });
+      setNotification({
+        message: "Test completed successfully!",
+        visible: true,
+      });
       setTimeout(() => setNotification({ message: "", visible: false }), 3000);
 
       const logText = response.log.replace(/\n/g, "<br>");
@@ -317,6 +336,7 @@ export default function CustomProduct(props) {
       reductionTokens: reductionRows,
       shipmentTokens: shipmentRows,
       generatedIDs: generatedIDs,
+      RefProduct: selectedProduct.id || null, // Include RefProduct or null
     });
     setNotification({ message: "Product added successfully!", visible: true });
     setTimeout(() => setNotification({ message: "", visible: false }), 3000);
@@ -563,6 +583,34 @@ export default function CustomProduct(props) {
             <option value="BUNDLE">BUNDLE</option>
           </select>
         </label>
+
+        <label style={{ width: "100%", marginBottom: "10px" }}>
+          Reference Stored Stock Product:
+          <input
+            type="checkbox"
+            checked={isReferenceProductChecked}
+            onChange={handleReferenceProductChange}
+            style={{ marginLeft: "10px" }}
+          />
+        </label>
+
+        {isReferenceProductChecked && (
+          <button
+            type="button"
+            onClick={() => openOverlay(null, "reference")}
+            style={{
+              display: "block",
+              margin: "10px 0",
+              padding: "10px 20px",
+              backgroundColor: "gray",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+            }}
+          >
+            {selectedProduct.name ? selectedProduct.name : "Select Product"}
+          </button>
+        )}
 
         <label style={{ width: "100%", marginBottom: "20px" }}>
           Create Label For this Product:
