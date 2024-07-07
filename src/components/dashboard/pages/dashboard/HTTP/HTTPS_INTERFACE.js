@@ -1,4 +1,9 @@
-import { getTopEmployee, getMetrics, getMetricsHistory } from "./HTTPS";
+import {
+  getTopEmployee,
+  getMetrics,
+  getMetricsHistory,
+  getEmployees,
+} from "./HTTPS";
 
 export default class http_handler {
   getTopEmployee = async () => {
@@ -9,5 +14,8 @@ export default class http_handler {
   };
   getMetricsHistory = async (params, options) => {
     return await getMetricsHistory(params, options);
+  };
+  getEmployees = async () => {
+    return await getEmployees();
   };
 }

@@ -49,3 +49,14 @@ export const getMetricsHistory = async (params, option) => {
   );
   return await response.json();
 };
+
+export const getEmployees = async () => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${metrics_base_url}/employees`, options);
+  return await response.json();
+}
