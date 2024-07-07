@@ -20,9 +20,13 @@ import {
   addProductProcess,
   getPastYearShipments,
   deleteProduct,
+  getGlobalMetrics,
 } from "./HTTPS";
 
 export default class http_handler {
+  getGlobalMetrics = async () => {
+    return await getGlobalMetrics();
+  };
   deleteProduct = async (data) => {
     return await deleteProduct(data);
   };

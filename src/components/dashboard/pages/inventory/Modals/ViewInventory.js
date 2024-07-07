@@ -81,6 +81,7 @@ export default function ViewInventoryModal(props) {
 
   const [filterOptions, setFilterOptions] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState("ALL PRODUCTS");
+  const [metrics, setMetrics] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -111,7 +112,7 @@ export default function ViewInventoryModal(props) {
           body: JSON.stringify(requestData),
         };
         const pdf = await fetch(
-          "http://192.168.1.176:3001/gen_inv_pdf_by_company",
+          "http://localhost:3001/gen_inv_pdf_by_company",
           requestOptions
         );
         const pdfBlob = await pdf.blob();
@@ -128,7 +129,7 @@ export default function ViewInventoryModal(props) {
           },
         };
         const pdf = await fetch(
-          "http://192.168.1.176:3001/gen_inv_pdf_A4",
+          "http://localhost:3001/gen_inv_pdf_A4",
           requestOptions
         );
         const pdfBlob = await pdf.blob();
@@ -145,6 +146,17 @@ export default function ViewInventoryModal(props) {
   };
 
   const init = async () => {
+    let metric_map = new Map();
+    const metrics = await http.getGlobalMetrics();
+    metrics.perHourMonthTimeFrame.forEach((item) => {
+      const rate = parseFloat(item.total);
+      if (rate > 0) {
+        metric_map.set(item.product_id, rate);
+      } else {
+        metric_map.set(item.product_id, 0);
+      }
+    });
+    setMetrics(metric_map);
     const productInventory = await http.getProductsInventory();
     const inventoryMap = new Map(
       productInventory.data.map((item) => [item.PRODUCT_ID, item])
@@ -238,7 +250,7 @@ export default function ViewInventoryModal(props) {
       }`}
       onClick={() => setSelectedProduct(product)}
     >
-      <td className="px-4 py-2 border text-black">{product.PRODUCT_ID}</td>
+      <td className="px-4 py-2 border text-black">{metrics.get(product.PRODUCT_ID) === 0 ? "N/A" : metrics.get(product.PRODUCT_ID)}</td>
       <td className="px-4 py-2 border text-black">{product.NAME}</td>
       <Tooltip title="TOTAL STOCK" placement="left" arrow>
         <td className="px-4 py-2 border text-black">
@@ -297,7 +309,7 @@ export default function ViewInventoryModal(props) {
             <table className="min-w-full border-collapse">
               <thead>
                 <tr className="bg-gray-300">
-                  <th className="px-4 py-2 border text-black">Product ID</th>
+                  <th className="px-4 py-2 border text-black">Reduction Rate</th>
                   <th className="px-4 py-2 border text-black">Name</th>
                   <th className="px-4 py-2 border text-black">Stock</th>
                   <th className="px-4 py-2 border text-black">Active Stock</th>

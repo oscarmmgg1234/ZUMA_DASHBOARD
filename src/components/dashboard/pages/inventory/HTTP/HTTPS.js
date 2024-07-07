@@ -1,7 +1,18 @@
-const base_url = "http://localhost:3001";
+const base_url = "http://192.168.1.176:3001";
 // http://192.168.1.176:3002
 
 
+
+export const getGlobalMetrics = async () => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`http://localhost:3002/metrics/global`, options);
+  return await response.json();
+};
 
 export const deleteProduct = async (data) => {
   const options = {
