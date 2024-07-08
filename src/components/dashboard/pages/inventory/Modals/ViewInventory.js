@@ -112,7 +112,7 @@ export default function ViewInventoryModal(props) {
           body: JSON.stringify(requestData),
         };
         const pdf = await fetch(
-          "http://localhost:3001/gen_inv_pdf_by_company",
+          "http://192.168.1.176:3001/gen_inv_pdf_by_company",
           requestOptions
         );
         const pdfBlob = await pdf.blob();
@@ -129,7 +129,7 @@ export default function ViewInventoryModal(props) {
           },
         };
         const pdf = await fetch(
-          "http://localhost:3001/gen_inv_pdf_A4",
+          "http://192.168.1.176:3001/gen_inv_pdf_A4",
           requestOptions
         );
         const pdfBlob = await pdf.blob();
