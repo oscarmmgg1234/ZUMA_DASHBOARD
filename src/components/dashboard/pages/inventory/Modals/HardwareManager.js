@@ -110,7 +110,7 @@ export default function HardwareManager(props) {
                   backgroundColor: "#f1f1f1",
                 }}
               >
-                Assigned Employee
+                Label
               </th>
               <th
                 style={{
@@ -162,7 +162,7 @@ export default function HardwareManager(props) {
                     color: "black",
                   }}
                 >
-                  {scanner.assigned_employee || "N/A"}
+                  {scanner.label || "N/A"}
                 </td>
                 <td
                   style={{
