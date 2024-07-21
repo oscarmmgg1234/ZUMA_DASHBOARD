@@ -10,6 +10,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
 import "chartjs-adapter-date-fns";
 
@@ -22,12 +23,20 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
-
+const rgbToRgba = (rgb, alpha) => {
+  return rgb.replace("rgb", "rgba").replace(")", `, ${alpha})`);
+};
 const ChartComponent = ({ data, options }) => {
   const chartData = {
-    datasets: data,
+    datasets: data.map((dataset) => ({
+      ...dataset,
+      fill: true,
+      backgroundColor: rgbToRgba(dataset.borderColor, 0.2), // Optional: Set the line tension for smooth curves
+      tension: 0.3, // Optional: Set the line tension for smooth curves
+    })),
   };
 
   const defaultOptions = {
@@ -42,7 +51,7 @@ const ChartComponent = ({ data, options }) => {
         },
         title: {
           display: true,
-          text: "Date",
+          text: "This Week",
         },
         ticks: {
           autoSkip: false,

@@ -1,8 +1,39 @@
 const base_url = "http://192.168.1.176:3001";
 // http://192.168.1.176:3002
 
+export const deleteScanner = async (id) => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${base_url}/deleteHarware/${id}`, options);
+  return await response.json();
+};
 
+export const addScanner = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/addHardware`, options);
+  return await response.json();
+};
 
+export const getScannerData = async () => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${base_url}/getScannerData`, options);
+  return await response.json();
+};
 export const getGlobalMetrics = async () => {
   const options = {
     method: "GET",

@@ -21,9 +21,21 @@ import {
   getPastYearShipments,
   deleteProduct,
   getGlobalMetrics,
+  getScannerData,
+  addScanner,
+  deleteScanner,
 } from "./HTTPS";
 
 export default class http_handler {
+  addScanner = async (data) => {
+    return await addScanner(data);
+  };
+  deleteScanner = async (hardwareID) => {
+    return await deleteScanner(hardwareID);
+  };
+  getScannerData = async () => {
+    return await getScannerData();
+  };
   getGlobalMetrics = async () => {
     return await getGlobalMetrics();
   };

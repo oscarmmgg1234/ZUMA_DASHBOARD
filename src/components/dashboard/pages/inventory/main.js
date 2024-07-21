@@ -9,6 +9,7 @@ import OverrideStock from "./Modals/OverrideStock";
 import ManageSystem from "./Modals/ManageSystem";
 import ProductTracking from "./Modals/ProductTracking";
 import SetGlobalGlycerin from "./Modals/SetGlobalGlycerin";
+import HardwareManager from "./Modals/HardwareManager";
 
 const Overlay = tw.div`
 
@@ -96,7 +97,7 @@ export default function Inventory() {
     useState(false);
   const [GlobalGlycerinModalVisible, setGlobalGlycerinModalVisible] =
     useState(false);
-
+  const [hardwareModalVisible, setHardwareModalVisible] = useState(false);
   const closeHandler = (args) => {
     if (args === "viewInv") {
       setViewInvModalVisible(false);
@@ -124,6 +125,9 @@ export default function Inventory() {
     }
     if (args === "GlobalGlycerin") {
       setGlobalGlycerinModalVisible(false);
+    }
+    if (args === "hardware") {
+      setHardwareModalVisible(false);
     }
   };
 
@@ -154,6 +158,9 @@ export default function Inventory() {
     }
     if (args === "GlobalGlycerin") {
       setGlobalGlycerinModalVisible(true);
+    }
+    if (args === "hardware") {
+      setHardwareModalVisible(true);
     }
   };
 
@@ -210,7 +217,6 @@ export default function Inventory() {
           </SubComponent>
         </Card>
         <Card onClick={() => openHandler("manage")}>
-          
           <h2 className="text-black mb-3">Manage Products</h2>
           <SubComponent>
             <h3 className="text-gray-800/50">Utility</h3>
@@ -256,7 +262,15 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
-      
+        <Card onClick={() => openHandler("hardware")}>
+          <h2 className="text-black mb-3">Manage System Hardware</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Configure and manage system hardware
+            </p>
+          </SubComponent>
+        </Card>
       </CardGrid>
 
       <ViewInventoryModal
@@ -290,6 +304,10 @@ export default function Inventory() {
       />
       <SetGlobalGlycerin
         visible={GlobalGlycerinModalVisible}
+        closeHandler={closeHandler}
+      />
+      <HardwareManager
+        visible={hardwareModalVisible}
         closeHandler={closeHandler}
       />
     </>
