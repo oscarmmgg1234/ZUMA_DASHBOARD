@@ -10,6 +10,7 @@ export default function HardwareManager(props) {
     status: 0,
     type_desc: "Reduction Scanner",
     assigned_employee: null,
+    label: "",
   });
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function HardwareManager(props) {
       status: 0,
       type_desc: "Reduction Scanner",
       assigned_employee: null,
+      label: "",
     });
   };
 
@@ -257,6 +259,23 @@ export default function HardwareManager(props) {
               ...newScanner,
               assigned_employee: e.target.value,
             })
+          }
+        />
+        <input
+          style={{
+            padding: "10px",
+            margin: "10px 0",
+            width: "100%",
+            boxSizing: "border-box",
+            color: "black",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+          }}
+          type="text"
+          placeholder="Label"
+          value={newScanner.label}
+          onChange={(e) =>
+            setNewScanner({ ...newScanner, label: e.target.value })
           }
         />
         <button
