@@ -159,22 +159,22 @@ export default function EditProduct(props) {
     };
 
     console.log("Payload:", payload);
-    // const response = await props.api.commitChanges(payload);
+    const response = await props.api.commitChanges(payload);
 
-    // if (response.status === true) {
-    //   // Update local product state
-    //   setProductList((prevList) =>
-    //     prevList.map((product) =>
-    //       product.PRODUCT_ID === selectedProduct.PRODUCT_ID
-    //         ? { ...product, ...editedFields }
-    //         : product
-    //     )
-    //   );
-    //   setSuccess(true);
-    // } else {
-    //   // Handle error (optional)
-    //   console.error("Failed to update product");
-    // }
+    if (response.status === true) {
+      // Update local product state
+      setProductList((prevList) =>
+        prevList.map((product) =>
+          product.PRODUCT_ID === selectedProduct.PRODUCT_ID
+            ? { ...product, ...editedFields }
+            : product
+        )
+      );
+      setSuccess(true);
+    } else {
+      // Handle error (optional)
+      console.error("Failed to update product");
+    }
   };
 
   const compileTokens = (rows) => {
