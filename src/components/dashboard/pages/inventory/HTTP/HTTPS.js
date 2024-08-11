@@ -41,7 +41,7 @@ export const getGlobalMetrics = async () => {
       "Content-Type": "application/json",
     },
   };
-  const response = await fetch(`http://192.168.1.209:3002/metrics/global`, options);
+  const response = await fetch(`http://192.168.1.224:3002/metrics/global`, options);
   return await response.json();
 };
 
