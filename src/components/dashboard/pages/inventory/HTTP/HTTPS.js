@@ -1,6 +1,30 @@
 const base_url = "http://192.168.1.176:3001";
 // http://192.168.1.176:3002
 
+
+export const getEmployeeData = async () => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${base_url}/get_employee_info`, options);
+  return await response.json();
+};
+
+export const getProductHistory = async (dateRange, productID) => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ dateRange: dateRange, productID: productID }),
+  };
+  const response = await fetch(`${base_url}/getProductHistory`, options);
+  return await response.json();
+};
+
 export const deleteScanner = async (id) => {
   const options = {
     method: "GET",
@@ -41,7 +65,10 @@ export const getGlobalMetrics = async () => {
       "Content-Type": "application/json",
     },
   };
-  const response = await fetch(`http://192.168.1.224:3002/metrics/global`, options);
+  const response = await fetch(
+    `http://192.168.1.224:3002/metrics/global`,
+    options
+  );
   return await response.json();
 };
 

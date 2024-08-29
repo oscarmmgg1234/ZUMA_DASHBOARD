@@ -10,6 +10,7 @@ import ManageSystem from "./Modals/ManageSystem";
 import ProductTracking from "./Modals/ProductTracking";
 import SetGlobalGlycerin from "./Modals/SetGlobalGlycerin";
 import HardwareManager from "./Modals/HardwareManager";
+import ProductHistory from "./Modals/ProductHistory";
 
 const Overlay = tw.div`
 
@@ -98,7 +99,13 @@ export default function Inventory() {
   const [GlobalGlycerinModalVisible, setGlobalGlycerinModalVisible] =
     useState(false);
   const [hardwareModalVisible, setHardwareModalVisible] = useState(false);
+  const [productHistoryModalVisible, setProductHistoryModalVisible] =
+    useState(false);
+
   const closeHandler = (args) => {
+    if (args === "productHistory") {
+      setProductHistoryModalVisible(false);
+    }
     if (args === "viewInv") {
       setViewInvModalVisible(false);
     }
@@ -132,6 +139,9 @@ export default function Inventory() {
   };
 
   const openHandler = (args) => {
+    if (args === "productHistory") {
+      setProductHistoryModalVisible(true);
+    }
     if (args === "viewInv") {
       setViewInvModalVisible(true);
     }
@@ -203,6 +213,16 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
+        <Card onClick={() => openHandler("productHistory")}>
+          <h2 className="text-black mb-3">Product History and Monitoring</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              View product history and monitor product usage
+            </p>
+          </SubComponent>
+        </Card>
+
         <Card onClick={() => {}}>
           <div className="h-30 bg-black bg-opacity-70 flex justify-center items-center text-white">
             Update Coming Soon
@@ -308,6 +328,10 @@ export default function Inventory() {
       />
       <HardwareManager
         visible={hardwareModalVisible}
+        closeHandler={closeHandler}
+      />
+      <ProductHistory
+        visible={productHistoryModalVisible}
         closeHandler={closeHandler}
       />
     </>
