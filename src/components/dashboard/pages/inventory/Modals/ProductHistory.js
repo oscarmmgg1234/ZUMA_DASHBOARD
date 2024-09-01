@@ -1,13 +1,4 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Button,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
 import BaseModal from "./Base";
 import { format } from "date-fns";
@@ -16,43 +7,151 @@ const http = new http_handler();
 
 export default function ProductHistory(props) {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productHistory, setProductHistory] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [startRange, setStartRange] = useState(
     format(new Date(), "yyyy-MM-dd")
   );
   const [endRange, setEndRange] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [productModalVisible, setProductModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [historyOverlayVisible, setHistoryOverlayVisible] = useState(false);
 
-  const init_process = async () => {
-    await init();
+  useEffect(() => {
+    const init = async () => {
+      const products = await http.getProducts();
+      const sortedProducts = products.data.sort((a, b) =>
+        a.NAME.localeCompare(b.NAME)
+      );
+      const filteredProducts = sortedProducts.filter(
+        (product) => product.TYPE === "122" || product.TYPE === "44"
+      );
+      setProducts(filteredProducts);
+      setFilteredProducts(filteredProducts);
+    };
+    init();
+  }, []);
+
+  const handleProductSelect = (product) => {
+    setSelectedProduct(product);
+    setProductModalVisible(false);
   };
 
-  const init = async () => {
-    const employees = await http.getEmployeeData();
-    setEmployees(employees.data);
-    const products = await http.getProducts();
-    setProducts(products.data);
+  const handleSearchChange = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+    const filtered = products.filter((product) =>
+      product.NAME.toLowerCase().includes(query)
+    );
+    setFilteredProducts(filtered);
   };
 
   const fetchProductHistory = async () => {
     if (!selectedProduct) {
       return alert("Please select a product");
     }
-    const history = await http.getProductHistory(selectedProduct, {
+    const range = {
       start: startRange,
       end: endRange,
-    });
-    setProductHistory(history.data);
+    };
+
+    try {
+      const history = await http.getProductHistory(
+        selectedProduct.PRODUCT_ID,
+        range
+      );
+
+      if (history.status) {
+        if (history.data.length === 0) {
+          alert(
+            "No product transaction found during the specified date range."
+          );
+          setProductHistory([]);
+          setHistoryOverlayVisible(false);
+        } else {
+          setProductHistory(history.data);
+          setHistoryOverlayVisible(true);
+        }
+      } else {
+        alert("No product transaction found during the specified date range.");
+        setProductHistory([]);
+        setHistoryOverlayVisible(false);
+      }
+    } catch (error) {
+      console.error("Failed to fetch product history:", error);
+      alert(
+        "An error occurred while fetching the product history. Please try again later."
+      );
+    }
   };
 
-  useEffect(() => {
-    init_process();
-  }, []);
+  const renderProductModal = () => (
+    <BaseModal
+      visible={productModalVisible}
+      closeHandler={() => setProductModalVisible(false)}
+      title={"Select Product"}
+    >
+      <div className="p-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={handleSearchChange}
+          placeholder="Search products..."
+          className="w-full p-2 mb-4 border border-gray-300 rounded text-black"
+        />
+        <div className="max-h-80 overflow-y-auto">
+          {filteredProducts.map((product, index) => (
+            <div
+              key={product.PRODUCT_ID}
+              className={`p-3 mb-2 rounded-md cursor-pointer transition-colors duration-300 
+                ${
+                  product.PRODUCT_ID === selectedProduct?.PRODUCT_ID
+                    ? "bg-blue-100 border-l-4 border-blue-500"
+                    : index % 2 === 0
+                    ? "bg-white hover:bg-gray-100"
+                    : "bg-gray-100 hover:bg-gray-200"
+                }`}
+              onClick={() => handleProductSelect(product)}
+            >
+              <p className="font-semibold text-gray-800">{product.NAME}</p>
+              <p className="text-sm text-gray-600">ID: {product.PRODUCT_ID}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </BaseModal>
+  );
+
+  const renderStockTable = (stockData) => {
+    return (
+      <table className="w-full text-xs text-left text-gray-700 mt-2">
+        <thead>
+          <tr>
+            <th className="border px-2 py-1">Product Name</th>
+            <th className="border px-2 py-1">Stock</th>
+            <th className="border px-2 py-1">Stored Stock</th>
+            <th className="border px-2 py-1">Active Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          {stockData.map((item, index) => (
+            <tr key={index}>
+              <td className="border px-2 py-1 text-black">
+                {item.product_name}
+              </td>
+              <td className="border px-2 py-1">{item.stock}</td>
+              <td className="border px-2 py-1">{item.stored}</td>
+              <td className="border px-2 py-1">{item.active}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  };
 
   const groupedHistory = productHistory.reduce((acc, entry) => {
-    const entryDate = new Date(entry.date);
+    const entryDate = new Date(entry.DATE);
     const dayKey = format(entryDate, "yyyy-MM-dd");
     if (!acc[dayKey]) {
       acc[dayKey] = [];
@@ -61,43 +160,101 @@ export default function ProductHistory(props) {
     return acc;
   }, {});
 
+  const getTotalTransactions = () => {
+    let total = 0;
+    for (const product in productHistory) {
+      total += 1;
+    }
+    return total;
+  };
   const renderHistory = () => {
     const dayEntries = Object.keys(groupedHistory)
       .sort((a, b) => new Date(b) - new Date(a)) // Sort by most recent date
       .map((dayKey) => {
         const entries = groupedHistory[dayKey];
         return (
-          <View key={dayKey} style={styles.dayGroup}>
-            <Text style={styles.dayHeader}>
+          <div
+            key={dayKey}
+            className="mb-6 bg-white rounded-lg p-4 shadow-md border border-orange-200 bg-orange-50"
+          >
+            <h3 className="font-bold text-lg text-gray-700 mb-4">
               {format(new Date(dayKey), "eeee, MMMM do, yyyy")}
-            </Text>
+            </h3>
             {entries.map((entry, index) => (
-              <View key={index} style={styles.historyEntry}>
-                <Text style={styles.entryText}>
+              <div key={index} className="border-b border-gray-200 py-2">
+                <p className="text-xs text-gray-600">
                   Transaction ID: {entry.TRANSACTIONID}
-                </Text>
-                <Text style={styles.entryText}>
-                  Product ID: {entry.PRODUCT_ID}
-                </Text>
-                <Text style={styles.entryText}>
-                  Product Name: {entry.PRODUCT_NAME}
-                </Text>
-                <Text style={styles.entryText}>Origin: {entry.origin}</Text>
-                <Text style={styles.entryText}>
-                  Date: {format(new Date(entry.date), "yyyy-MM-dd HH:mm:ss")}
-                </Text>
-                <Text style={styles.entryText}>
-                  Before Stock: {JSON.stringify(entry.before_stock)}
-                </Text>
-                <Text style={styles.entryText}>
-                  After Stock: {JSON.stringify(entry.after_stock)}
-                </Text>
-              </View>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Employee: {entry.EMPLOYEE_NAME}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Protocol Reference: {entry.PRODUCT_NAME}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Product Name: {entry.ACTION}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Status:{" "}
+                  {entry.REVERSED == 0 ? "Committed" : "Error and Reverted"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Date: {format(new Date(entry.DATE), "yyyy-MM-dd HH:mm:ss")}
+                </p>
+                {entry.before_stock && (
+                  <>
+                    <p className="text-sm font-semibold text-gray-700 mt-2">
+                      Before Stock:
+                    </p>
+                    {renderStockTable(entry.before_stock)}
+                  </>
+                )}
+                {entry.after_stock && (
+                  <>
+                    <p className="text-sm font-semibold text-gray-700 mt-2">
+                      After Stock:
+                    </p>
+                    {renderStockTable(entry.after_stock)}
+                  </>
+                )}
+              </div>
             ))}
-          </View>
+          </div>
         );
       });
     return dayEntries;
+  };
+
+  const FullPageOverlay = ({ visible, onClose, children }) => {
+    if (!visible) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+        <div className="bg-white w-full h-full p-5 overflow-y-auto relative">
+          <button
+            className="fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-md z-10"
+            onClick={onClose}
+          >
+            Back
+          </button>
+          <div className="mt-16">
+            <div className="mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 rounded-md">
+              <h2 className="font-semibold text-gray-800 text-lg">
+                Product: {selectedProduct.NAME}
+              </h2>
+              <p className="text-sm text-gray-600">
+                Date Range: {startRange} to {endRange}
+              </p>
+              <p className="text-sm text-gray-600">
+                Total Transactions: {getTotalTransactions()}
+              </p>
+            </div>{" "}
+            {/* This adds space below the Back button */}
+            {children}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -107,102 +264,58 @@ export default function ProductHistory(props) {
       title={"Product History"}
       closeName={"productHistory"}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.filterContainer}>
-          <Text style={styles.label}>Start Date:</Text>
-          <TextInput
-            style={styles.dateInput}
+      <div className="p-5 bg-gray-100">
+        <div className="mb-5 p-4 bg-white rounded-lg shadow-md">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Start Date:
+          </label>
+          <input
+            type="date"
+            className="border border-gray-300 rounded-md p-2 text-sm w-full mb-4"
             value={startRange}
-            onChangeText={(text) => setStartRange(text)}
+            onChange={(e) => setStartRange(e.target.value)}
             placeholder="YYYY-MM-DD"
           />
-          <Text style={styles.label}>End Date:</Text>
-          <TextInput
-            style={styles.dateInput}
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            End Date:
+          </label>
+          <input
+            type="date"
+            className="border border-gray-300 rounded-md p-2 text-sm w-full mb-4"
             value={endRange}
-            onChangeText={(text) => setEndRange(text)}
+            onChange={(e) => setEndRange(e.target.value)}
             placeholder="YYYY-MM-DD"
           />
-          <TouchableOpacity style={styles.button} onPress={fetchProductHistory}>
-            <Text style={styles.buttonText}>Fetch History</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.historyContainer}>{renderHistory()}</View>
-      </ScrollView>
+          <button
+            className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition mb-4"
+            onClick={() => setProductModalVisible(true)}
+          >
+            Select Product
+          </button>
+          {selectedProduct && (
+            <div className="p-2 bg-gray-200 rounded-md mb-4">
+              <p className="font-semibold">Selected Product:</p>
+              <p>{selectedProduct.NAME}</p>
+              <p className="text-sm text-gray-600">
+                ID: {selectedProduct.PRODUCT_ID}
+              </p>
+            </div>
+          )}
+          <button
+            className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition"
+            onClick={fetchProductHistory}
+          >
+            Fetch History
+          </button>
+        </div>
+        <FullPageOverlay
+          visible={historyOverlayVisible}
+          onClose={() => setHistoryOverlayVisible(false)}
+        >
+          {renderHistory()}
+        </FullPageOverlay>
+        {renderProductModal()}
+      </div>
     </BaseModal>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    backgroundColor: "#f5f5f5",
-  },
-  filterContainer: {
-    marginBottom: 20,
-    padding: 10,
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 5,
-  },
-  dateInput: {
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 8,
-    fontSize: 14,
-    marginBottom: 10,
-    backgroundColor: "#ffffff",
-  },
-  button: {
-    backgroundColor: "#007bff",
-    paddingVertical: 10,
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  historyContainer: {
-    marginTop: 20,
-  },
-  dayGroup: {
-    marginBottom: 20,
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    padding: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  dayHeader: {
-    fontWeight: "700",
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 10,
-  },
-  historyEntry: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    paddingVertical: 8,
-  },
-  entryText: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 2,
-  },
-});

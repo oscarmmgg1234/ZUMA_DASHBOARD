@@ -13,9 +13,9 @@ export const getEmployeeData = async () => {
   return await response.json();
 };
 
-export const getProductHistory = async (dateRange, productID) => {
+export const getProductHistory = async (productID, dateRange) => {
   const options = {
-    method: "GET",
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
