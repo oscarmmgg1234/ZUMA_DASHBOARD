@@ -192,6 +192,9 @@ export default function ProductHistory(props) {
                   Product Name: {entry.PRODUCT_NAME}
                 </p>
                 <p className="text-sm text-gray-600">
+                  Source Quantity: {entry.QUANTITY}
+                </p>
+                <p className="text-sm text-gray-600">
                   Protocol Reference: {entry.ACTION}
                 </p>
                 <p className="text-sm text-gray-600">
