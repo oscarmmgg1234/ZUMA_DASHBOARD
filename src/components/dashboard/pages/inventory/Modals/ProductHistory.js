@@ -271,12 +271,12 @@ export default function ProductHistory(props) {
           </label>
           <input
             type="date"
-            className="border border-gray-300 rounded-md p-2 text-sm w-full mb-4"
+            className="border border-gray-300 rounded-md p-2 text-sm w-full mb-4 text-black"
             value={startRange}
             onChange={(e) => setStartRange(e.target.value)}
             placeholder="YYYY-MM-DD"
           />
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2 text-black">
             End Date:
           </label>
           <input
@@ -294,8 +294,8 @@ export default function ProductHistory(props) {
           </button>
           {selectedProduct && (
             <div className="p-2 bg-gray-200 rounded-md mb-4">
-              <p className="font-semibold">Selected Product:</p>
-              <p>{selectedProduct.NAME}</p>
+              <p className="font-semibold text-black">Selected Product:</p>
+              <p className="text-black">{selectedProduct.NAME}</p>
               <p className="text-sm text-gray-600">
                 ID: {selectedProduct.PRODUCT_ID}
               </p>
