@@ -254,17 +254,17 @@ export default function ViewInventoryModal(props) {
       <td className="px-4 py-2 border text-black">{product.NAME}</td>
       <Tooltip title="TOTAL STOCK" placement="left" arrow>
         <td className="px-4 py-2 border text-black">
-          {product.STOCK ?? "N/A"}
+          {Math.round(product.STOCK) ?? "N/A"}
         </td>
       </Tooltip>
       <Tooltip title="Active Stock" placement="left" arrow>
         <td className="px-4 py-2 border text-black">
-          {product.ACTIVE_STOCK ?? "N/A"}
+          {Math.round(product.ACTIVE_STOCK) ?? "N/A"}
         </td>
       </Tooltip>
       <Tooltip title="Stored Stock" placement="left" arrow>
         <td className="px-4 py-2 border text-black">
-          {product.STORED_STOCK ?? "N/A"}
+          {Math.round(product.STORED_STOCK) ?? "N/A"}
         </td>
       </Tooltip>
     </tr>
