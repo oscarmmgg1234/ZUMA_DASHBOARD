@@ -281,7 +281,7 @@ export default function ProductHistory(props) {
           </label>
           <input
             type="date"
-            className="border border-gray-300 rounded-md p-2 text-sm w-full mb-4"
+            className="border border-gray-300 rounded-md p-2 text-sm w-full mb-4 text-black"
             value={endRange}
             onChange={(e) => setEndRange(e.target.value)}
             placeholder="YYYY-MM-DD"
