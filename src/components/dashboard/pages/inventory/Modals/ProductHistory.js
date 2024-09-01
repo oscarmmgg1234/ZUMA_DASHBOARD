@@ -189,10 +189,10 @@ export default function ProductHistory(props) {
                   Employee: {entry.EMPLOYEE_NAME}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Protocol Reference: {entry.PRODUCT_NAME}
+                  Product Name: {entry.PRODUCT_NAME}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Product Name: {entry.ACTION}
+                  Protocol Reference: {entry.ACTION}
                 </p>
                 <p className="text-sm text-gray-600">
                   Status:{" "}
