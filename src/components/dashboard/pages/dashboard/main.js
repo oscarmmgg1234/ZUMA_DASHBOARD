@@ -100,7 +100,9 @@ const DashboardBody = () => {
               className="text-black text-2xl "
               style={{ display: "flex", alignItems: "baseline" }}
             >
-              {metrics.perHourWholeStore?.perMonth.toFixed(1)}{" "}
+              {metrics.perHourWholeStore.perMonth
+                ? metrics.perHourWholeStore.perMonth.toFixed(1)
+                : "N/A"}{" "}
               <p
                 style={{
                   fontSize: "12px",
@@ -116,13 +118,14 @@ const DashboardBody = () => {
         </Card>
         <Card className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2 lg:row-span 3 md:row-span-3 xl:row-span-3">
           <h2 className="text-black">Top 5 Products Today</h2>
-          <SubComponent style={{ height: "94%", width: "100%", paddingLeft: 10 }}>
+          <SubComponent
+            style={{ height: "94%", width: "100%", paddingLeft: 10 }}
+          >
             <Suspense fallback={<p style={{ color: "grey" }}>loading...</p>}>
               {!loading && <TopProductsChart data={topProducts} />}
             </Suspense>
           </SubComponent>
         </Card>
-        
       </CardGrid>
     </>
   );
