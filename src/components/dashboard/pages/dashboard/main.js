@@ -93,16 +93,14 @@ const DashboardBody = () => {
             </Suspense>
           </SubComponent>
         </Card>
-        <Card>
+        {/* <Card>
           <h2 className="text-black">Store Reductions Per Hour</h2>
           <SubComponent>
             <p
               className="text-black text-2xl "
               style={{ display: "flex", alignItems: "baseline" }}
             >
-              {metrics.perHourWholeStore.perMonth
-                ? metrics.perHourWholeStore.perMonth.toFixed(1)
-                : "N/A"}{" "}
+              {"N/A"}{" "}
               <p
                 style={{
                   fontSize: "12px",
@@ -115,7 +113,7 @@ const DashboardBody = () => {
               </p>
             </p>
           </SubComponent>
-        </Card>
+        </Card> */}
         <Card className="col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2 lg:row-span 3 md:row-span-3 xl:row-span-3">
           <h2 className="text-black">Top 5 Products Today</h2>
           <SubComponent
