@@ -3,6 +3,8 @@ import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
 const http = new http_handler();
 
+
+
 export default function OverrideStock(props) {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -12,6 +14,17 @@ export default function OverrideStock(props) {
   const [inventoryMap, setInventoryMap] = useState(new Map());
   const [searchQuery, setSearchQuery] = useState("");
   const [changeMessage, setChangeMessage] = useState("");
+
+  // New state variables for additional parameters
+  const [explanation, setExplanation] = useState("");
+  const [errorRangeDates, setErrorRangeDates] = useState({
+    start: null,
+    end: null,
+  });
+  const [category, setCategory] = useState("");
+  const [errorCauseType, setErrorCauseType] = useState("employee");
+  const [showExtraParamsModal, setShowExtraParamsModal] = useState(false);
+  const [extraParamsError, setExtraParamsError] = useState("");
 
   const init = async () => {
     const productInventory = await http.getProductsInventory();
@@ -29,14 +42,34 @@ export default function OverrideStock(props) {
     setFilteredProducts(formatted_products);
   };
 
-  const handleUpdateStock = async (productId) => {
-    if (!quantity || !editingField || editingProductId !== productId) {
+  const handleUpdateStock = () => {
+    if (!quantity || !editingField || !editingProductId) {
       setChangeMessage("Fields cannot be empty");
       return;
     }
 
+    // Open the extra parameters modal
+    setShowExtraParamsModal(true);
+  };
+
+  const handleSubmitExtraParams = async () => {
+    // Validate extra parameters
+    if (
+      !explanation ||
+      !errorRangeDates.start ||
+      !errorRangeDates.end ||
+      !category ||
+      !errorCauseType
+    ) {
+      setExtraParamsError("All fields are required");
+      return;
+    }
+
+    const productId = editingProductId;
+    const field = editingField;
+
     const currentStock =
-      editingField === "STORED_STOCK"
+      field === "STORED_STOCK"
         ? inventoryMap.get(productId)?.STORED_STOCK
         : inventoryMap.get(productId)?.ACTIVE_STOCK;
 
@@ -45,14 +78,18 @@ export default function OverrideStock(props) {
     const data = {
       PRODUCT_ID: productId,
       QUANTITY: difference,
+      explanation: explanation,
+      errorRangeDates: errorRangeDates,
+      category: category,
+      errorCauseType: errorCauseType,
     };
-    await http.updateStock(data, editingField === "STORED_STOCK");
+    await http.updateStock(data, field === "STORED_STOCK");
 
     // Update local state without refreshing the entire view
     setInventoryMap((prevMap) => {
       const updatedMap = new Map(prevMap);
       const updatedProduct = { ...updatedMap.get(productId) };
-      if (editingField === "STORED_STOCK") {
+      if (field === "STORED_STOCK") {
         updatedProduct.STORED_STOCK = parseFloat(quantity);
       } else {
         updatedProduct.ACTIVE_STOCK = parseFloat(quantity);
@@ -69,6 +106,13 @@ export default function OverrideStock(props) {
     setEditingProductId(null);
     setEditingField(null);
     setQuantity("");
+    setShowExtraParamsModal(false);
+    // Reset extra parameters
+    setExplanation("");
+    setErrorRangeDates({ start: null, end: null });
+    setCategory("");
+    setErrorCauseType("employee");
+    setExtraParamsError("");
   };
 
   const handleEditClick = (productId, field) => {
@@ -154,7 +198,7 @@ export default function OverrideStock(props) {
         {editingProductId === product.PRODUCT_ID && (
           <button
             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
-            onClick={() => handleUpdateStock(product.PRODUCT_ID)}
+            onClick={handleUpdateStock}
           >
             Commit Change
           </button>
@@ -215,6 +259,100 @@ export default function OverrideStock(props) {
           </div>
         </div>
       </BaseModal>
+
+      {/* Extra Parameters Modal */}
+      {showExtraParamsModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">
+              Additional Information Required
+            </h2>
+            {extraParamsError && (
+              <div className="mb-4 p-2 bg-red-100 text-red-800 rounded-lg">
+                {extraParamsError}
+              </div>
+            )}
+            <div className="mb-4">
+              <label className="block text-gray-700">Explanation</label>
+              <input
+                type="text"
+                value={explanation}
+                onChange={(e) => setExplanation(e.target.value)}
+                className="w-full p-2 border rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">
+                Error Range Start Date
+              </label>
+              <input
+                type="datetime-local"
+                value={errorRangeDates.start || ""}
+                onChange={(e) =>
+                  setErrorRangeDates({
+                    ...errorRangeDates,
+                    start: e.target.value,
+                  })
+                }
+                className="w-full p-2 border rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">
+                Error Range End Date
+              </label>
+              <input
+                type="datetime-local"
+                value={errorRangeDates.end || ""}
+                onChange={(e) =>
+                  setErrorRangeDates({
+                    ...errorRangeDates,
+                    end: e.target.value,
+                  })
+                }
+                className="w-full p-2 border rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Category</label>
+              <input
+                type="text"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full p-2 border rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700">Error Cause Type</label>
+              <select
+                value={errorCauseType}
+                onChange={(e) => setErrorCauseType(e.target.value)}
+                className="w-full p-2 border rounded-lg"
+              >
+                <option value="employee">Employee</option>
+                <option value="operation">Operation</option>
+              </select>
+            </div>
+            <div className="flex justify-end">
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
+                onClick={handleSubmitExtraParams}
+              >
+                Submit
+              </button>
+              <button
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+                onClick={() => {
+                  setShowExtraParamsModal(false);
+                  setExtraParamsError("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
