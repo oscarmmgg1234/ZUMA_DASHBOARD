@@ -82,6 +82,7 @@ export default function OverrideStock(props) {
       errorRangeDates: errorRangeDates,
       category: category,
       errorCauseType: errorCauseType,
+      beforeUpdateStock: currentStock,
     };
     await http.updateStock(data, field === "STORED_STOCK");
 
