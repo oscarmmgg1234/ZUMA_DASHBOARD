@@ -3,8 +3,6 @@ import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
 const http = new http_handler();
 
-
-
 export default function OverrideStock(props) {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -15,7 +13,6 @@ export default function OverrideStock(props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [changeMessage, setChangeMessage] = useState("");
 
-  // New state variables for additional parameters
   const [explanation, setExplanation] = useState("");
   const [errorRangeDates, setErrorRangeDates] = useState({
     start: null,
@@ -48,12 +45,10 @@ export default function OverrideStock(props) {
       return;
     }
 
-    // Open the extra parameters modal
     setShowExtraParamsModal(true);
   };
 
   const handleSubmitExtraParams = async () => {
-    // Validate extra parameters
     if (
       !explanation ||
       !errorRangeDates.start ||
@@ -86,7 +81,6 @@ export default function OverrideStock(props) {
     };
     await http.updateStock(data, field === "STORED_STOCK");
 
-    // Update local state without refreshing the entire view
     setInventoryMap((prevMap) => {
       const updatedMap = new Map(prevMap);
       const updatedProduct = { ...updatedMap.get(productId) };
@@ -108,7 +102,6 @@ export default function OverrideStock(props) {
     setEditingField(null);
     setQuantity("");
     setShowExtraParamsModal(false);
-    // Reset extra parameters
     setExplanation("");
     setErrorRangeDates({ start: null, end: null });
     setCategory("");
@@ -166,7 +159,7 @@ export default function OverrideStock(props) {
             type="text"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            className="w-full p-2"
+            className="w-full p-2 text-black"
             autoFocus
           />
         ) : (
@@ -188,7 +181,7 @@ export default function OverrideStock(props) {
             type="text"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            className="w-full p-2"
+            className="w-full p-2 text-black"
             autoFocus
           />
         ) : (
@@ -198,7 +191,7 @@ export default function OverrideStock(props) {
       <td className="px-4 py-2 border text-black">
         {editingProductId === product.PRODUCT_ID && (
           <button
-            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
             onClick={handleUpdateStock}
           >
             Commit Change
@@ -261,11 +254,10 @@ export default function OverrideStock(props) {
         </div>
       </BaseModal>
 
-      {/* Extra Parameters Modal */}
       {showExtraParamsModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">
+            <h2 className="text-xl font-semibold mb-4 text-black">
               Additional Information Required
             </h2>
             {extraParamsError && (
@@ -274,18 +266,16 @@ export default function OverrideStock(props) {
               </div>
             )}
             <div className="mb-4">
-              <label className="block text-gray-700">Explanation</label>
+              <label className="block text-black">Explanation</label>
               <input
                 type="text"
                 value={explanation}
                 onChange={(e) => setExplanation(e.target.value)}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg text-black"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">
-                Error Range Start Date
-              </label>
+              <label className="block text-black">Error Range Start Date</label>
               <input
                 type="datetime-local"
                 value={errorRangeDates.start || ""}
@@ -295,13 +285,11 @@ export default function OverrideStock(props) {
                     start: e.target.value,
                   })
                 }
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg text-black"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">
-                Error Range End Date
-              </label>
+              <label className="block text-black">Error Range End Date</label>
               <input
                 type="datetime-local"
                 value={errorRangeDates.end || ""}
@@ -311,24 +299,24 @@ export default function OverrideStock(props) {
                     end: e.target.value,
                   })
                 }
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg text-black"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Category</label>
+              <label className="block text-black">Category</label>
               <input
                 type="text"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg text-black"
               />
             </div>
             <div className="mb-4">
-              <label className="block text-gray-700">Error Cause Type</label>
+              <label className="block text-black">Error Cause Type</label>
               <select
                 value={errorCauseType}
                 onChange={(e) => setErrorCauseType(e.target.value)}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg text-black"
               >
                 <option value="employee">Employee</option>
                 <option value="operation">Operation</option>
