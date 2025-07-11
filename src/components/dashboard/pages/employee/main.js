@@ -311,6 +311,12 @@ const Employee = () => {
   const [scheduleEmployees, setScheduleEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
 
+  //Range remove range state
+  const [rangeOption, setRangeOption] = useState(false);
+  const [rangeSelectedStart, setRangeSelectedStart] = useState(Date.now());
+  const [rangeSelectedEnd, setRangeSelectedEnd] = useState(Date.now());
+  const [revertRange, setRevertRange] = useState(false);
+
   const getScheduleEmployees = async () => {
     const employees = await https.getEmployees();
     const formatted_employees = employees.map((employee) => {
@@ -341,8 +347,20 @@ const Employee = () => {
   };
 
   const handleSubmit = () => {
-    if(!selectedEmployee && !schedule.monday.start && !schedule.monday.end && !schedule.tuesday.start && !schedule.tuesday.end && !schedule.wednesday.start && !schedule.wednesday.end && !schedule.thursday.start && !schedule.thursday.end && !schedule.friday.start && !schedule.friday.end){
-      alert("Please fill out all fields")
+    if (
+      !selectedEmployee &&
+      !schedule.monday.start &&
+      !schedule.monday.end &&
+      !schedule.tuesday.start &&
+      !schedule.tuesday.end &&
+      !schedule.wednesday.start &&
+      !schedule.wednesday.end &&
+      !schedule.thursday.start &&
+      !schedule.thursday.end &&
+      !schedule.friday.start &&
+      !schedule.friday.end
+    ) {
+      alert("Please fill out all fields");
       return;
     }
     const employee = scheduleEmployees.filter((employee) => {
@@ -394,6 +412,7 @@ const Employee = () => {
 
   //remove modal states
   const [revert, setRevert] = useState(false);
+
   const removePreviewData = async (args) => {
     if (selEmployeeData != "Select Employee" && selectedDate != null) {
       const data = await https.previewRemoveShift(args);
@@ -742,7 +761,6 @@ const Employee = () => {
           </SubComponent>
         </Card>
       </CardGrid>
-
       {/* <div className="hidden lg:block fixed bottom-0 left-0 w-full bg-red-500 py-2">
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -882,6 +900,11 @@ const Employee = () => {
         </>
       )}
       {/* rm modal */}
+      {/* //Range remove range state const [rangeOption, setRangeOption] =
+      useState(false); const [rangeSelectedStart, setRangeSelectedStart] =
+      useState(Date.now()) const [rangeSelectedEnd, setRangeSelectedEnd] =
+      useState(Date.now()); const [revertRange, setRevertRange] =
+      useState(false); */}
       {isModalRmOpen && (
         <>
           <ModalBackground onClick={() => handleModalClose("rm")} />
@@ -894,9 +917,134 @@ const Employee = () => {
                 <FaTimes className="w-5 h-5 mr-2" />
               </ModalCloseButton>
             </ModalHeader>
+
             <>
-              {status == null ? (
+              {rangeOption == false ? (
                 <>
+                  {status == null ? (
+                    <>
+                      <div className="p-4 grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 border border-b-2 border-black/20">
+                        <div>
+                          <p className="text-black">Select Employee</p>
+                          <DropdownButton
+                            setData={setEmployee}
+                            dataValue={employee}
+                            data={{ data: local_data.emps }}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-black">Select Date</p>
+                          <Datepicker
+                            selected={selectedDate}
+                            setSelected={setSelectedDate}
+                          />
+                        </div>
+                        <button
+                          onClick={() => setRangeOption(!rangeOption)}
+                          className="w-full sm:w-auto rounded-lg text-black border border-3 bg-zuma-green/80 px-4 py-2 sm:mr-4 mb-4 sm:mb-0"
+                        >
+                          <p>Select Range</p>
+                        </button>
+                      </div>
+                      <div className="text-black flex justify-center items-center text-3xl mt-20">
+                        <div className="w-auto h-auto text-center opacity-50">
+                          {previewData.length > 0 ? (
+                            <div>
+                              {employee}
+                              {previewData.map((obj) => {
+                                if (
+                                  obj.SHIFT_CHANGE == true &&
+                                  obj.SHIFT_DATE == "Called Off"
+                                ) {
+                                  return (
+                                    <div
+                                      className="flex items-center"
+                                      key={obj.SHIFT_DATE}
+                                    >
+                                      <div
+                                        key={obj.SHIFT_DATE}
+                                        className="bg-red-500/80 rounded-lg mr-2 py-1 px-2"
+                                      >
+                                        {obj.SHIFT_DATE}
+                                      </div>
+                                      <Slider
+                                        value={revert}
+                                        onChange={setRevert}
+                                      />
+                                      <div className="text-lg">
+                                        Revert Shift Removal
+                                      </div>
+                                    </div>
+                                  );
+                                } else if (obj.SHIFT_CHANGE == true) {
+                                  return (
+                                    <div
+                                      key={obj.SHIFT_DATE}
+                                      className="bg-red-500/80 rounded-lg"
+                                    >
+                                      {obj.SHIFT_DATE}
+                                    </div>
+                                  );
+                                } else {
+                                  return (
+                                    <div key={obj.SHIFT_DATE}>
+                                      {obj.SHIFT_DATE}
+                                    </div>
+                                  );
+                                }
+                              })}
+                            </div>
+                          ) : (
+                            <div> Loading Preview...</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row justify-center items-center sm:mt-8 lg:mt-16">
+                        {!revert && (
+                          <button
+                            className="w-full sm:w-auto rounded-lg text-black border border-3 bg-zuma-green/80 px-4 py-2 sm:mr-4 mb-4 sm:mb-0"
+                            onClick={() => {
+                              removePreviewData({
+                                e_id: selEmployeeData,
+                                date: selectedDate,
+                                shiftOption: shiftOption,
+                                hours: hours,
+                              });
+                            }}
+                          >
+                            Preview Change
+                          </button>
+                        )}
+                        <button
+                          className="w-full sm:w-auto rounded-lg text-black border border-3 bg-orange-500/80 px-4 py-2"
+                          onClick={() => {
+                            submitRemove({
+                              e_id: selEmployeeData,
+                              date: selectedDate,
+                              shiftOption: shiftOption,
+                              hours: hours,
+                              revert: revert,
+                            });
+                          }}
+                        >
+                          {revert
+                            ? "Revert Modified Entry"
+                            : "Remove Shift Entry"}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-gray-900 font-bold">
+                      {" "}
+                      {revert
+                        ? "Reverted Removal Of Entry"
+                        : "Removed Shift Entry!"}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {" "}
                   <div className="p-4 grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 border border-b-2 border-black/20">
                     <div>
                       <p className="text-black">Select Employee</p>
@@ -907,100 +1055,64 @@ const Employee = () => {
                       />
                     </div>
                     <div>
-                      <p className="text-black">Select Date</p>
+                      <p className="text-black">Select Start Date</p>
                       <Datepicker
-                        selected={selectedDate}
-                        setSelected={setSelectedDate}
+                        selected={rangeSelectedStart}
+                        setSelected={setRangeSelectedStart}
                       />
                     </div>
-                  </div>
-                  <div className="text-black flex justify-center items-center text-3xl mt-20">
-                    <div className="w-auto h-auto text-center opacity-50">
-                      {previewData.length > 0 ? (
-                        <div>
-                          {employee}
-                          {previewData.map((obj) => {
-                            if (
-                              obj.SHIFT_CHANGE == true &&
-                              obj.SHIFT_DATE == "Called Off"
-                            ) {
-                              return (
-                                <div
-                                  className="flex items-center"
-                                  key={obj.SHIFT_DATE}
-                                >
-                                  <div
-                                    key={obj.SHIFT_DATE}
-                                    className="bg-red-500/80 rounded-lg mr-2 py-1 px-2"
-                                  >
-                                    {obj.SHIFT_DATE}
-                                  </div>
-                                  <Slider value={revert} onChange={setRevert} />
-                                  <div className="text-lg">
-                                    Revert Shift Removal
-                                  </div>
-                                </div>
-                              );
-                            } else if (obj.SHIFT_CHANGE == true) {
-                              return (
-                                <div
-                                  key={obj.SHIFT_DATE}
-                                  className="bg-red-500/80 rounded-lg"
-                                >
-                                  {obj.SHIFT_DATE}
-                                </div>
-                              );
-                            } else {
-                              return (
-                                <div key={obj.SHIFT_DATE}>{obj.SHIFT_DATE}</div>
-                              );
-                            }
-                          })}
-                        </div>
-                      ) : (
-                        <div> Loading Preview...</div>
-                      )}
+                    <div>
+                      <p className="text-black">Select End Date</p>
+                      <Datepicker
+                        selected={rangeSelectedEnd}
+                        setSelected={setRangeSelectedEnd}
+                      />
+                    </div>
+                    <button
+                      onClick={() => setRangeOption(!rangeOption)}
+                      className="w-full sm:w-auto rounded-lg text-black border border-3 bg-zuma-green/80 px-4 py-2 sm:mr-4 mb-4 sm:mb-0"
+                    >
+                      <p>Select Single Date</p>
+                    </button>
+                    <div className="flex items-center gap-4 mt-4">
+                      <label className="flex items-center">
+                        <span className="text-black mr-2">Revert</span>
+                        <input
+                          type="checkbox"
+                          checked={revertRange}
+                          onChange={(e) => setRevertRange(e.target.checked)}
+                          className="appearance-none w-12 h-6 rounded-full bg-gray-300 checked:bg-zuma-green/80 relative transition-all duration-200"
+                          style={{
+                            backgroundImage: revertRange
+                              ? "linear-gradient(to right, #22c55e, #16a34a)"
+                              : undefined,
+                          }}
+                        />
+                      </label>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row justify-center items-center sm:mt-8 lg:mt-16">
-                    {!revert && (
-                      <button
-                        className="w-full sm:w-auto rounded-lg text-black border border-3 bg-zuma-green/80 px-4 py-2 sm:mr-4 mb-4 sm:mb-0"
-                        onClick={() => {
-                          removePreviewData({
-                            e_id: selEmployeeData,
-                            date: selectedDate,
-                            shiftOption: shiftOption,
-                            hours: hours,
-                          });
-                        }}
-                      >
-                        Preview Change
-                      </button>
-                    )}
+                  <>
                     <button
-                      className="w-full sm:w-auto rounded-lg text-black border border-3 bg-orange-500/80 px-4 py-2"
                       onClick={() => {
-                        submitRemove({
+                        https.setRemoveRange({
+                          revert: revertRange,
+                          startDate: rangeSelectedStart,
+                          endDate: rangeSelectedEnd,
                           e_id: selEmployeeData,
-                          date: selectedDate,
-                          shiftOption: shiftOption,
-                          hours: hours,
-                          revert: revert,
                         });
+                        window.alert(
+                          revertRange
+                            ? "Successfully reverted range of shift entries."
+                            : "Successfully removed range of shift entries."
+                        );
                       }}
+                      className="flex justify-center items-center mt-8 rounded-lg text-black border border-3 bg-orange-200 px-4 py-2 sm:mr-4 mb-4 sm:mb-0"
                     >
-                      {revert ? "Revert Modified Entry" : "Remove Shift Entry"}
+                      {" "}
+                      Submit Range Of Dates
                     </button>
-                  </div>
+                  </>
                 </>
-              ) : (
-                <div className="text-gray-900 font-bold">
-                  {" "}
-                  {revert
-                    ? "Reverted Removal Of Entry"
-                    : "Removed Shift Entry!"}
-                </div>
               )}
             </>
           </ModalContainer>

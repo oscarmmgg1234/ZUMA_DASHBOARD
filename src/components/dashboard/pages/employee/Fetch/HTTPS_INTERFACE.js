@@ -10,10 +10,14 @@ import {
   addEmployee,
   deleteEmployee,
   setSchedule,
+  setRange,
 } from "./HTTPS.js";
 
 export default class http_handler {
   constructor() {}
+  setRemoveRange = async (data) => {
+    await setRange(data);
+  };
   setSchedule = async (data) => {
     await setSchedule(data);
   };

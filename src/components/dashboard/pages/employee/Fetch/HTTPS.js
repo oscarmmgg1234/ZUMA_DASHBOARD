@@ -1,6 +1,17 @@
 // const base_url = "http://192.168.1.176:3002";
 const base_url = "http://192.168.1.176:3002";
 
+export const setRange = async (data) => {
+  const options = {
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  await fetch(`${base_url}/removeRangeShift`, options);
+};
+
 export const setSchedule = async (data) => {
   const options = {
     body: JSON.stringify(data),
