@@ -1,0 +1,43 @@
+/* Custom Calendar Styling */
+.rbc-calendar,
+.rbc-month-view,
+.rbc-date-cell,
+.rbc-day-bg,
+.rbc-header {
+    background-color: white !important;
+    color: black !important;
+}
+
+.rbc-month-view {
+    border: 1px solid #e0e0e0;
+}
+.rbc-month-row {
+    height: auto !important;
+    min-height: 1px;
+    /* adjust as needed */
+}
+.rbc-date-cell {
+    border: 1px solid #ddd !important;
+    box-sizing: border-box;
+    vertical-align: top;
+}
+
+.rbc-header {
+    border-bottom: 1px solid #ccc;
+    font-weight: 600;
+    text-align: center;
+    padding: 4px 0;
+    background-color: #f9f9f9;
+}
+
+
+
+.rbc-today {
+    background-color: #e6f7ff !important;
+    border: 2px solid #1890ff !important;
+}
+
+.rbc-off-range {
+    background-color: #fafafa !important;
+    color: #999 !important;
+}

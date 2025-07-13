@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+
+/* Custom Calendar Styling */
+.rbc-calendar,
+.rbc-month-view,
+.rbc-date-cell,
+.rbc-day-bg,
+.rbc-header {
+    background-color: white !important;
+    color: black !important;
+}
+
+.rbc-month-view {
+    border: 1px solid #e0e0e0;
+}
+
+.rbc-date-cell {
+    border: 1px solid #ddd !important;
+    box-sizing: border-box;
+    padding-top: 2cpx;
+}
+
+.rbc-header {
+    border-bottom: 1px solid #000000;
+    font-weight: 600;
+    text-align: center;
+    padding: 4px 0;
+    background-color: #f9f9f9;
+}
+
+.rbc-today {
+    background-color: #e6f7ff !important;
+    border: 2px solid #1890ff !important;
+}
+
+.rbc-off-range {
+    background-color: #fafafa !important;
+    color: #c4c3c3 !important;
+}
+

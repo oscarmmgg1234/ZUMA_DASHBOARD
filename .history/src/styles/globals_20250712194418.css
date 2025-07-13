@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+
+/* Custom Calendar Styling */
+/* Root calendar styling */
+.rbc-calendar {
+  background-color: white !important;
+  color: black !important;
+  font-family: sans-serif;
+  border: 1px solid #e0e0e0;
+}
+
+/* Grid appearance */
+.rbc-month-view {
+  border-collapse: collapse;
+}
+
+/* Day header (Sun, Mon, etc.) */
+.rbc-header {
+  border: 1px solid #e0e0e0;
+  background-color: #f9f9f9;
+  padding: 8px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Each day cell (the full box) */
+.rbc-day-bg {
+  border: 1px solid #e0e0e0 !important;
+  background-color: white !important;
+}
+
+/* Overlaying content inside date cell (like time inputs) */
+.rbc-date-cell {
+  position: relative;
+  vertical-align: top;
+}
+
+/* Today highlight */
+.rbc-today {
+  background-color: #e6f7ff !important;
+  border: 2px solid #1890ff !important;
+}
+
+/* Grey out previous/next month's cells */
+.rbc-off-range {
+  background-color: #fafafa !important;
+  color: #bbb !important;
+}
+
+/* Ensure inputs inside cells are styled properly */
+.rbc-date-cell input[type="time"] {
+  font-size: 12px;
+  padding: 2px;
+  margin-bottom: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
