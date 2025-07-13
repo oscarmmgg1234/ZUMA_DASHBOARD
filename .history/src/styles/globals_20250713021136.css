@@ -45,8 +45,8 @@ body {
   transition: background-color 0.2s ease;
 }
 .rbc-header {
-    background-color: rgb(230, 230, 230) !important;
-    color: rgb(0, 0, 0) !important;
+    background-color: rgb(255, 255, 255) !important;
+    color: rgb(10, 41, 82) !important;
     border-bottom: none;
     text-align: center;
 }

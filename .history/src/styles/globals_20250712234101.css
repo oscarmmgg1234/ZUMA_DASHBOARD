@@ -32,38 +32,25 @@ body {
 .rbc-month-view,
 .rbc-date-cell,
 .rbc-day-bg,
-.rbc-toolbar button {
-  background-color: #6c7f6f;
-  /* dark green background */
-  color: #ffffff;
-  /* white text */
-  border: none;
-  
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
 .rbc-header {
-    background-color: rgb(230, 230, 230) !important;
-    color: rgb(0, 0, 0) !important;
-    border-bottom: none;
+    background-color: rgb(204, 216, 254) !important;
+    color: rgb(10, 41, 82) !important;
+    border-bottom: 1px solid #ccc;
     text-align: center;
 }
 
 .rbc-month-view {
-    border: none;
+    border: 1px solid #e0e0e0;
 }
 
-
 .rbc-date-cell {
-    border: none;
+    border: 1px solid #7e6c6c !important;
     box-sizing: border-box;
     padding: 0 !important;
 }
 
 .rbc-off-range {
-    background-color: #6c7f6f !important;
+    background-color: #fafafa !important;
     color: #c4c3c3 !important;
 }
 

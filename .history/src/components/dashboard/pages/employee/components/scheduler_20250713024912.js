@@ -242,7 +242,7 @@ const MyCalendar = ({ employee }) => {
       >
         {weekend ? (
           <div style={{ padding: "0.25rem", width: "100%", marginTop: "30px" }}>
-            <label style={{ color: "black" }}>💤 Non-Business Day</label>
+            <label style={{color: "black"}}>💤 Non-Business Day</label>
             <input
               type="time"
               style={{
@@ -306,31 +306,13 @@ const MyCalendar = ({ employee }) => {
                 type="time"
                 value={shift.SHIFT_START || ""}
                 onChange={(e) => handleChange(value, "start", e.target.value)}
-                style={{
-                  width: "100%",
-                  marginBottom: "4px",
-                  backgroundColor: startChanged ? "#fff3cd" : "#fefefe", // soft yellow
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  padding: "2px 4px",
-                  fontWeight: 500,
-                  color: "#333",
-                }}
+                style={{ width: "100%" }}
               />
-
               <input
                 type="time"
                 value={shift.SHIFT_END || ""}
                 onChange={(e) => handleChange(value, "end", e.target.value)}
-                style={{
-                  width: "100%",
-                  backgroundColor: endChanged ? "#fff3cd" : "#fefefe", // soft yellow
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  padding: "2px 4px",
-                  fontWeight: 500,
-                  color: "#333",
-                }}
+                style={{ width: "100%", marginTop: "4px" }}
               />
             </div>
           </>

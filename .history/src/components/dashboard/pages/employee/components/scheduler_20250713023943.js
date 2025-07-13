@@ -212,9 +212,6 @@ const MyCalendar = ({ employee }) => {
   const CustomDateCellWrapper = ({ children, value }) => {
     const key = value.toISOString().split("T")[0];
     const shift = shiftData[key] || {};
-    const original = originalShiftData?.[key] || {};
-    const startChanged = shift.SHIFT_START !== original.SHIFT_START;
-    const endChanged = shift.SHIFT_END !== original.SHIFT_END;
 
     const isWeekend = (date) => {
       const day = date.getDay(); // 0 = Sunday, 6 = Saturday
@@ -242,7 +239,7 @@ const MyCalendar = ({ employee }) => {
       >
         {weekend ? (
           <div style={{ padding: "0.25rem", width: "100%", marginTop: "30px" }}>
-            <label style={{ color: "black" }}>💤 Non-Business Day</label>
+            <label>Non-Business Day</label>
             <input
               type="time"
               style={{
@@ -306,31 +303,13 @@ const MyCalendar = ({ employee }) => {
                 type="time"
                 value={shift.SHIFT_START || ""}
                 onChange={(e) => handleChange(value, "start", e.target.value)}
-                style={{
-                  width: "100%",
-                  marginBottom: "4px",
-                  backgroundColor: startChanged ? "#fff3cd" : "#fefefe", // soft yellow
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  padding: "2px 4px",
-                  fontWeight: 500,
-                  color: "#333",
-                }}
+                style={{ width: "100%" }}
               />
-
               <input
                 type="time"
                 value={shift.SHIFT_END || ""}
                 onChange={(e) => handleChange(value, "end", e.target.value)}
-                style={{
-                  width: "100%",
-                  backgroundColor: endChanged ? "#fff3cd" : "#fefefe", // soft yellow
-                  border: "1px solid #ccc",
-                  borderRadius: "4px",
-                  padding: "2px 4px",
-                  fontWeight: 500,
-                  color: "#333",
-                }}
+                style={{ width: "100%", marginTop: "4px" }}
               />
             </div>
           </>
@@ -341,7 +320,7 @@ const MyCalendar = ({ employee }) => {
   };
 
   return (
-    <div style={{ height: "73vh", color: "black" }}>
+    <div style={{ height: "70vh", color: "black" }}>
       <Calendar
         localizer={localizer}
         defaultView="month"
@@ -357,7 +336,7 @@ const MyCalendar = ({ employee }) => {
       />
       <button
 
-        className="bg-emerald-900 hover:bg-emerald-800 text-white px-4 py-2 w-full "
+        className="bg-emerald-900 hover:bg-emerald-850 text-white px-4 py-2 w-full "
         onClick={() => {
           processShiftChanges(shiftData, originalShiftData, employee.id);
         }}
