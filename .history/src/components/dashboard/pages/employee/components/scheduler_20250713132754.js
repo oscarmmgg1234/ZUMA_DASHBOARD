@@ -371,7 +371,7 @@ const MyCalendar = ({ employee }) => {
                       fontWeight: 500,
                       color: "#333",
                     }}
-                    disabled={isOutOfScope || shift.VALID}
+                    disabled={isOutOfScope}
                   />
 
                   <input
@@ -387,7 +387,7 @@ const MyCalendar = ({ employee }) => {
                       fontWeight: 500,
                       color: "#333",
                     }}
-                    disabled={isOutOfScope || shift.VALID}
+                    disabled={isOutOfScope}
                   />
                 </div>
               </>

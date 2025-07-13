@@ -232,7 +232,7 @@ const MyCalendar = ({ employee }) => {
           backgroundColor: weekend
             ? "#dcdcdcff"
             : shift.VALID
-            ? "#323f446c" // ← slightly darker shade when called off
+            ? "#83a090ff" // ← slightly darker shade when called off
             : "#abc0acff", // ← default
           color: "black",
           display: "flex",
@@ -268,40 +268,18 @@ const MyCalendar = ({ employee }) => {
           </div>
         ) : (
           <>
+           
+           
             {isOutOfScope == true ? (
               <>
                 <div
                   style={{
                     fontSize: "0.75rem",
                     color: "#666",
-                    marginTop: "40px",
-                    width: "100%",
+                    marginTop: "4px",
                   }}
                 >
-                  🔒 Manager Update Schedule For Employee
-                </div>
-                <div style={{ padding: "0.25rem", width: "100%" }}>
-                  <input
-                    type="time"
-                    value={shift.SHIFT_START || ""}
-                    onChange={(e) =>
-                      handleChange(value, "start", e.target.value)
-                    }
-                    style={{
-                      width: "100%",
-                      marginBottom: "6px",
-                      backgroundColor: "transparent", // or 'white' if needed
-                      border: "1px solid transparent",
-                      color: "transparent",
-                      outline: "none",
-                      fontWeight: "500",
-                      fontSize: "0.9rem",
-                      WebkitAppearance: "none", // removes default style in Chrome
-                      MozAppearance: "none",
-                      appearance: "none",
-                    }}
-                    disabled={isOutOfScope}
-                  />
+                  🔒 Manager Update Schedule
                 </div>
               </>
             ) : (
@@ -325,7 +303,7 @@ const MyCalendar = ({ employee }) => {
                       marginTop: "1.5rem",
                       paddingRight: "0.2rem",
                       paddingLeft: "0.2rem",
-                      color: shift.VALID ? "white" : "rgba(76, 74, 45, 1)",
+                      color: "rgba(76, 74, 45, 1)",
                     }}
                   >
                     Called Off
@@ -371,7 +349,7 @@ const MyCalendar = ({ employee }) => {
                       fontWeight: 500,
                       color: "#333",
                     }}
-                    disabled={isOutOfScope || shift.VALID}
+                    disabled={isOutOfScope}
                   />
 
                   <input
@@ -387,7 +365,7 @@ const MyCalendar = ({ employee }) => {
                       fontWeight: 500,
                       color: "#333",
                     }}
-                    disabled={isOutOfScope || shift.VALID}
+                    disabled={isOutOfScope}
                   />
                 </div>
               </>

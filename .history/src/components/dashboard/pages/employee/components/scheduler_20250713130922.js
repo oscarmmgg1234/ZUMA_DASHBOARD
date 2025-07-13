@@ -232,7 +232,7 @@ const MyCalendar = ({ employee }) => {
           backgroundColor: weekend
             ? "#dcdcdcff"
             : shift.VALID
-            ? "#323f446c" // ← slightly darker shade when called off
+            ? "#83a090ff" // ← slightly darker shade when called off
             : "#abc0acff", // ← default
           color: "black",
           display: "flex",
@@ -268,129 +268,93 @@ const MyCalendar = ({ employee }) => {
           </div>
         ) : (
           <>
-            {isOutOfScope == true ? (
-              <>
-                <div
+            <div
+              style={{
+                position: "relative",
+                top: 2,
+                right: 2,
+                zIndex: 1,
+                opacity: isOutOfScope ? 0.5 : 1,
+              }}
+            >
+              <label
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: "1.5rem",
+                  paddingRight: "0.2rem",
+                  paddingLeft: "0.2rem",
+                  color: "rgba(76, 74, 45, 1)",
+                }}
+              >
+                Called Off
+                <input
                   style={{
-                    fontSize: "0.75rem",
-                    color: "#666",
-                    marginTop: "40px",
-                    width: "100%",
+                    marginLeft: "0.6rem",
+                    backgroundColor: "#6c7f6f", // or 'white' if needed
+                    border: "2px solid white",
+                    width: "1.2rem",
+                    height: "1.2rem",
+                    color: "white",
+                    padding: "4px 6px",
+                    borderRadius: "4px",
+                    outline: "none",
+                    fontWeight: "500",
+                    fontSize: "0.9rem",
+                    WebkitAppearance: "none", // removes default style in Chrome
+                    MozAppearance: "none",
+                    appearance: "none",
                   }}
-                >
-                  🔒 Manager Update Schedule For Employee
-                </div>
-                <div style={{ padding: "0.25rem", width: "100%" }}>
-                  <input
-                    type="time"
-                    value={shift.SHIFT_START || ""}
-                    onChange={(e) =>
-                      handleChange(value, "start", e.target.value)
-                    }
-                    style={{
-                      width: "100%",
-                      marginBottom: "6px",
-                      backgroundColor: "transparent", // or 'white' if needed
-                      border: "1px solid transparent",
-                      color: "transparent",
-                      outline: "none",
-                      fontWeight: "500",
-                      fontSize: "0.9rem",
-                      WebkitAppearance: "none", // removes default style in Chrome
-                      MozAppearance: "none",
-                      appearance: "none",
-                    }}
-                    disabled={isOutOfScope}
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                {" "}
-                <div
-                  style={{
-                    position: "relative",
-                    top: 2,
-                    right: 2,
-                    zIndex: 1,
-                    opacity: isOutOfScope ? 0.5 : 1,
-                  }}
-                >
-                  <label
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      marginTop: "1.5rem",
-                      paddingRight: "0.2rem",
-                      paddingLeft: "0.2rem",
-                      color: shift.VALID ? "white" : "rgba(76, 74, 45, 1)",
-                    }}
-                  >
-                    Called Off
-                    <input
-                      style={{
-                        marginLeft: "0.6rem",
-                        backgroundColor: "#6c7f6f", // or 'white' if needed
-                        border: "2px solid white",
-                        width: "1.2rem",
-                        height: "1.2rem",
-                        color: "white",
-                        padding: "4px 6px",
-                        borderRadius: "4px",
-                        outline: "none",
-                        fontWeight: "500",
-                        fontSize: "0.9rem",
-                        WebkitAppearance: "none", // removes default style in Chrome
-                        MozAppearance: "none",
-                        appearance: "none",
-                      }}
-                      type="checkbox"
-                      checked={shift.VALID || false}
-                      onChange={() => handleCheckbox(value)}
-                      title="Called Off"
-                      disabled={isOutOfScope}
-                    />
-                  </label>
-                </div>
-                <div style={{ padding: "0.25rem", width: "100%" }}>
-                  <input
-                    type="time"
-                    value={shift.SHIFT_START || ""}
-                    onChange={(e) =>
-                      handleChange(value, "start", e.target.value)
-                    }
-                    style={{
-                      width: "100%",
-                      marginBottom: "4px",
-                      backgroundColor: startChanged ? "#fff3cd" : "#fefefe", // soft yellow
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      padding: "2px 4px",
-                      fontWeight: 500,
-                      color: "#333",
-                    }}
-                    disabled={isOutOfScope || shift.VALID}
-                  />
+                  type="checkbox"
+                  checked={shift.VALID || false}
+                  onChange={() => handleCheckbox(value)}
+                  title="Called Off"
+                  disabled={isOutOfScope}
+                />
+              </label>
+            </div>
+            <div style={{ padding: "0.25rem", width: "100%" }}>
+              <input
+                type="time"
+                value={shift.SHIFT_START || ""}
+                onChange={(e) => handleChange(value, "start", e.target.value)}
+                style={{
+                  width: "100%",
+                  marginBottom: "4px",
+                  backgroundColor: startChanged ? "#fff3cd" : "#fefefe", // soft yellow
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  padding: "2px 4px",
+                  fontWeight: 500,
+                  color: "#333",
+                }}
+                disabled={isOutOfScope}
+              />
 
-                  <input
-                    type="time"
-                    value={shift.SHIFT_END || ""}
-                    onChange={(e) => handleChange(value, "end", e.target.value)}
-                    style={{
-                      width: "100%",
-                      backgroundColor: endChanged ? "#fff3cd" : "#fefefe", // soft yellow
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      padding: "2px 4px",
-                      fontWeight: 500,
-                      color: "#333",
-                    }}
-                    disabled={isOutOfScope || shift.VALID}
-                  />
-                </div>
-              </>
+              <input
+                type="time"
+                value={shift.SHIFT_END || ""}
+                onChange={(e) => handleChange(value, "end", e.target.value)}
+                style={{
+                  width: "100%",
+                  backgroundColor: endChanged ? "#fff3cd" : "#fefefe", // soft yellow
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  padding: "2px 4px",
+                  fontWeight: 500,
+                  color: "#333",
+                }}
+                disabled={isOutOfScope}
+              />
+            </div>
+            {isOutOfScope  (
+              <div
+                style={{ fontSize: "0.75rem", color: "#666", marginTop: "4px" }}
+              >
+                🔒 Out of scope – Manager must update schedule
+              </div>
             )}
           </>
         )}

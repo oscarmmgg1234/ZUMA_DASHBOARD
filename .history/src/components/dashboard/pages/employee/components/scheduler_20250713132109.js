@@ -232,7 +232,7 @@ const MyCalendar = ({ employee }) => {
           backgroundColor: weekend
             ? "#dcdcdcff"
             : shift.VALID
-            ? "#323f446c" // ← slightly darker shade when called off
+            ? "#83a090ff" // ← slightly darker shade when called off
             : "#abc0acff", // ← default
           color: "black",
           display: "flex",
@@ -274,7 +274,7 @@ const MyCalendar = ({ employee }) => {
                   style={{
                     fontSize: "0.75rem",
                     color: "#666",
-                    marginTop: "40px",
+                    marginTop: "36px",
                     width: "100%",
                   }}
                 >
@@ -325,7 +325,7 @@ const MyCalendar = ({ employee }) => {
                       marginTop: "1.5rem",
                       paddingRight: "0.2rem",
                       paddingLeft: "0.2rem",
-                      color: shift.VALID ? "white" : "rgba(76, 74, 45, 1)",
+                      color: "rgba(76, 74, 45, 1)",
                     }}
                   >
                     Called Off
@@ -371,7 +371,7 @@ const MyCalendar = ({ employee }) => {
                       fontWeight: 500,
                       color: "#333",
                     }}
-                    disabled={isOutOfScope || shift.VALID}
+                    disabled={isOutOfScope}
                   />
 
                   <input
@@ -387,7 +387,7 @@ const MyCalendar = ({ employee }) => {
                       fontWeight: 500,
                       color: "#333",
                     }}
-                    disabled={isOutOfScope || shift.VALID}
+                    disabled={isOutOfScope}
                   />
                 </div>
               </>

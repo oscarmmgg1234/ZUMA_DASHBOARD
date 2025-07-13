@@ -325,7 +325,7 @@ const MyCalendar = ({ employee }) => {
                       marginTop: "1.5rem",
                       paddingRight: "0.2rem",
                       paddingLeft: "0.2rem",
-                      color: shift.VALID ? "white" : "rgba(76, 74, 45, 1)",
+                      color: "rgba(76, 74, 45, 1)",
                     }}
                   >
                     Called Off
@@ -371,7 +371,7 @@ const MyCalendar = ({ employee }) => {
                       fontWeight: 500,
                       color: "#333",
                     }}
-                    disabled={isOutOfScope || shift.VALID}
+                    disabled={isOutOfScope}
                   />
 
                   <input
@@ -387,7 +387,7 @@ const MyCalendar = ({ employee }) => {
                       fontWeight: 500,
                       color: "#333",
                     }}
-                    disabled={isOutOfScope || shift.VALID}
+                    disabled={isOutOfScope}
                   />
                 </div>
               </>
