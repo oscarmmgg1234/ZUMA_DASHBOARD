@@ -243,6 +243,7 @@ const MyCalendar = ({ employee }) => {
         {weekend ? (
           <div style={{ padding: "0.25rem", width: "100%", marginTop: "30px" }}>
             <label style={{ color: "black" }}>Non-Business Day</label>
+            <div style={{ font }}>💤</div>
             <input
               type="time"
               style={{
