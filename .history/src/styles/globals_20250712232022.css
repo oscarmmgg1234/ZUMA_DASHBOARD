@@ -33,8 +33,8 @@ body {
 .rbc-date-cell,
 .rbc-day-bg,
 .rbc-header {
-    background-color: rgb(255, 255, 255) !important;
-    color: rgb(14, 48, 93) !important;
+    background-color: rgb(87, 53, 53) !important;
+    color: black !important;
 }
 
 .rbc-month-view {

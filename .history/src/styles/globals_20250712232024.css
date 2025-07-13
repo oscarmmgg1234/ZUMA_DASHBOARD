@@ -34,7 +34,7 @@ body {
 .rbc-day-bg,
 .rbc-header {
     background-color: rgb(255, 255, 255) !important;
-    color: rgb(14, 48, 93) !important;
+    color: black !important;
 }
 
 .rbc-month-view {

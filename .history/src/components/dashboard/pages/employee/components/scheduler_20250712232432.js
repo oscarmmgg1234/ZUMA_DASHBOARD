@@ -224,7 +224,7 @@ const MyCalendar = ({ employee }) => {
         style={{
           position: "relative",
           height: "100%",
-          backgroundColor: weekend ? "#f4f4f4" : "#d1d5dcff",
+          backgroundColor: weekend ? "#f4f4f4" : "#fefefeff",
           color: "black",
           display: "flex",
           flexDirection: "column",
@@ -234,6 +234,7 @@ const MyCalendar = ({ employee }) => {
           fontWeight: weekend ? 500 : "normal",
           padding: "0.25rem",
           textAlign: "center",
+          border: "1px solid #ddd",
         }}
       >
         {weekend ? (

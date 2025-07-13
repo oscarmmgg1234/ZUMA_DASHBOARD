@@ -224,7 +224,7 @@ const MyCalendar = ({ employee }) => {
         style={{
           position: "relative",
           height: "100%",
-          backgroundColor: weekend ? "#f4f4f4" : "#d1d5dcff",
+          backgroundColor: weekend ? "#f4f4f4" : "#c7f0d1ff",
           color: "black",
           display: "flex",
           flexDirection: "column",
