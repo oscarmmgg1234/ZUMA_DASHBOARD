@@ -293,7 +293,6 @@ const Employee = () => {
   }, []);
 
   // states
-  const [showAddForm, setShowAddForm] = useState(false);
   const [isModalRmOpen, setIsModalRmOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
   const [isModalGenOpen, setIsModalGenOpen] = useState(false);
@@ -341,7 +340,12 @@ const Employee = () => {
     // ... initialize the rest of the days similarly
   });
 
-  
+  const handleScheduleChange = (day, type) => (event) => {
+    setSchedule({
+      ...schedule,
+      [day]: { ...schedule[day], [type]: event.target.value },
+    });
+  };
 
   const handleSubmit = () => {
     if (
@@ -503,28 +507,6 @@ const Employee = () => {
 
   const [clickedEmployee, setClickedEmployee] = useState(null);
 
-
-
-  const formatHour = (h) => {
-    if (h === "" || h === undefined || h === null) return "";
-    return h.toString().padStart(2, "0") + ":00";
-  };
- const handleScheduleChange = (day, type) => (event) => {
-   const timeStr = event.target.value; // e.g., "14:00"
-   const hour = parseInt(timeStr.split(":")[0], 10); // Convert to military hour
-   if (isNaN(hour)) return;
-
-   setSchedule((prev) => ({
-     ...prev,
-     [day]: {
-       ...prev[day],
-       [type]: hour,
-     },
-   }));
- };
-
-
-
   const init = async () => {
     const employee_list = await https.getEmployees();
     const formatted_employee_list = employee_list.map((employee) => {
@@ -576,7 +558,7 @@ const Employee = () => {
       key={employee.EMPLOYEE_ID}
       className={`${
         employee.focus
-          ? "bg-green-100"
+          ? "bg-orange-300"
           : index % 2 === 0
           ? "bg-gray-100"
           : "bg-white"
@@ -584,7 +566,7 @@ const Employee = () => {
       onClick={() => onFocusEmployee(employee)}
     >
       <td className="px-4 py-2 border text-black">{employee.NAME}</td>
-      <td className="px-4 py-2 border text-white bg-lime-900/80">
+      <td className="px-4 py-2 border text-black bg-rose-400">
         {employee.EMPLOYEE_ID}
       </td>
       <td className="px-4 py-2 border text-black">{employee.TITLE}</td>
@@ -1536,121 +1518,126 @@ const Employee = () => {
                 <FaTimes className="w-5 h-5 mr-2" />
               </ModalCloseButton>
             </ModalHeader>
-            <div className="max-h-[75vh] overflow-y-auto rounded border text-black">
-              <table className="min-w-full table-fixed text-sm">
-                <thead className="bg-gray-200 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-4 py-2 border w-1/4 text-left">Name</th>
-                    <th className="px-4 py-2 border w-1/4 text-left">ID</th>
-                    <th className="px-4 py-2 border w-1/4 text-left">Title</th>
-                    <th className="px-2 py-2 border w-12 text-center">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* ✅ Employee Rows */}
-                  {tableRows}
+            <div className="h-full w-full">
+              <button
+                onClick={() => setAction(!action)}
+                className="w-32 h-24 bg-orange-300"
+              >
+                <p className="text-xs">Click to toggle</p>
+                <p className="font-bold">
+                  {action ? "Add Employee" : "Delete Employee"}
+                </p>
+              </button>
 
-                  {/* ✅ Delete Confirmation Row */}
-                  {clickedEmployee !== null && (
-                    <tr className="bg-red-50 text-black">
-                      <td colSpan={4} className="px-4 py-3">
-                        <div className="flex justify-between items-center">
-                          <span>
-                            Are you sure you want to delete this employee?
-                          </span>
-                          <div className="space-x-2">
-                            <button
-                              onClick={() => {
-                                handleEmployeeDelete();
-                                setClickedEmployee(null);
-                                init();
-                              }}
-                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() => setClickedEmployee(null)}
-                              className="px-3 py-1 bg-gray-300 text-black rounded hover:bg-gray-400 text-sm"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
+              <div className="flex flex-1 justify-center items-center">
+                <div className="p-6 bg-white rounded-lg shadow max-w-2xl w-full">
+                  {action ? (
+                    <div className="flex flex-col space-y-3">
+                      <label className="font-semibold text-gray-700">
+                        Employee Full Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Name"
+                        value={employeeName}
+                        onChange={(e) => setEmployeeName(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300 text-black"
+                      />
 
-                  {/* ✅ Add Inline Form */}
-                  {!showAddForm ? (
-                    <tr>
-                      <td colSpan={4} className="text-center py-3">
-                        <button
-                          onClick={() => setShowAddForm(true)}
-                          className="text-blue-600 hover:underline font-medium"
-                        >
-                          + Add Employee
-                        </button>
-                      </td>
-                    </tr>
+                      <label className="font-semibold text-gray-700">
+                        Employee Email
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Email Adress"
+                        value={employeeEmail}
+                        onChange={(e) => setEmployeeEmail(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <label className="font-semibold text-gray-700">
+                        Employee Phone
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Phone#"
+                        value={employeePhone}
+                        onChange={(e) => setEmployeePhone(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <label className="font-semibold text-gray-700">
+                        Employee Title
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Title"
+                        value={employeeTitle}
+                        onChange={(e) => setEmployeeTitle(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <label className="font-semibold text-gray-700">
+                        Employee Wage
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Wage"
+                        value={employeeWage}
+                        onChange={(e) => setEmployeeWage(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <label className="font-semibold text-gray-700">
+                        Employee Work Facility Location ID
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Location# (4322)"
+                        value={employeeLocation}
+                        onChange={(e) => setEmployeeLocation(e.target.value)}
+                        className="h-10 px-3 rounded border border-gray-300  text-black"
+                      />
+
+                      <button
+                        onClick={() => handleEmployeeAdd()}
+                        className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
+                      >
+                        Add Employee
+                      </button>
+                    </div>
                   ) : (
-                    <tr className="bg-gray-50">
-                      <td colSpan={4}>
-                        <div className="p-4 space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            {[
-                              ["Full Name", employeeName, setEmployeeName],
-                              ["Email", employeeEmail, setEmployeeEmail],
-                              ["Phone", employeePhone, setEmployeePhone],
-                              ["Title", employeeTitle, setEmployeeTitle],
-                              ["Wage", employeeWage, setEmployeeWage],
-                              [
-                                "Location ID",
-                                employeeLocation,
-                                setEmployeeLocation,
-                              ],
-                            ].map(([label, val, setFn], idx) => (
-                              <div key={idx}>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                  {label}
-                                </label>
-                                <input
-                                  type="text"
-                                  value={val}
-                                  onChange={(e) => setFn(e.target.value)}
-                                  className="w-full px-3 py-2 border rounded-md text-black border-gray-300"
-                                  placeholder={label}
-                                />
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="flex justify-end gap-3">
-                            <button
-                              onClick={() => {
-                                handleEmployeeAdd();
-                                setShowAddForm(false);
-                                init()
-                              }}
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
-                            >
-                              Submit
-                            </button>
-                            <button
-                              onClick={() => setShowAddForm(false)}
-                              className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded text-sm"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
+                    <>
+                      <div className="max-h-96 overflow-y-auto">
+                        <table className="min-w-full border-collapse ">
+                          <thead>
+                            <tr className="bg-gray-300">
+                              <th className="px-4 py-2 border text-black">
+                                Employee Name
+                              </th>
+                              <th className="px-4 py-2 border text-black">
+                                Employee ID
+                              </th>
+                              <th className="px-4 py-2 border text-black">
+                                Employee Title
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>{tableRows}</tbody>
+                        </table>
+                      </div>
+                      {clickedEmployee !== null && (
+                        <button
+                          className="mt-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition duration-300 ease-in-out"
+                          onClick={() => handleEmployeeDelete()}
+                        >
+                          Delete Employee
+                        </button>
+                      )}
+                    </>
                   )}
-                </tbody>
-              </table>
+                </div>
+              </div>
             </div>
           </ModalContainer>
         </>
@@ -1668,9 +1655,8 @@ const Employee = () => {
               </ModalCloseButton>
             </ModalHeader>
             <div className="flex flex-1 justify-center items-center w-full">
-              <div className="p-6 bg-white rounded-lg shadow max-w-4xl w-full text-black">
-                {/* Employee Selector */}
-                <div className="mb-6">
+              <div className="p-6 bg-white rounded-lg shadow max-w-4xl w-full">
+                <div className="mb-4">
                   <label
                     htmlFor="employee-select"
                     className="block text-sm font-medium text-gray-700"
@@ -1690,44 +1676,51 @@ const Employee = () => {
                     ))}
                   </select>
                 </div>
-
-                {/* Vertical Day List */}
-                <div className="space-y-4">
-                  {daysOfWeek.map((day) => (
-                    <div
-                      key={day}
-                      className="flex flex-col sm:flex-row sm:items-center gap-3 border-b pb-4"
-                    >
-                      <span className="w-32 text-sm font-semibold text-gray-700 capitalize">
-                        {day}
-                      </span>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
-                        <input
-                          type="time"
-                          step="3600"
-                          value={formatHour(schedule[day]?.start)}
-                          onChange={handleScheduleChange(day, "start")}
-                          className="h-10 px-3 w-full sm:w-1/2 border border-gray-300 rounded text-black"
-                        />
-                        <input
-                          type="time"
-                          step="3600"
-                          value={formatHour(schedule[day]?.end)}
-                          onChange={handleScheduleChange(day, "end")}
-                          className="h-10 px-3 w-full sm:w-1/2 border border-gray-300 rounded text-black"
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {daysOfWeek.map((day) => (
+                          <th
+                            key={day}
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            {day.charAt(0).toUpperCase() + day.slice(1)}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200 ">
+                      <tr>
+                        {daysOfWeek.map((day) => (
+                          <td key={day} className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex flex-col">
+                                <input
+                                  type="number"
+                                  placeholder="Start"
+                                  value={schedule[day].start}
+                                  onChange={handleScheduleChange(day, "start")}
+                                  className="mb-2 mt-1 h-10 px-3 rounded border border-gray-300 text-black"
+                                />
+                                <input
+                                  type="number"
+                                  placeholder="End"
+                                  value={schedule[day].end}
+                                  onChange={handleScheduleChange(day, "end")}
+                                  className="mb-1 h-10 px-3 rounded border border-gray-300 text-black"
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-
-                {/* Submit Button */}
                 <button
-                  onClick={() => {
-                    handleSubmit();
-                    
-                  }}
-                  className="mt-6 w-full h-12 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md"
+                  onClick={() => handleSubmit()}
+                  className="mt-4 w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
                 >
                   Submit Schedule
                 </button>
@@ -1736,15 +1729,13 @@ const Employee = () => {
           </ModalContainer>
         </>
       )}
-      {viewScheduler && (
+      { viewScheduler && (
         <>
-          <ModalBackground onClick={() => handleModalClose("viewScheduler")} />
+        <ModalBackground onClick={() => handleModalClose("viewScheduler")} />
           <ModalContainer>
             <ModalHeader className="sticky top-0 z-10 bg-white">
               <ModalTitle className="text-black">Scheduler Utility</ModalTitle>
-              <ModalCloseButton
-                onClick={() => handleModalClose("viewScheduler")}
-              >
+              <ModalCloseButton onClick={() => handleModalClose("viewScheduler")}>
                 <FaTimes className="w-5 h-5 mr-2" />
               </ModalCloseButton>
             </ModalHeader>
@@ -1761,14 +1752,11 @@ const Employee = () => {
                 </option>
               ))}
             </select>
-            <MyCalendar
-              employee={scheduleEmployees.find(
-                (emp) => emp.name === selectedEmployee
-              )}
-            />
+          <MyCalendar employee={scheduleEmployees.find(emp => emp.name === selectedEmployee)} />
           </ModalContainer>
         </>
-      )}
+      )
+      }
     </>
   );
 };

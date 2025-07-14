@@ -341,7 +341,12 @@ const Employee = () => {
     // ... initialize the rest of the days similarly
   });
 
-  
+  const handleScheduleChange = (day, type) => (event) => {
+    setSchedule({
+      ...schedule,
+      [day]: { ...schedule[day], [type]: event.target.value },
+    });
+  };
 
   const handleSubmit = () => {
     if (
@@ -509,20 +514,19 @@ const Employee = () => {
     if (h === "" || h === undefined || h === null) return "";
     return h.toString().padStart(2, "0") + ":00";
   };
- const handleScheduleChange = (day, type) => (event) => {
-   const timeStr = event.target.value; // e.g., "14:00"
-   const hour = parseInt(timeStr.split(":")[0], 10); // Convert to military hour
-   if (isNaN(hour)) return;
+  const handleScheduleChange = (day, field) => (e) => {
+    const timeStr = e.target.value; // "03:00", "14:00", etc.
+    const hour = parseInt(timeStr.split(":")[0], 10); // just get hour part
+    if (isNaN(hour)) return;
 
-   setSchedule((prev) => ({
-     ...prev,
-     [day]: {
-       ...prev[day],
-       [type]: hour,
-     },
-   }));
- };
-
+    setSchedule((prev) => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        [field]: hour,
+      },
+    }));
+  };
 
 
   const init = async () => {
@@ -1565,7 +1569,6 @@ const Employee = () => {
                               onClick={() => {
                                 handleEmployeeDelete();
                                 setClickedEmployee(null);
-                                init();
                               }}
                               className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                             >
@@ -1632,7 +1635,6 @@ const Employee = () => {
                               onClick={() => {
                                 handleEmployeeAdd();
                                 setShowAddForm(false);
-                                init()
                               }}
                               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
                             >
@@ -1725,9 +1727,11 @@ const Employee = () => {
                 <button
                   onClick={() => {
                     handleSubmit();
-                    
+                    alert(
+                      `Schedule for ${selectedEmployee} has been created or updated.`
+                    );
                   }}
-                  className="mt-6 w-full h-12 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md"
+                  className="mt-6 w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
                 >
                   Submit Schedule
                 </button>

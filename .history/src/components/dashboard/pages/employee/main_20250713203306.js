@@ -1565,7 +1565,6 @@ const Employee = () => {
                               onClick={() => {
                                 handleEmployeeDelete();
                                 setClickedEmployee(null);
-                                init();
                               }}
                               className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                             >
@@ -1725,9 +1724,11 @@ const Employee = () => {
                 <button
                   onClick={() => {
                     handleSubmit();
-                    
+                    alert(
+                      `Schedule for ${selectedEmployee} has been created or updated.`
+                    );
                   }}
-                  className="mt-6 w-full h-12 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md"
+                  className="mt-6 w-full h-12 bg-emerald-800 hover:bg-emerald-600 text-white rounded-md"
                 >
                   Submit Schedule
                 </button>

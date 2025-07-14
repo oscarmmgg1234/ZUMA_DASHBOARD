@@ -293,7 +293,7 @@ const Employee = () => {
   }, []);
 
   // states
-  const [showAddForm, setShowAddForm] = useState(false);
+  
   const [isModalRmOpen, setIsModalRmOpen] = useState(false);
   const [isModalEditOpen, setIsModalEditOpen] = useState(false);
   const [isModalGenOpen, setIsModalGenOpen] = useState(false);
@@ -341,7 +341,12 @@ const Employee = () => {
     // ... initialize the rest of the days similarly
   });
 
-  
+  const handleScheduleChange = (day, type) => (event) => {
+    setSchedule({
+      ...schedule,
+      [day]: { ...schedule[day], [type]: event.target.value },
+    });
+  };
 
   const handleSubmit = () => {
     if (
@@ -503,28 +508,6 @@ const Employee = () => {
 
   const [clickedEmployee, setClickedEmployee] = useState(null);
 
-
-
-  const formatHour = (h) => {
-    if (h === "" || h === undefined || h === null) return "";
-    return h.toString().padStart(2, "0") + ":00";
-  };
- const handleScheduleChange = (day, type) => (event) => {
-   const timeStr = event.target.value; // e.g., "14:00"
-   const hour = parseInt(timeStr.split(":")[0], 10); // Convert to military hour
-   if (isNaN(hour)) return;
-
-   setSchedule((prev) => ({
-     ...prev,
-     [day]: {
-       ...prev[day],
-       [type]: hour,
-     },
-   }));
- };
-
-
-
   const init = async () => {
     const employee_list = await https.getEmployees();
     const formatted_employee_list = employee_list.map((employee) => {
@@ -576,7 +559,7 @@ const Employee = () => {
       key={employee.EMPLOYEE_ID}
       className={`${
         employee.focus
-          ? "bg-green-100"
+          ? "bg-orange-300"
           : index % 2 === 0
           ? "bg-gray-100"
           : "bg-white"
@@ -584,7 +567,7 @@ const Employee = () => {
       onClick={() => onFocusEmployee(employee)}
     >
       <td className="px-4 py-2 border text-black">{employee.NAME}</td>
-      <td className="px-4 py-2 border text-white bg-lime-900/80">
+      <td className="px-4 py-2 border text-black bg-rose-400">
         {employee.EMPLOYEE_ID}
       </td>
       <td className="px-4 py-2 border text-black">{employee.TITLE}</td>
@@ -1536,121 +1519,154 @@ const Employee = () => {
                 <FaTimes className="w-5 h-5 mr-2" />
               </ModalCloseButton>
             </ModalHeader>
-            <div className="max-h-[75vh] overflow-y-auto rounded border text-black">
-              <table className="min-w-full table-fixed text-sm">
-                <thead className="bg-gray-200 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-4 py-2 border w-1/4 text-left">Name</th>
-                    <th className="px-4 py-2 border w-1/4 text-left">ID</th>
-                    <th className="px-4 py-2 border w-1/4 text-left">Title</th>
-                    <th className="px-2 py-2 border w-12 text-center">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* ✅ Employee Rows */}
-                  {tableRows}
+            <div className="h-full w-full p-4">
+              {/* Toggle Button */}
+              <div className="mb-6 flex justify-center">
+                <button
+                  onClick={() => setAction(!action)}
+                  className="w-40 h-14 bg-orange-400 hover:bg-orange-500 rounded-lg shadow font-semibold text-white transition"
+                >
+                  {action ? "Switch to Delete Mode" : "Switch to Add Mode"}
+                </button>
+              </div>
 
-                  {/* ✅ Delete Confirmation Row */}
-                  {clickedEmployee !== null && (
-                    <tr className="bg-red-50 text-black">
-                      <td colSpan={4} className="px-4 py-3">
-                        <div className="flex justify-between items-center">
-                          <span>
+              {/* Container */}
+              <div className="flex flex-1 justify-center items-start">
+                <div className="p-6 bg-white rounded-lg shadow max-w-2xl w-full">
+                  {action ? (
+                    // Add Employee Form
+                    <div className="flex flex-col space-y-4 text-black">
+                      {[
+                        [
+                          "Employee Full Name",
+                          employeeName,
+                          setEmployeeName,
+                          "Name",
+                        ],
+                        [
+                          "Employee Email",
+                          employeeEmail,
+                          setEmployeeEmail,
+                          "Email Address",
+                        ],
+                        [
+                          "Employee Phone",
+                          employeePhone,
+                          setEmployeePhone,
+                          "Phone#",
+                        ],
+                        [
+                          "Employee Title",
+                          employeeTitle,
+                          setEmployeeTitle,
+                          "Title",
+                        ],
+                        [
+                          "Employee Wage",
+                          employeeWage,
+                          setEmployeeWage,
+                          "Wage",
+                        ],
+                        [
+                          "Location ID",
+                          employeeLocation,
+                          setEmployeeLocation,
+                          "Location# (4322)",
+                        ],
+                      ].map(([label, val, setFn, placeholder], idx) => (
+                        <div key={idx}>
+                          <label className="font-semibold text-gray-700">
+                            {label}
+                          </label>
+                          <input
+                            type="text"
+                            placeholder={placeholder}
+                            value={val}
+                            onChange={(e) => setFn(e.target.value)}
+                            className="h-10 px-3 rounded border border-gray-300 w-full"
+                          />
+                        </div>
+                      ))}
+
+                      <button
+                        onClick={handleEmployeeAdd}
+                        className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-semibold"
+                      >
+                        Add Employee
+                      </button>
+                    </div>
+                  ) : (
+                    // Delete Mode Table
+                    <>
+                      <div className="max-h-[400px] overflow-y-auto rounded border">
+                        <table className="min-w-full table-fixed text-sm text-black">
+                          <thead className="bg-gray-200 sticky top-0 z-10">
+                            <tr>
+                              <th className="px-4 py-2 border w-1/3 text-left">
+                                Employee Name
+                              </th>
+                              <th className="px-4 py-2 border w-1/3 text-left">
+                                Employee ID
+                              </th>
+                              <th className="px-4 py-2 border w-1/3 text-left">
+                                Employee Title
+                              </th>
+                              <th className="px-2 py-2 border w-12 text-center">
+                                Delete
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {tableRows.map((row, idx) => (
+                              <tr key={idx} className="hover:bg-gray-50">
+                                <td className="px-4 py-2 border">{row.name}</td>
+                                <td className="px-4 py-2 border">{row.id}</td>
+                                <td className="px-4 py-2 border">
+                                  {row.title}
+                                </td>
+                                <td className="px-2 py-2 border text-center">
+                                  <button
+                                    onClick={() => setClickedEmployee(row.id)}
+                                    className="text-red-600 hover:text-red-800"
+                                  >
+                                    <FaTimes className="inline-block w-4 h-4" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Confirm Delete Prompt */}
+                      {clickedEmployee !== null && (
+                        <div className="mt-6 p-4 border border-red-300 bg-red-50 rounded-md text-black">
+                          <p className="mb-3 font-medium">
                             Are you sure you want to delete this employee?
-                          </span>
-                          <div className="space-x-2">
+                          </p>
+                          <div className="flex justify-end gap-4">
                             <button
                               onClick={() => {
-                                handleEmployeeDelete();
+                                handleEmployeeDelete(clickedEmployee);
                                 setClickedEmployee(null);
-                                init();
                               }}
-                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
                             >
-                              Confirm
+                              Confirm Delete
                             </button>
                             <button
                               onClick={() => setClickedEmployee(null)}
-                              className="px-3 py-1 bg-gray-300 text-black rounded hover:bg-gray-400 text-sm"
+                              className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black rounded-md"
                             >
                               Cancel
                             </button>
                           </div>
                         </div>
-                      </td>
-                    </tr>
+                      )}
+                    </>
                   )}
-
-                  {/* ✅ Add Inline Form */}
-                  {!showAddForm ? (
-                    <tr>
-                      <td colSpan={4} className="text-center py-3">
-                        <button
-                          onClick={() => setShowAddForm(true)}
-                          className="text-blue-600 hover:underline font-medium"
-                        >
-                          + Add Employee
-                        </button>
-                      </td>
-                    </tr>
-                  ) : (
-                    <tr className="bg-gray-50">
-                      <td colSpan={4}>
-                        <div className="p-4 space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            {[
-                              ["Full Name", employeeName, setEmployeeName],
-                              ["Email", employeeEmail, setEmployeeEmail],
-                              ["Phone", employeePhone, setEmployeePhone],
-                              ["Title", employeeTitle, setEmployeeTitle],
-                              ["Wage", employeeWage, setEmployeeWage],
-                              [
-                                "Location ID",
-                                employeeLocation,
-                                setEmployeeLocation,
-                              ],
-                            ].map(([label, val, setFn], idx) => (
-                              <div key={idx}>
-                                <label className="block text-sm font-medium text-black mb-1">
-                                  {label}
-                                </label>
-                                <input
-                                  type="text"
-                                  value={val}
-                                  onChange={(e) => setFn(e.target.value)}
-                                  className="w-full px-3 py-2 border rounded-md text-black border-gray-300"
-                                  placeholder={label}
-                                />
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="flex justify-end gap-3">
-                            <button
-                              onClick={() => {
-                                handleEmployeeAdd();
-                                setShowAddForm(false);
-                                init()
-                              }}
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
-                            >
-                              Submit
-                            </button>
-                            <button
-                              onClick={() => setShowAddForm(false)}
-                              className="bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded text-sm"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                </div>
+              </div>
             </div>
           </ModalContainer>
         </>
@@ -1667,71 +1683,90 @@ const Employee = () => {
                 <FaTimes className="w-5 h-5 mr-2" />
               </ModalCloseButton>
             </ModalHeader>
-            <div className="flex flex-1 justify-center items-center w-full">
-              <div className="p-6 bg-white rounded-lg shadow max-w-4xl w-full text-black">
-                {/* Employee Selector */}
-                <div className="mb-6">
-                  <label
-                    htmlFor="employee-select"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Select Employee
-                  </label>
-                  <select
-                    id="employee-select"
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md text-black"
-                    value={selectedEmployee}
-                    onChange={(e) => setSelectedEmployee(e.target.value)}
-                  >
-                    {scheduleEmployees.map((employee) => (
-                      <option key={employee.id} value={employee.name}>
-                        {employee.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            <div className="max-h-[400px] overflow-y-auto rounded border text-black">
+              <table className="min-w-full table-fixed text-sm">
+                <thead className="bg-gray-200 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-2 border w-1/4 text-left">
+                      Employee Name
+                    </th>
+                    <th className="px-4 py-2 border w-1/4 text-left">
+                      Employee ID
+                    </th>
+                    <th className="px-4 py-2 border w-1/4 text-left">
+                      Employee Title
+                    </th>
+                    <th className="px-2 py-2 border w-1/4 text-center">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* ✅ Existing tableRows */}
+                  {tableRows}
 
-                {/* Vertical Day List */}
-                <div className="space-y-4">
-                  {daysOfWeek.map((day) => (
-                    <div
-                      key={day}
-                      className="flex flex-col sm:flex-row sm:items-center gap-3 border-b pb-4"
-                    >
-                      <span className="w-32 text-sm font-semibold text-gray-700 capitalize">
-                        {day}
-                      </span>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
+                  {/* ✅ Inline Add Row */}
+                  {!showAddForm ? (
+                    <tr>
+                      <td colSpan={4} className="text-center py-3">
+                        <button
+                          onClick={() => setShowAddForm(true)}
+                          className="text-blue-600 hover:underline font-medium"
+                        >
+                          + Add Employee
+                        </button>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr className="bg-gray-50">
+                      <td className="px-4 py-2 border">
                         <input
-                          type="time"
-                          step="3600"
-                          value={formatHour(schedule[day]?.start)}
-                          onChange={handleScheduleChange(day, "start")}
-                          className="h-10 px-3 w-full sm:w-1/2 border border-gray-300 rounded text-black"
+                          type="text"
+                          placeholder="Full Name"
+                          value={employeeName}
+                          onChange={(e) => setEmployeeName(e.target.value)}
+                          className="w-full h-8 px-2 rounded border border-gray-300 text-black"
                         />
+                      </td>
+                      <td className="px-4 py-2 border">
                         <input
-                          type="time"
-                          step="3600"
-                          value={formatHour(schedule[day]?.end)}
-                          onChange={handleScheduleChange(day, "end")}
-                          className="h-10 px-3 w-full sm:w-1/2 border border-gray-300 rounded text-black"
+                          type="text"
+                          placeholder="ID"
+                          value={employeeId}
+                          onChange={(e) => setEmployeeId(e.target.value)}
+                          className="w-full h-8 px-2 rounded border border-gray-300 text-black"
                         />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  onClick={() => {
-                    handleSubmit();
-                    
-                  }}
-                  className="mt-6 w-full h-12 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md"
-                >
-                  Submit Schedule
-                </button>
-              </div>
+                      </td>
+                      <td className="px-4 py-2 border">
+                        <input
+                          type="text"
+                          placeholder="Title"
+                          value={employeeTitle}
+                          onChange={(e) => setEmployeeTitle(e.target.value)}
+                          className="w-full h-8 px-2 rounded border border-gray-300 text-black"
+                        />
+                      </td>
+                      <td className="px-4 py-2 border text-center space-x-2">
+                        <button
+                          onClick={() => {
+                            handleEmployeeAdd();
+                            setShowAddForm(false);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Submit
+                        </button>
+                        <button
+                          onClick={() => setShowAddForm(false)}
+                          className="bg-gray-300 hover:bg-gray-400 text-black px-3 py-1 rounded text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </ModalContainer>
         </>

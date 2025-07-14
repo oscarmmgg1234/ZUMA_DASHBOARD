@@ -1565,7 +1565,7 @@ const Employee = () => {
                               onClick={() => {
                                 handleEmployeeDelete();
                                 setClickedEmployee(null);
-                                init();
+                                
                               }}
                               className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                             >

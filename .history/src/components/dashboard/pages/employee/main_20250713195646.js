@@ -341,7 +341,12 @@ const Employee = () => {
     // ... initialize the rest of the days similarly
   });
 
-  
+  const handleScheduleChange = (day, type) => (event) => {
+    setSchedule({
+      ...schedule,
+      [day]: { ...schedule[day], [type]: event.target.value },
+    });
+  };
 
   const handleSubmit = () => {
     if (
@@ -503,28 +508,6 @@ const Employee = () => {
 
   const [clickedEmployee, setClickedEmployee] = useState(null);
 
-
-
-  const formatHour = (h) => {
-    if (h === "" || h === undefined || h === null) return "";
-    return h.toString().padStart(2, "0") + ":00";
-  };
- const handleScheduleChange = (day, type) => (event) => {
-   const timeStr = event.target.value; // e.g., "14:00"
-   const hour = parseInt(timeStr.split(":")[0], 10); // Convert to military hour
-   if (isNaN(hour)) return;
-
-   setSchedule((prev) => ({
-     ...prev,
-     [day]: {
-       ...prev[day],
-       [type]: hour,
-     },
-   }));
- };
-
-
-
   const init = async () => {
     const employee_list = await https.getEmployees();
     const formatted_employee_list = employee_list.map((employee) => {
@@ -576,7 +559,7 @@ const Employee = () => {
       key={employee.EMPLOYEE_ID}
       className={`${
         employee.focus
-          ? "bg-green-100"
+          ? "bg-orange-300"
           : index % 2 === 0
           ? "bg-gray-100"
           : "bg-white"
@@ -584,7 +567,7 @@ const Employee = () => {
       onClick={() => onFocusEmployee(employee)}
     >
       <td className="px-4 py-2 border text-black">{employee.NAME}</td>
-      <td className="px-4 py-2 border text-white bg-lime-900/80">
+      <td className="px-4 py-2 border text-black bg-rose-400">
         {employee.EMPLOYEE_ID}
       </td>
       <td className="px-4 py-2 border text-black">{employee.TITLE}</td>
@@ -1565,7 +1548,6 @@ const Employee = () => {
                               onClick={() => {
                                 handleEmployeeDelete();
                                 setClickedEmployee(null);
-                                init();
                               }}
                               className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                             >
@@ -1632,7 +1614,6 @@ const Employee = () => {
                               onClick={() => {
                                 handleEmployeeAdd();
                                 setShowAddForm(false);
-                                init()
                               }}
                               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
                             >
@@ -1668,9 +1649,8 @@ const Employee = () => {
               </ModalCloseButton>
             </ModalHeader>
             <div className="flex flex-1 justify-center items-center w-full">
-              <div className="p-6 bg-white rounded-lg shadow max-w-4xl w-full text-black">
-                {/* Employee Selector */}
-                <div className="mb-6">
+              <div className="p-6 bg-white rounded-lg shadow max-w-4xl w-full">
+                <div className="mb-4">
                   <label
                     htmlFor="employee-select"
                     className="block text-sm font-medium text-gray-700"
@@ -1690,44 +1670,51 @@ const Employee = () => {
                     ))}
                   </select>
                 </div>
-
-                {/* Vertical Day List */}
-                <div className="space-y-4">
-                  {daysOfWeek.map((day) => (
-                    <div
-                      key={day}
-                      className="flex flex-col sm:flex-row sm:items-center gap-3 border-b pb-4"
-                    >
-                      <span className="w-32 text-sm font-semibold text-gray-700 capitalize">
-                        {day}
-                      </span>
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
-                        <input
-                          type="time"
-                          step="3600"
-                          value={formatHour(schedule[day]?.start)}
-                          onChange={handleScheduleChange(day, "start")}
-                          className="h-10 px-3 w-full sm:w-1/2 border border-gray-300 rounded text-black"
-                        />
-                        <input
-                          type="time"
-                          step="3600"
-                          value={formatHour(schedule[day]?.end)}
-                          onChange={handleScheduleChange(day, "end")}
-                          className="h-10 px-3 w-full sm:w-1/2 border border-gray-300 rounded text-black"
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {daysOfWeek.map((day) => (
+                          <th
+                            key={day}
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            {day.charAt(0).toUpperCase() + day.slice(1)}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200 ">
+                      <tr>
+                        {daysOfWeek.map((day) => (
+                          <td key={day} className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex flex-col">
+                                <input
+                                  type="number"
+                                  placeholder="Start"
+                                  value={schedule[day].start}
+                                  onChange={handleScheduleChange(day, "start")}
+                                  className="mb-2 mt-1 h-10 px-3 rounded border border-gray-300 text-black"
+                                />
+                                <input
+                                  type="number"
+                                  placeholder="End"
+                                  value={schedule[day].end}
+                                  onChange={handleScheduleChange(day, "end")}
+                                  className="mb-1 h-10 px-3 rounded border border-gray-300 text-black"
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-
-                {/* Submit Button */}
                 <button
-                  onClick={() => {
-                    handleSubmit();
-                    
-                  }}
-                  className="mt-6 w-full h-12 bg-emerald-700 hover:bg-emerald-600 text-white rounded-md"
+                  onClick={() => handleSubmit()}
+                  className="mt-4 w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-md"
                 >
                   Submit Schedule
                 </button>
