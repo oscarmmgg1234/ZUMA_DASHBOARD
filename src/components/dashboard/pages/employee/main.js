@@ -1106,7 +1106,8 @@ const Employee = () => {
                     <button
                       onClick={() => setRangeOption(!rangeOption)}
                       className="w-full sm:w-auto rounded-lg text-black border border-3 bg-zuma-green/80 px-4 py-2 sm:mr-4 mb-4 sm:mb-0"
-                    >
+                    > 
+                    
                       <p>Select Single Date</p>
                     </button>
                     <div className="flex items-center gap-4 mt-4">
