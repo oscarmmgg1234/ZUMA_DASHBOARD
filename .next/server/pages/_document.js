@@ -21,7 +21,7 @@ var _constants = __webpack_require__(6724);
 var _getPageFiles = __webpack_require__(4140);
 var _htmlescape = __webpack_require__(9716);
 var _isError = _interopRequireDefault(__webpack_require__(676));
-var _htmlContext = __webpack_require__(8743);
+var _htmlContext = __webpack_require__(6404);
 class Document extends _react.default.Component {
     /**
    * `getInitialProps` hook returns the context object with the addition of `renderPage`.
@@ -896,7 +896,7 @@ module.exports = require("next/dist/shared/lib/constants.js");
 
 /***/ }),
 
-/***/ 8743:
+/***/ 6404:
 /***/ ((module) => {
 
 "use strict";

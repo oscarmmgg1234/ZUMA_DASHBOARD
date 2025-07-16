@@ -7,6 +7,7 @@ import getDay from "date-fns/getDay";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import http_handler from "../Fetch/HTTPS_INTERFACE";
 import { set } from "date-fns";
+import TimePicker from "react-time-picker";
 
 const https = new http_handler();
 const locales = { "en-US": require("date-fns/locale/en-US") };
