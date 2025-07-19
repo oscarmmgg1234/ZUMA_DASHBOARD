@@ -8,8 +8,10 @@
 # testing
 /coverage
 
-
-
+/node_modules
+/build
+/.next
+/out
 # misc
 .DS_Store
 *.pem
