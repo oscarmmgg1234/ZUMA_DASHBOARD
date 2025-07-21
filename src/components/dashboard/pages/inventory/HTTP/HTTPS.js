@@ -1,4 +1,4 @@
-const base_url = "http://localhost:3001";
+const base_url = "http://192.168.1.247:3001";
 // http://192.168.1.176:3002
 
 
@@ -67,7 +67,7 @@ export const getGlobalMetrics = async () => {
     },
   };
   const response = await fetch(
-    `http://localhost:3004/metrics/global`,
+    `http://192.168.1.247:3004/metrics/global`,
     options
   );
   return await response.json();
