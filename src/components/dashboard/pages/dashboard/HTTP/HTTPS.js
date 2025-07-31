@@ -1,5 +1,5 @@
-const inv_base_url = "http://192.168.1.247:3001";
-const metrics_base_url = "http://192.168.1.247:3004";
+const inv_base_url = "http://192.168.1.248:3001";
+const metrics_base_url = "http://192.168.1.248:3004";
 
 export const getTopEmployee = async () => {
   const options = {
