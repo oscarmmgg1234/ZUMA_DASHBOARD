@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from "react";
 import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";

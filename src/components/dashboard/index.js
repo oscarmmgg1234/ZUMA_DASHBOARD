@@ -5,7 +5,6 @@ import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import Employee from "./pages/employee/main";
 import Inventory from "./pages/inventory/main";
 import Dashboard from "./pages/dashboard/main";
-
 const userNavigation = [
   { name: "Your Profile", href: "#" },
   { name: "Settings", href: "#" },
