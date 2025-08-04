@@ -550,6 +550,26 @@ useEffect(() => {
     return prevSnapshot;
   });
 }, [props.selectedProduct, props.route, props.products]);
+useEffect(()=>{
+  setTimeout(()=>{
+     if (!props.selectedProduct || !props.products || !props.route) return;
+
+  const firstStage = buildFirstStageMap(props.selectedProduct);
+  const newTree = finalPhase(firstStage, props.route, props.products);
+  
+  setTree(newTree);
+   setTreeSnapshot((prevSnapshot) => {
+    // Only set if snapshot is empty OR product changed
+    const currentSnapshotProductId = prevSnapshot?.[0]?.productId || '';
+    if (props.selectedProduct.PRODUCT_ID !== currentSnapshotProductId) {
+      return JSON.parse(JSON.stringify(newTree)); // deep clone
+    }
+    return prevSnapshot;
+  });
+  }, 3000
+  )
+
+}, [props.refTree])
 
 useEffect(() => {
   if (notification) {
@@ -643,7 +663,11 @@ const onKeyDown = useCallback((e) => {
   <button
     onClick={async () => {
       const isSame = await handleCommit(tree, treeSnapshot, props.route, setNotification, props.selectedProduct);
+
       if (!isSame) {
+        const updatedProduct = await http.getProductById(productID.PRODUCT_ID); 
+        console.log(updatedProduct);
+        //props.setRefTree(JSON.parse(JSON.stringify(tree)))
         setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
       }
     }}

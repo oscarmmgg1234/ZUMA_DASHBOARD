@@ -26,9 +26,13 @@ import {
   deleteScanner,
   getProductHistory,
   getEmployeeData,
+  getProductByID
 } from "./HTTPS";
 
 export default class http_handler {
+  getProductByID = async (args) => {
+return await getProductByID(args)
+  };
   getEmployeeData = async () => {
     return await getEmployeeData();
   };

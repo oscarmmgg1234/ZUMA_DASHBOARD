@@ -24,6 +24,7 @@ export default function EditProduct(props) {
   const previousSelectedCompany = useRef("All");
   const [route, setRoute] = useState("activation");
   const [registry, setRegistry] = useState(null);
+  const [refTree, setRefTree] = useState(null);
   //reduction
   //shipment
 
@@ -40,7 +41,7 @@ export default function EditProduct(props) {
       setRegistry(fetchRegistry);
     };
     fetchData();
-  }, [props.api]);
+  }, [props.api, refTree]);
 
   const handleProductClick = (product) => {
     setSelectedProduct(product);
@@ -353,6 +354,8 @@ export default function EditProduct(props) {
             route={route}
             products={productList}
             registry={registry}
+            setRefTree={setRefTree}
+            refTree={refTree}
           />
           <div className="w-full p-4 text-white rounded text-lg font-semibold mt-8 mb-40" />
         </div>
