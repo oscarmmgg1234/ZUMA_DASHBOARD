@@ -297,22 +297,26 @@ function treeToTokenEncoder(tree, route) {
 
     for (const action of product.children) {
       const t = action.token || {};
-      const classId = t.type?.toUpperCase() || '';
-      const funcId = t.func || '';
+      const classId = t.type?.toUpperCase();
+      const funcId = t.func;
       const productId = product.selectedProductId;
-      const p1 = t.param1 ?? 'null';
-      const p2 = t.param2 ?? 'null';
-      const p3 = t.param3 ?? 'null';
 
-      // If essential values are missing, skip
       if (!classId || !funcId || !productId) continue;
 
-      const tokenStr = `${classId}:${funcId}:${productId}:${p1}:${p2}:${p3}`;
-      tokens.push(tokenStr);
+      const parts = [classId, funcId, productId];
+
+      // Only push defined parameters (not null or empty strings)
+      [t.param1, t.param2, t.param3].forEach(p => {
+        if (p !== undefined && p !== null && p !== "") {
+          parts.push(p);
+        }
+      });
+
+      tokens.push(parts.join(":"));
     }
   }
 
-  return tokens.join(' ');
+  return tokens.join(" ");
 }
 
 
@@ -382,7 +386,7 @@ function getAllProductNodes(tree) {
   return result;
 }
 
-const handleCommit = (tree, treeSnapshot, route, setNotification) => {
+const handleCommit = (tree, treeSnapshot, route, setNotification, productID) => {
   const isSame = commitChangesIsValid(tree, treeSnapshot);
   if (isSame) {
     setNotification({ message: "No changes to commit.", type: 'error' });
@@ -418,8 +422,10 @@ const handleCommit = (tree, treeSnapshot, route, setNotification) => {
     route: route,
     postops: postops,
     newToken: updatedToken,
-    section: "node"
+    section: "node",
+    productID: productID
   }
+  console.log(dataPacket)
   //section: "form is for the form updates"
 
   setNotification({ message: "Changes committed and token updated.", type: 'success' });
@@ -599,7 +605,7 @@ const onKeyDown = useCallback((e) => {
 
   <button
     onClick={() => {
-      const isSame = handleCommit(tree, treeSnapshot, props.route, setNotification);
+      const isSame = handleCommit(tree, treeSnapshot, props.route, setNotification, props.selectedProduct);
       if (!isSame) {
         setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
       }
