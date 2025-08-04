@@ -3,6 +3,10 @@ import { selectClasses } from "@mui/material";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch } from "react-icons/fa";
 import NodeRenderer from "./node/NodeRenderer";
+import http_handler from "../../HTTP/HTTPS_INTERFACE";
+
+
+const http = new http_handler()
 
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
@@ -300,6 +304,36 @@ export default function EditProduct(props) {
           {renderField("Location", "LOCATION", [
             { value: "4322", label: "4322" },
           ])}
+         {/* Save Edit Changes button */}
+<button
+  onClick={async () => {
+    const updates = Object.keys(editedFields).reduce((acc, key) => {
+      if (editedFields[key] !== selectedProduct[key]) {
+        acc.push({ field: key, value: editedFields[key] });
+      }
+      return acc;
+    }, []);
+
+    if (updates.length === 0) {
+      console.log("No changes to commit.");
+      return;
+    }
+
+    const payload = {
+      PRODUCT_ID: selectedProduct.PRODUCT_ID,
+      updates,
+      section: "form"
+    };
+
+    await http.commitChanges(payload)
+
+    console.log("📝 Payload to commit:", payload);
+  }}
+  className="w-full mb-4 p-3 bg-green-600 hover:bg-green-700 text-white rounded text-md font-semibold shadow transition duration-150"
+>
+  Save Edit Changes
+</button>
+
 
           <div className="mb-4">
             <label className="block mb-2 text-black">Select Node View</label>

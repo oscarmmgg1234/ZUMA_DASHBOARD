@@ -11,6 +11,8 @@ import { v4 as uuidv4 } from 'uuid';
 import 'reactflow/dist/style.css';
 import ProductNode from './nodes/ProductNode';
 import ActionNode from './nodes/ActionNode';
+import http_handler from '../../../HTTP/HTTPS_INTERFACE';
+const http = new http_handler();
 
 const nodeTypes = {
   productNode: ProductNode,
@@ -252,6 +254,9 @@ const prepareRegistry = (registry) => {
 
   return registryMap;
 };
+
+
+
 function finalPhase(firstStage, route, allProducts) {
   const result = [];
 
@@ -386,46 +391,81 @@ function getAllProductNodes(tree) {
   return result;
 }
 
-const handleCommit = (tree, treeSnapshot, route, setNotification, productID) => {
+
+const extractFromVisualTree = (tree, route, funcsToMatch) => {
+  const result = [];
+
+  for (const product of tree) {
+    if (!product.selectedProductId || !Array.isArray(product.children)) continue;
+
+    for (const action of product.children) {
+      const token = action.token || {};
+      if (funcsToMatch.includes(token.func)) {
+        result.push({
+          productID: product.selectedProductId,
+          ratio: token.param1 ? parseFloat(token.param1) : null,
+          route,
+          func: token.func
+        });
+      }
+    }
+  }
+
+  return result;
+};
+const extractFromTokens = (product, activeRoute, funcsToMatch) => {
+  const parsed = parseTokensFromProduct(product);
+  const result = [];
+
+  for (const route in parsed) {
+    if (route === activeRoute) continue; // ❌ skip visualized route
+
+    for (const token of parsed[route]) {
+      if (funcsToMatch.includes(token.func)) {
+        result.push({
+          productID: token.productId,
+          ratio: token.param1 ? parseFloat(token.param1) : null,
+          route,
+          func: token.func
+        });
+      }
+    }
+  }
+
+  return result;
+};
+
+
+const handleCommit = async (tree, treeSnapshot, route, setNotification, productID) => {
   const isSame = commitChangesIsValid(tree, treeSnapshot);
   if (isSame) {
     setNotification({ message: "No changes to commit.", type: 'error' });
     return true;
   }
-  console.log(JSON.stringify(tree))
+  
   const allProductNodes = getAllProductNodes(tree);
-  let postops = [];
 
-  for (const productNode of allProductNodes) {
-    if (!productNode.children || productNode.children.length === 0) continue;
+  const parsedTokens = parseTokensFromProduct(productID);
 
-    const match = productNode.children.find(child =>
-      ['29wp', '2a1k'].includes(child.token?.func || child.name)
-    );
+// Detect across all three token types (activation, reduction, shipment)
+const visualPostops = extractFromVisualTree(tree, route, ['29wp', '2a1k']);
+const tokenPostops = extractFromTokens(productID, route, ['29wp', '2a1k']);
 
-    if (match) {
-      postops.push({
-        productID: productNode.selectedProductId,
-        ratio:
-          match.token?.param1 !== "" && match.token?.param1 != null
-            ? parseFloat(match.token.param1)
-            : null,
-      });
-    }
-  }
+const allPostops = [...visualPostops, ...tokenPostops];
+
+
 
   const updatedToken = treeToTokenEncoder(tree, route);
-  console.log("✅ Updated Token:", updatedToken);
-  console.log("📦 Postops:", postops);
+  
 
   const dataPacket = {
     route: route,
-    postops: postops,
+    postops: allPostops,
     newToken: updatedToken,
     section: "node",
-    productID: productID
+    product: productID,
   }
-  console.log(dataPacket)
+  await http.commitChanges(dataPacket)
   //section: "form is for the form updates"
 
   setNotification({ message: "Changes committed and token updated.", type: 'success' });
@@ -440,10 +480,7 @@ const handleCommit = (tree, treeSnapshot, route, setNotification, productID) => 
 
 function FlowComponentInner({props}) {
   
-  // console.log("seleted product", props.selectedProduct)
-  // console.log("products", props.products)
-  // console.log("route", props.route)
-  // console.log("registry", props.registry)
+ 
 
 
 const [notification, setNotification] = useState({ message: '', type: '' });
@@ -604,8 +641,8 @@ const onKeyDown = useCallback((e) => {
 
 
   <button
-    onClick={() => {
-      const isSame = handleCommit(tree, treeSnapshot, props.route, setNotification, props.selectedProduct);
+    onClick={async () => {
+      const isSame = await handleCommit(tree, treeSnapshot, props.route, setNotification, props.selectedProduct);
       if (!isSame) {
         setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
       }
