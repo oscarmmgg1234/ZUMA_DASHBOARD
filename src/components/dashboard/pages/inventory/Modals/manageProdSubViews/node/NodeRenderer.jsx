@@ -618,7 +618,7 @@ const onKeyDown = useCallback((e) => {
 
 
   return (
-    <div style={{ position: 'relative', width: '95%', height: '800px', borderStyle: "solid", borderWidth: "7px", borderColor: "rgba(0, 28, 62, 0.75)", borderRadius: "10px" }} tabIndex={0} onKeyDown={onKeyDown}>
+    <div style={{ position: 'relative', width: '95%', height: '600px', borderStyle: "solid", borderWidth: "7px", borderColor: "rgba(0, 28, 62, 0.75)", borderRadius: "10px" }} tabIndex={0} onKeyDown={onKeyDown}>
   {/* Save Button */}
   {notification.message && (
   <div style={{
