@@ -24,12 +24,7 @@ export default function EditProduct(props) {
   const previousSelectedCompany = useRef("All");
   const [route, setRoute] = useState("activation");
   const [registry, setRegistry] = useState(null);
-const [refTrees, setRefTrees] = useState({
-  activation: null,
-  reduction: null,
-  shipment: null,
-});
-
+  const [refTree, setRefTree] = useState(null);
   //reduction
   //shipment
 
@@ -46,7 +41,7 @@ const [refTrees, setRefTrees] = useState({
       setRegistry(fetchRegistry);
     };
     fetchData();
-  }, [props.api]);
+  }, [props.api, refTree]);
 
   const handleProductClick = (product) => {
     setSelectedProduct(product);
@@ -310,35 +305,36 @@ const [refTrees, setRefTrees] = useState({
           {renderField("Location", "LOCATION", [
             { value: "4322", label: "4322" },
           ])}
-          {/* Save Edit Changes button */}
-          <button
-            onClick={async () => {
-              const updates = Object.keys(editedFields).reduce((acc, key) => {
-                if (editedFields[key] !== selectedProduct[key]) {
-                  acc.push({ field: key, value: editedFields[key] });
-                }
-                return acc;
-              }, []);
+         {/* Save Edit Changes button */}
+<button
+  onClick={async () => {
+    const updates = Object.keys(editedFields).reduce((acc, key) => {
+      if (editedFields[key] !== selectedProduct[key]) {
+        acc.push({ field: key, value: editedFields[key] });
+      }
+      return acc;
+    }, []);
 
-              if (updates.length === 0) {
-                console.log("No changes to commit.");
-                return;
-              }
+    if (updates.length === 0) {
+      console.log("No changes to commit.");
+      return;
+    }
 
-              const payload = {
-                PRODUCT_ID: selectedProduct.PRODUCT_ID,
-                updates,
-                section: "form",
-              };
+    const payload = {
+      PRODUCT_ID: selectedProduct.PRODUCT_ID,
+      updates,
+      section: "form"
+    };
 
-              await http.commitChanges(payload);
+    await http.commitChanges(payload)
 
-              console.log("📝 Payload to commit:", payload);
-            }}
-            className="w-full mb-4 p-3 bg-green-600 hover:bg-green-700 text-white rounded text-md font-semibold shadow transition duration-150"
-          >
-            Save Edit Changes
-          </button>
+    console.log("📝 Payload to commit:", payload);
+  }}
+  className="w-full mb-4 p-3 bg-green-600 hover:bg-green-700 text-white rounded text-md font-semibold shadow transition duration-150"
+>
+  Save Edit Changes
+</button>
+
 
           <div className="mb-4">
             <label className="block mb-2 text-black">Select Node View</label>
@@ -358,11 +354,9 @@ const [refTrees, setRefTrees] = useState({
             route={route}
             products={productList}
             registry={registry}
-            refTree={refTrees[route]} // only pass the current one
-            setRefTree={(updatedTree) =>
-              setRefTrees((prev) => ({ ...prev, [route]: updatedTree }))
-            }
-            setSelectedProduct={setSelectedProduct}
+            setRefTree={setRefTree}
+            refTree={refTree}
+            setSelectedProduct={setSelected}
           />
           <div className="w-full p-4 text-white rounded text-lg font-semibold mt-8 mb-40" />
         </div>

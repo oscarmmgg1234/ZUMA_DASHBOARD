@@ -358,9 +358,9 @@ const [refTrees, setRefTrees] = useState({
             route={route}
             products={productList}
             registry={registry}
-            refTree={refTrees[route]} // only pass the current one
-            setRefTree={(updatedTree) =>
-              setRefTrees((prev) => ({ ...prev, [route]: updatedTree }))
+            refTree={routeTrees[route]}
+            setRefTree={(tree) =>
+              setRouteTrees((prev) => ({ ...prev, [route]: tree }))
             }
             setSelectedProduct={setSelectedProduct}
           />

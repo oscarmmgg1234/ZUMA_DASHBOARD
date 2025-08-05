@@ -534,12 +534,6 @@ const [notification, setNotification] = useState({ message: '', type: '' });
 useEffect(() => {
   if (!props.selectedProduct || !props.products || !props.route) return;
 
-   if (props.refTree) {
-    // 👑 Trust existing visual tree if it exists
-    setTree(props.refTree);
-    setTreeSnapshot(JSON.parse(JSON.stringify(props.refTree)));
-    return;
-  }
   const firstStage = buildFirstStageMap(props.selectedProduct);
   const newTree = finalPhase(firstStage, props.route, props.products);
   
@@ -553,7 +547,26 @@ useEffect(() => {
     return prevSnapshot;
   });
 }, [props.selectedProduct, props.route, props.products]);
+useEffect(()=>{
+  setTimeout(()=>{
+     if (!props.selectedProduct || !props.products || !props.route) return;
 
+  const firstStage = buildFirstStageMap(props.selectedProduct);
+  const newTree = finalPhase(firstStage, props.route, props.products);
+  
+  setTree(newTree);
+   setTreeSnapshot((prevSnapshot) => {
+    // Only set if snapshot is empty OR product changed
+    const currentSnapshotProductId = prevSnapshot?.[0]?.productId || '';
+    if (props.selectedProduct.PRODUCT_ID !== currentSnapshotProductId) {
+      return JSON.parse(JSON.stringify(newTree)); // deep clone
+    }
+    return prevSnapshot;
+  });
+  }, 3000
+  )
+
+}, [props.refTree])
 
 useEffect(() => {
   if (notification) {
@@ -649,8 +662,10 @@ const onKeyDown = useCallback((e) => {
       const isSame = await handleCommit(tree, treeSnapshot, props.route, setNotification, props.selectedProduct);
 
       if (!isSame) {
-         props.setRefTree(JSON.parse(JSON.stringify(tree))); // Updates current route's tree
-    setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
+        const updatedProduct = await http.getProductByID(props.selectedProduct.PRODUCT_ID); 
+        console.log(updatedProduct.ACTIVATION_TOKEN);
+        //props.setRefTree(JSON.parse(JSON.stringify(tree)))
+        setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
       }
     }}
     style={{

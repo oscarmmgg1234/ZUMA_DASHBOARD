@@ -24,12 +24,11 @@ export default function EditProduct(props) {
   const previousSelectedCompany = useRef("All");
   const [route, setRoute] = useState("activation");
   const [registry, setRegistry] = useState(null);
-const [refTrees, setRefTrees] = useState({
+const [routeTrees, setRouteTrees] = useState({
   activation: null,
   reduction: null,
   shipment: null,
 });
-
   //reduction
   //shipment
 
@@ -358,9 +357,9 @@ const [refTrees, setRefTrees] = useState({
             route={route}
             products={productList}
             registry={registry}
-            refTree={refTrees[route]} // only pass the current one
-            setRefTree={(updatedTree) =>
-              setRefTrees((prev) => ({ ...prev, [route]: updatedTree }))
+            refTree={routeTrees[route]}
+            setRefTree={(tree) =>
+              setRouteTrees((prev) => ({ ...prev, [route]: tree }))
             }
             setSelectedProduct={setSelectedProduct}
           />

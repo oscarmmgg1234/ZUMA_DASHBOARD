@@ -534,12 +534,7 @@ const [notification, setNotification] = useState({ message: '', type: '' });
 useEffect(() => {
   if (!props.selectedProduct || !props.products || !props.route) return;
 
-   if (props.refTree) {
-    // 👑 Trust existing visual tree if it exists
-    setTree(props.refTree);
-    setTreeSnapshot(JSON.parse(JSON.stringify(props.refTree)));
-    return;
-  }
+  
   const firstStage = buildFirstStageMap(props.selectedProduct);
   const newTree = finalPhase(firstStage, props.route, props.products);
   
@@ -649,8 +644,8 @@ const onKeyDown = useCallback((e) => {
       const isSame = await handleCommit(tree, treeSnapshot, props.route, setNotification, props.selectedProduct);
 
       if (!isSame) {
-         props.setRefTree(JSON.parse(JSON.stringify(tree))); // Updates current route's tree
-    setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
+        props.setRefTree(JSON.parse(JSON.stringify(tree))); // 🧠 Save locally
+setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
       }
     }}
     style={{

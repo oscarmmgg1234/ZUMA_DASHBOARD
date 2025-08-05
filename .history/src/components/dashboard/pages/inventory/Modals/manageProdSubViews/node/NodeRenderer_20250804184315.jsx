@@ -649,8 +649,8 @@ const onKeyDown = useCallback((e) => {
       const isSame = await handleCommit(tree, treeSnapshot, props.route, setNotification, props.selectedProduct);
 
       if (!isSame) {
-         props.setRefTree(JSON.parse(JSON.stringify(tree))); // Updates current route's tree
-    setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
+        props.setRefTree(JSON.parse(JSON.stringify(tree))); // 🧠 Save locally
+setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
       }
     }}
     style={{
