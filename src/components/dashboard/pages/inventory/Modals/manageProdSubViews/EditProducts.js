@@ -5,8 +5,7 @@ import { FaSearch } from "react-icons/fa";
 import NodeRenderer from "./node/NodeRenderer";
 import http_handler from "../../HTTP/HTTPS_INTERFACE";
 
-
-const http = new http_handler()
+const http = new http_handler();
 
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
@@ -24,15 +23,14 @@ export default function EditProduct(props) {
   const previousSelectedCompany = useRef("All");
   const [route, setRoute] = useState("activation");
   const [registry, setRegistry] = useState(null);
-const [refTrees, setRefTrees] = useState({
-  activation: null,
-  reduction: null,
-  shipment: null,
-});
+  const [refTrees, setRefTrees] = useState({
+    activation: null,
+    reduction: null,
+    shipment: null,
+  });
 
   //reduction
   //shipment
-
 
   useEffect(() => {
     const fetchData = async () => {

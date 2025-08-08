@@ -1,19 +1,63 @@
 const base_url = "http://localhost:3001";
 // http://192.168.1.176:3002
 
-
+export const getVirtualStockPools = async () => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  const response = await fetch(`${base_url}/getVirtualStockPools`, options);
+  return await response.json();
+};
+export const createVirtualPools = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/createVirtualPool`, options);
+  return await response.json();
+};
+export const virtualPoolProductAdd = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/virtualStockProductAdd`, options);
+  return await response.json();
+};
+export const virtualPoolProductRemove = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(
+    `${base_url}/virtualStockProductRemove`,
+    options
+  );
+  return await response.json();
+};
 export const getProductByID = async (id) => {
   const options = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({id: id}),
+    body: JSON.stringify({ id: id }),
   };
   const response = await fetch(`${base_url}/getProductByID`, options);
   return await response.json();
-}
-
+};
 
 export const getEmployeeData = async () => {
   const options = {

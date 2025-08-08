@@ -1,1530 +1,672 @@
 import React, { useState, useEffect } from "react";
-import Tooltip from "@mui/material/Tooltip";
 import http_handler from "../../HTTP/HTTPS_INTERFACE";
+const http = new http_handler();
 
-function generateRandomID(length) {
-  let result = "";
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+// 8-char ID
+function generateShortUUID() {
+  // crypto path first when available, fallback otherwise
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    const arr = new Uint8Array(4); // 4 bytes -> 8 hex chars
+    crypto.getRandomValues(arr);
+    return Array.from(arr, (b) => b.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase();
   }
-  return result;
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
 export default function CustomProduct(props) {
-  const [funcRegistry, setFuncRegistry] = useState([]);
-  const [generatedIDs, setGeneratedIDs] = useState([]);
-  const [productList, setProductList] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  // ===== Core IDs / phase =====
+  const [productID, setProductID] = useState(generateShortUUID());
+  const [phase, setPhase] = useState("pool-setup"); // 'pool-setup' | 'form' | 'creating'
+  const [isLoading, setIsLoading] = useState(false);
+
+  // ===== Notifications =====
+  const [notification, setNotification] = useState({
+    message: "",
+    visible: false,
+  });
+  const toast = (msg) => {
+    setNotification({ message: msg, visible: true });
+    setTimeout(() => setNotification({ message: "", visible: false }), 2500);
+  };
+
+  // ===== Reference data =====
+  const [companies, setCompanies] = useState([]);
+  const [productTypes, setProductTypes] = useState([]);
+  const [virtualPools, setVirtualPools] = useState([]);
+
+  // ===== Pool UI state =====
+  const [usePool, setUsePool] = useState(true);
+  const [creatingPool, setCreatingPool] = useState(false);
+  const [poolName, setPoolName] = useState("");
+  const [selectedPoolId, setSelectedPoolId] = useState("");
+  const [normalizeRatio, setNormalizeRatio] = useState(1);
+
+  // Tracks current link status when linked
+  // { linked: true, poolID, poolName, ratio, productID }
+  const [linkStatus, setLinkStatus] = useState(null);
+
+  // ===== Product form =====
   const [formFields, setFormFields] = useState({
     name: "",
     description: "",
     price: "",
     type: "",
-    location: "4322",
     company: "",
-    unitType: "",
+    unitType: "", // you can replace with UNIT/BUNDLE dropdown if you have it
   });
   const [createLabel, setCreateLabel] = useState(false);
-  const [actionRows, setActionRows] = useState([]);
-  const [reductionRows, setReductionRows] = useState([]);
-  const [shipmentRows, setShipmentRows] = useState([]);
-  const [summary, setSummary] = useState("");
-  const [reductionSummary, setReductionSummary] = useState("");
-  const [shipmentSummary, setShipmentSummary] = useState("");
-  const [isOverlayVisible, setIsOverlayVisible] = useState(false);
-  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
-  const [currentSection, setCurrentSection] = useState("");
-  const [companies, setCompanies] = useState([]);
-  const [productTypes, setProductTypes] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [notification, setNotification] = useState({
-    message: "",
-    visible: false,
-  });
-  const [selectedProduct, setSelectedProduct] = useState({ id: "", name: "" }); // New state
-  const [isReferenceProductChecked, setIsReferenceProductChecked] =
-    useState(false); // New state
+  const [needBarcode, setNeedBarcode] = useState(false);
 
+  // --- helpers: required fields & packet compiler
+  const requiredFields = ["name", "price", "type", "company", "unitType"];
+
+  function buildProductPacket() {
+    // basic required checks
+    for (const f of requiredFields) {
+      const v = (formFields[f] ?? "").toString().trim();
+      if (!v) {
+        throw new Error(`Missing required field: ${f}`);
+      }
+    }
+    // price sanity
+    const priceNum = Number(formFields.price);
+    if (Number.isNaN(priceNum) || priceNum < 0) {
+      throw new Error("Price must be a non-negative number");
+    }
+
+    // pool rules
+    const currentPoolRef =
+      usePool && linkStatus?.linked ? linkStatus.poolID : null;
+
+    // compile final packet (what your backend expects)
+    const packet = {
+      PRODUCT_ID: productID, // 8-char ID we’ve been using
+      name: formFields.name.trim(),
+      description: (formFields.description ?? "").trim(),
+      price: priceNum,
+      type: formFields.type,
+      company: formFields.company,
+      unitType: formFields.unitType, // "UNIT" | "BUNDLE"
+      createLabel,
+      needBarcode,
+      currentPoolRef, // null or poolID
+      // Optional: include extra context if helpful for backend logs
+      _meta: {
+        normalizeRatio: linkStatus?.linked ? linkStatus.ratio : normalizeRatio,
+        linked: !!linkStatus?.linked,
+        phase,
+      },
+    };
+
+    return packet;
+  }
+
+  const handleCreateProduct = async () => {
+    // Guard: if using pool, ensure we’re linked first
+    if (usePool && !linkStatus?.linked) {
+      return toast("Link the product to a pool first, or disable pool usage.");
+    }
+
+    try {
+      const packet = buildProductPacket();
+      console.log("[createProduct packet]", packet);
+
+      await http.addProductProcess(packet);
+
+      toast("Compiled product packet logged to console.");
+
+      // === CLEAR EVERYTHING ===
+      setProductID(generateShortUUID());
+      setFormFields({
+        name: "",
+        description: "",
+        price: "",
+        type: "",
+        company: "",
+        unitType: "",
+      });
+      setCreateLabel(false);
+      setNeedBarcode(false);
+      setUsePool(true); // default state if you want
+      setCreatingPool(false);
+      setPoolName("");
+      setSelectedPoolId("");
+      setNormalizeRatio(1);
+      setLinkStatus(null);
+      setPhase("pool-setup"); // return to pool linking step
+    } catch (err) {
+      console.error("Packet build failed:", err);
+      toast(err.message || "Invalid form data.");
+    }
+  };
+
+  // below other state
+  const canRegenerateID = !usePool || !linkStatus?.linked;
+
+  const safeRegenerate = () => {
+    if (!canRegenerateID) {
+      toast("Unlink from pool to change PRODUCT_ID.");
+      return;
+    }
+    setProductID(generateShortUUID());
+  };
+
+  // ===== Load selects + pools =====
   useEffect(() => {
-    async function fetchData() {
+    (async () => {
       try {
-        const response = await props.api.fetchRegistry();
-        const products = await props.api.getProducts();
-        const companiesData = await props.api.getPartnerCompanies();
-        setCompanies(companiesData.data);
-        const productTypesData = await props.api.getProductTypes();
-        setProductTypes(productTypesData.data);
-        setProductList(products.data);
-        setFuncRegistry(response);
-        generateIDsinit();
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        const [comp, types, pools] = await Promise.all([
+          props.api.getPartnerCompanies(),
+          props.api.getProductTypes(),
+          http.getVirtualStockPools(),
+        ]);
+        setCompanies(comp.data || []);
+        setProductTypes(types.data || []);
+        setVirtualPools(pools.arr || []);
+      } catch (err) {
+        console.error("Failed to fetch:", err);
+        toast("Failed to load data.");
       }
-    }
-
-    function generateIDsinit() {
-      const initialIDs = [];
-      for (let i = 0; i < 2; i++) {
-        initialIDs.push(generateRandomID(8));
-      }
-      setGeneratedIDs(initialIDs);
-    }
-
-    fetchData();
+    })();
   }, [props.api]);
 
-  useEffect(() => {
-    if (!createLabel) {
-      setActionRows((rows) =>
-        rows.map((row) =>
-          row.product.id === generatedIDs[1]
-            ? { ...row, product: { id: "", name: "" } }
-            : row
-        )
-      );
-      setReductionRows((rows) =>
-        rows.map((row) =>
-          row.product.id === generatedIDs[1]
-            ? { ...row, product: { id: "", name: "" } }
-            : row
-        )
-      );
-      setShipmentRows((rows) =>
-        rows.map((row) =>
-          row.product.id === generatedIDs[1]
-            ? { ...row, product: { id: "", name: "" } }
-            : row
-        )
-      );
+  // ===== Helpers =====
+  const propChange = (e) =>
+    setFormFields((s) => ({ ...s, [e.target.name]: e.target.value }));
+  const isFilled = (f) => (formFields[f] ?? "").toString().trim() !== "";
+
+  // ===== Pool handlers (PRE-CREATION) =====
+  const handleLinkPool = async () => {
+    if (!usePool) {
+      setLinkStatus(null);
+      setPhase("form");
+      return;
     }
-  }, [createLabel, generatedIDs]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormFields({ ...formFields, [name]: value });
-  };
-
-  const handleAddRow = (type) => {
-    if (type === "activation") {
-      setActionRows([
-        ...actionRows,
-        {
-          class: "",
-          id: "",
-          product: { id: "", name: "" },
-          param1: "",
-          param2: "",
-          param3: "",
-        },
-      ]);
-    } else if (type === "reduction") {
-      setReductionRows([
-        ...reductionRows,
-        {
-          class: "",
-          id: "",
-          product: { id: "", name: "" },
-          param1: "",
-          param2: "",
-          param3: "",
-        },
-      ]);
-    } else if (type === "shipment") {
-      setShipmentRows([
-        ...shipmentRows,
-        {
-          class: "",
-          id: "",
-          product: { id: "", name: "" },
-          param1: "",
-          param2: "",
-          param3: "",
-        },
-      ]);
+    // Validate inputs
+    if (creatingPool) {
+      if (!poolName.trim()) return toast("Enter a pool name.");
+    } else {
+      if (!selectedPoolId) return toast("Select a pool to link.");
     }
-  };
 
-  const handleDeleteRow = (index, type) => {
-    if (type === "activation") {
-      const updatedRows = actionRows.filter((row, i) => i !== index);
-      setActionRows(updatedRows);
-      updateSummary(updatedRows);
-    } else if (type === "reduction") {
-      const updatedRows = reductionRows.filter((row, i) => i !== index);
-      setReductionRows(updatedRows);
-      updateReductionSummary(updatedRows);
-    } else if (type === "shipment") {
-      const updatedRows = shipmentRows.filter((row, i) => i !== index);
-      setShipmentRows(updatedRows);
-      updateShipmentSummary(updatedRows);
+    try {
+      setIsLoading(true);
+
+      if (creatingPool) {
+        // Create new pool and immediately link this productID in linked list
+        const res = await http.createVirtualPools({
+          name: poolName.trim(),
+          virtualStock: 0,
+          productID, // pre-product creation link
+          normalizeRatio,
+        });
+        if (res?.createdTable) {
+          // Re-load pools to get new poolID + name in dropdowns
+          const pools = await http.getVirtualStockPools();
+          setVirtualPools(pools.arr || []);
+          const created = (pools.arr || []).find(
+            (p) => p.name === poolName.trim()
+          );
+          setLinkStatus({
+            linked: true,
+            poolID: created?.poolID,
+            poolName: created?.name || poolName.trim(),
+            ratio: normalizeRatio,
+            productID,
+          });
+          toast("Pool created & product linked.");
+          setPhase("form");
+        } else {
+          toast(res?.status || "Failed to create pool.");
+        }
+      } else {
+        // Link to existing pool
+        const res = await http.virtualPoolProductAdd({
+          poolID: selectedPoolId,
+          productID,
+          normalizeRatio,
+        });
+        if (res?.linkedProduct) {
+          const pool = virtualPools.find((p) => p.poolID === selectedPoolId);
+          setLinkStatus({
+            linked: true,
+            poolID: selectedPoolId,
+            poolName: pool?.name || "",
+            ratio: normalizeRatio,
+            productID,
+          });
+          toast("Product linked to pool.");
+          setPhase("form");
+        } else {
+          // Show backend statuses (e.g., already linked)
+          toast(res?.status || "Failed to link product.");
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast("Error linking to pool.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRowChange = (index, e, type) => {
-    const { name, value } = e.target;
-    if (type === "activation") {
-      const updatedRows = actionRows.map((row, i) =>
-        i === index ? { ...row, [name]: value } : row
-      );
-      setActionRows(updatedRows);
-      updateSummary(updatedRows);
-    } else if (type === "reduction") {
-      const updatedRows = reductionRows.map((row, i) =>
-        i === index ? { ...row, [name]: value } : row
-      );
-      setReductionRows(updatedRows);
-      updateReductionSummary(updatedRows);
-    } else if (type === "shipment") {
-      const updatedRows = shipmentRows.map((row, i) =>
-        i === index ? { ...row, [name]: value } : row
-      );
-      setShipmentRows(updatedRows);
-      updateShipmentSummary(updatedRows);
-    }
-  };
+  const handleRemoveLink = async () => {
+    if (!linkStatus?.linked) return;
 
-  const updateSummary = (rows) => {
-    const newSummary = rows
-      .map((row) => {
-        const funcDesc =
-          funcRegistry.find((func) => func.id === row.id)?.desc || "";
-        return `• ${row.product.name}: ${funcDesc}`;
-      })
-      .join("\n");
-    setSummary(newSummary);
-  };
-
-  const updateReductionSummary = (rows) => {
-    const newSummary = rows
-      .map((row) => {
-        const funcDesc =
-          funcRegistry.find((func) => func.id === row.id)?.desc || "";
-        return `• ${row.product.name}: ${funcDesc}`;
-      })
-      .join("\n");
-    setReductionSummary(newSummary);
-  };
-
-  const updateShipmentSummary = (rows) => {
-    const newSummary = rows
-      .map((row) => {
-        const funcDesc =
-          funcRegistry.find((func) => func.id === row.id)?.desc || "";
-        return `• ${row.product.name}: ${funcDesc}`;
-      })
-      .join("\n");
-    setShipmentSummary(newSummary);
-  };
-
-  const filteredFuncRegistry = (cls) => {
-    return funcRegistry.filter((func) => func.class === cls);
-  };
-
-  const filteredProducts = [
-    { PRODUCT_ID: generatedIDs[0], NAME: `Self (${generatedIDs[0]})` },
-    ...(createLabel
-      ? [{ PRODUCT_ID: generatedIDs[1], NAME: `Label (${generatedIDs[1]})` }]
-      : []),
-    ...productList.filter((product) =>
-      product.NAME.toLowerCase().includes(searchTerm.toLowerCase())
-    ),
-  ];
-
-  const openOverlay = (index, section) => {
-    setSelectedRowIndex(index);
-    setCurrentSection(section);
-    setIsOverlayVisible(true);
-  };
-
-  const closeOverlay = () => {
-    setIsOverlayVisible(false);
-    setSearchTerm("");
-  };
-
-  const selectProduct = (productID, productName) => {
-    if (currentSection === "activation") {
-      const updatedRows = actionRows.map((row, i) =>
-        i === selectedRowIndex
-          ? { ...row, product: { id: productID, name: productName } }
-          : row
-      );
-      setActionRows(updatedRows);
-      updateSummary(updatedRows);
-    } else if (currentSection === "reduction") {
-      const updatedRows = reductionRows.map((row, i) =>
-        i === selectedRowIndex
-          ? { ...row, product: { id: productID, name: productName } }
-          : row
-      );
-      setReductionRows(updatedRows);
-      updateReductionSummary(updatedRows);
-    } else if (currentSection === "shipment") {
-      const updatedRows = shipmentRows.map((row, i) =>
-        i === selectedRowIndex
-          ? { ...row, product: { id: productID, name: productName } }
-          : row
-      );
-      setShipmentRows(updatedRows);
-      updateShipmentSummary(updatedRows);
-    } else if (currentSection === "reference") {
-      setSelectedProduct({ id: productID, name: productName });
-    }
-    closeOverlay();
-  };
-
-  const handleReferenceProductChange = () => {
-    setIsReferenceProductChecked(!isReferenceProductChecked);
-    if (!isReferenceProductChecked) {
-      setSelectedProduct({ id: "", name: "" });
-    }
-  };
-
-  const handleTestProduct = async () => {
-    setIsLoading(true);
-    console.log("Test Product:", {
-      ...formFields,
-      createLabel,
-      activationTokens: actionRows,
-      reductionTokens: reductionRows,
-      shipmentTokens: shipmentRows,
-      generatedIDs: generatedIDs,
-      RefProduct: selectedProduct.id || null, // Include RefProduct or null
-    });
-
-    const response = await props.api.runtimeTest({
-      ...formFields,
-      createLabel,
-      activationTokens: actionRows,
-      reductionTokens: reductionRows,
-      shipmentTokens: shipmentRows,
-      generatedIDs: generatedIDs,
-      RefProduct: selectedProduct.id || null, // Include RefProduct or null
-    });
-
-    setIsLoading(false);
-    console.log(response);
-
-    if (response.status) {
-      setNotification({
-        message: "Test completed successfully!",
-        visible: true,
+    try {
+      setIsLoading(true);
+      const res = await http.virtualPoolProductRemove({
+        poolID: linkStatus.poolID,
+        productID: linkStatus.productID,
       });
-      setTimeout(() => setNotification({ message: "", visible: false }), 3000);
-
-      const logText = response.log.replace(/\n/g, "<br>");
-      const logWindow = window.open("", "Log", "width=800,height=600");
-      logWindow.document.write(`
-        <html>
-          <head><title>Test Log</title></head>
-          <body>
-            <pre>${logText}</pre>
-          </body>
-        </html>
-      `);
-      logWindow.document.close();
+      if (res?.unlinkedProduct) {
+        setLinkStatus(null);
+        toast("Link removed.");
+        setPhase("pool-setup");
+      } else {
+        toast(res?.status || "Failed to remove link.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast("Error removing link.");
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  const handleCreateProduct = () => {
-    props.api.addProductProcess({
-      ...formFields,
-      createLabel,
-      activationTokens: actionRows,
-      reductionTokens: reductionRows,
-      shipmentTokens: shipmentRows,
-      generatedIDs: generatedIDs,
-      RefProduct: selectedProduct.id || null, // Include RefProduct or null
-    });
-    setNotification({ message: "Product added successfully!", visible: true });
-    setTimeout(() => setNotification({ message: "", visible: false }), 3000);
-  };
-
-  const isFieldFilled = (field) => {
-    return formFields[field] !== "";
-  };
-
-  const generateNewIDs = () => {
-    const newIDs = [];
-    for (let i = 0; i < 2; i++) {
-      newIDs.push(generateRandomID(8));
-    }
-    setGeneratedIDs(newIDs);
   };
 
   return (
-    <div style={{ color: "black", padding: "20px" }}>
+    <div style={styles.container}>
       {isLoading && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "20px",
-              borderRadius: "8px",
-              textAlign: "center",
-            }}
-          >
-            <h2>Loading...</h2>
+        <div style={styles.overlay}>
+          <div style={styles.modal}>
+            {phase === "creating" ? "Creating product..." : "Processing..."}
           </div>
         </div>
       )}
-
       {notification.visible && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            backgroundColor: "green",
-            color: "white",
-            padding: "10px",
-            textAlign: "center",
-            zIndex: 1001,
-          }}
-        >
-          {notification.message}
-        </div>
+        <div style={styles.toast}>{notification.message}</div>
       )}
 
-      <form
+      {/* ===== Product ID / header ===== */}
+      <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          width: "100%",
-          maxHeight: "62vh",
-          overflowY: "auto",
+          justifyContent: "space-between",
+          marginBottom: 16,
         }}
       >
-        <button
-          type="button"
-          onClick={generateNewIDs}
-          style={{
-            display: "block",
-            margin: "20px auto",
-            padding: "10px 20px",
-            backgroundColor: "blue",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          Generate New IDs
-        </button>
-        <label
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-          }}
-        >
-          Name:
-          <input
-            type="text"
-            name="name"
-            value={formFields.name}
-            onChange={handleInputChange}
-            style={{
-              width: "100%",
-              border: isFieldFilled("name")
-                ? "2px solid green"
-                : "1px solid silver",
-            }}
-          />
-        </label>
-        <label
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-          }}
-        >
-          Description:
-          <input
-            type="text"
-            name="description"
-            value={formFields.description}
-            onChange={handleInputChange}
-            style={{
-              width: "100%",
-              border: isFieldFilled("description")
-                ? "2px solid green"
-                : "1px solid silver",
-            }}
-          />
-        </label>
-        <label
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-          }}
-        >
-          Price:
-          <input
-            type="text"
-            name="price"
-            value={formFields.price}
-            onChange={handleInputChange}
-            style={{
-              width: "100%",
-              border: isFieldFilled("price")
-                ? "2px solid green"
-                : "1px solid silver",
-            }}
-          />
-        </label>
-        <label
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-          }}
-        >
-          Type:
-          <select
-            name="type"
-            value={formFields.type}
-            onChange={handleInputChange}
-            style={{
-              width: "100%",
-              border: isFieldFilled("type")
-                ? "2px solid green"
-                : "1px solid silver",
-            }}
-          >
-            <option value="">Select Type</option>
-            {productTypes.map((type) => (
-              <option key={type.TYPE_ID} value={type.TYPE_ID}>
-                {type.TYPE} ({type.TYPE_ID})
-              </option>
-            ))}
-          </select>
-        </label>
-        <label
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-          }}
-        >
-          Location:
-          <select
-            name="location"
-            value={formFields.location}
-            onChange={handleInputChange}
-            style={{
-              width: "100%",
-              border: isFieldFilled("location")
-                ? "2px solid green"
-                : "1px solid silver",
-            }}
-          >
-            <option value="4322">4322</option>
-          </select>
-        </label>
-        <label
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-          }}
-        >
-          Company:
-          <select
-            name="company"
-            value={formFields.company}
-            onChange={handleInputChange}
-            style={{
-              width: "100%",
-              border: isFieldFilled("company")
-                ? "2px solid green"
-                : "1px solid silver",
-            }}
-          >
-            <option value="">Select Company</option>
-            {companies.map((company) => (
-              <option key={company.COMPANY_ID} value={company.COMPANY_ID}>
-                {company.NAME} ({company.COMPANY_ID})
-              </option>
-            ))}
-          </select>
-        </label>
+        <div style={{ fontFamily: "monospace" }}>
+          <strong>PRODUCT_ID:</strong> {productID}
+          {linkStatus?.linked && (
+            <span
+              style={{
+                marginLeft: 8,
+                padding: "2px 8px",
+                fontSize: 12,
+                borderRadius: 12,
+                background: "#ffe0b2",
+                border: "1px solid #ffb74d",
+              }}
+            >
+              locked (linked to {linkStatus.poolName || "pool"})
+            </span>
+          )}
+        </div>
 
-        <label
-          style={{
-            width: "100%",
-            marginBottom: "10px",
-          }}
-        >
-          Unit Type:
-          <select
-            name="unitType"
-            value={formFields.unitType}
-            onChange={handleInputChange}
-            style={{
-              width: "100%",
-              border: isFieldFilled("unitType")
-                ? "2px solid green"
-                : "1px solid silver",
-            }}
+        {canRegenerateID ? (
+          <button
+            type="button"
+            onClick={safeRegenerate}
+            style={styles.secondaryBtn}
+            title="Regenerate 8-char ID"
           >
-            <option value="">Select Unit Type</option>
-            <option value="UNIT">UNIT</option>
-            <option value="BUNDLE">BUNDLE</option>
-          </select>
-        </label>
+            Regenerate ID
+          </button>
+        ) : null}
+      </div>
 
-        <label style={{ width: "100%", marginBottom: "10px" }}>
-          Reference Stored Stock Product:
+      {/* ===== STEP 1: Pool Setup (before product creation) ===== */}
+      <div style={styles.sectionCard}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <input
             type="checkbox"
-            checked={isReferenceProductChecked}
-            onChange={handleReferenceProductChange}
-            style={{ marginLeft: "10px" }}
-          />
-        </label>
-
-        {isReferenceProductChecked && (
-          <button
-            type="button"
-            onClick={() => openOverlay(null, "reference")}
-            style={{
-              display: "block",
-              margin: "10px 0",
-              padding: "10px 20px",
-              backgroundColor: "gray",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
+            checked={usePool}
+            onChange={(e) => {
+              setUsePool(e.target.checked);
+              if (!e.target.checked) {
+                setLinkStatus(null);
+                setPhase("form"); // skip to form if not using pool
+              } else {
+                setPhase("pool-setup");
+              }
             }}
-          >
-            {selectedProduct.name ? selectedProduct.name : "Select Product"}
-          </button>
-        )}
-
-        <label style={{ width: "100%", marginBottom: "20px" }}>
-          Create Label For this Product:
-          <input
-            type="checkbox"
-            checked={createLabel}
-            onChange={(e) => setCreateLabel(e.target.checked)}
-            style={{ marginLeft: "10px" }}
           />
-        </label>
-
-        {/* Activation Token Section */}
-        <div
-          style={{
-            width: "100%",
-            marginBottom: "1em",
-            backgroundColor: "#333",
-            padding: "20px",
-            borderRadius: "8px",
-          }}
-        >
-          <h3 style={{ color: "white" }}>Activation Token</h3>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Index
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Class
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  ID
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Product
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Param1
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Param2
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Param3
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Delete
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {actionRows.map((row, index) => {
-                const func = funcRegistry.find((func) => func.id === row.id);
-                const meta_data = func?.meta_data || {};
-                const paramStyles = {
-                  backgroundColor:
-                    meta_data.optionalParams > 0 ? "#f0f0f0" : "white",
-                };
-                return (
-                  <tr key={index}>
-                    <td
-                      style={{
-                        border: "1px solid black",
-                        padding: "10px",
-                        color: "white",
-                      }}
-                    >
-                      {index + 1}
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <select
-                        name="class"
-                        value={row.class}
-                        onChange={(e) =>
-                          handleRowChange(index, e, "activation")
-                        }
-                        style={{ width: "100%", color: "black" }}
-                      >
-                        <option value="">Select Class</option>
-                        <option value="AC">AC</option>
-                        <option value="RD">RD</option>
-                        <option value="UP">UP</option>
-                      </select>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <select
-                        name="id"
-                        value={row.id}
-                        onChange={(e) =>
-                          handleRowChange(index, e, "activation")
-                        }
-                        style={{ width: "100%", color: "black" }}
-                      >
-                        <option value="">Select ID</option>
-                        {filteredFuncRegistry(row.class).map((func) => (
-                          <option key={func.id} value={func.id}>
-                            {func.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <button
-                        type="button"
-                        onClick={() => openOverlay(index, "activation")}
-                        style={{ width: "100%", color: "white" }}
-                      >
-                        {row.product.name ? row.product.name : "Select Product"}
-                      </button>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <Tooltip
-                        title={meta_data.optionalDesc?.[0]?.desc || ""}
-                        arrow
-                      >
-                        <input
-                          type="text"
-                          name="param1"
-                          value={row.param1}
-                          onChange={(e) =>
-                            handleRowChange(index, e, "activation")
-                          }
-                          placeholder="Param1"
-                          style={{
-                            width: "100%",
-                            color: "black",
-                            ...paramStyles,
-                          }}
-                        />
-                      </Tooltip>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <Tooltip
-                        title={meta_data.optionalDesc?.[1]?.desc || ""}
-                        arrow
-                      >
-                        <input
-                          type="text"
-                          name="param2"
-                          value={row.param2}
-                          onChange={(e) =>
-                            handleRowChange(index, e, "activation")
-                          }
-                          placeholder="Param2"
-                          style={{
-                            width: "100%",
-                            color: "black",
-                            ...paramStyles,
-                          }}
-                        />
-                      </Tooltip>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <Tooltip
-                        title={meta_data.optionalDesc?.[2]?.desc || ""}
-                        arrow
-                      >
-                        <input
-                          type="text"
-                          name="param3"
-                          value={row.param3}
-                          onChange={(e) =>
-                            handleRowChange(index, e, "activation")
-                          }
-                          placeholder="Param3"
-                          style={{
-                            width: "100%",
-                            color: "black",
-                            ...paramStyles,
-                          }}
-                        />
-                      </Tooltip>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRow(index, "activation")}
-                        style={{
-                          backgroundColor: "red",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          padding: "5px 10px",
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <button
-            type="button"
-            onClick={() => handleAddRow("activation")}
-            style={{
-              display: "block",
-              margin: "20px auto",
-              padding: "10px 20px",
-              backgroundColor: "#555",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-            }}
-          >
-            +
-          </button>
+          <strong>Link to Virtual Stock Pool</strong>
         </div>
-        <label
-          style={{ width: "100%", marginTop: "1px", marginBottom: "50px" }}
-        >
-          Summary:
-          <textarea
-            value={summary}
-            readOnly
-            style={{
-              width: "100%",
-              color: "black",
-              backgroundColor: "#f5f5f5",
-              padding: "10px",
-              borderRadius: "4px",
-            }}
-          />
-        </label>
 
-        {/* Reduction Token Section */}
-        <div
-          style={{
-            width: "100%",
-            marginBottom: "1em",
-            backgroundColor: "#333",
-            padding: "20px",
-            borderRadius: "8px",
-          }}
-        >
-          <h3 style={{ color: "white" }}>Reduction Token</h3>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Index
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Class
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  ID
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Product
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Param1
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Param2
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Param3
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Delete
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {reductionRows.map((row, index) => {
-                const func = funcRegistry.find((func) => func.id === row.id);
-                const meta_data = func?.meta_data || {};
-                const paramStyles = {
-                  backgroundColor:
-                    meta_data.optionalParams > 0 ? "#f0f0f0" : "white",
-                };
-                return (
-                  <tr key={index}>
-                    <td
-                      style={{
-                        border: "1px solid black",
-                        padding: "10px",
-                        color: "white",
-                      }}
-                    >
-                      {index + 1}
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <select
-                        name="class"
-                        value={row.class}
-                        onChange={(e) => handleRowChange(index, e, "reduction")}
-                        style={{ width: "100%", color: "black" }}
-                      >
-                        <option value="">Select Class</option>
-                        <option value="CM">CM</option>
-                        <option value="CMUP">CMUP</option>
-                      </select>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <select
-                        name="id"
-                        value={row.id}
-                        onChange={(e) => handleRowChange(index, e, "reduction")}
-                        style={{ width: "100%", color: "black" }}
-                      >
-                        <option value="">Select ID</option>
-                        {filteredFuncRegistry(row.class).map((func) => (
-                          <option key={func.id} value={func.id}>
-                            {func.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <button
-                        type="button"
-                        onClick={() => openOverlay(index, "reduction")}
-                        style={{ width: "100%", color: "white" }}
-                      >
-                        {row.product.name ? row.product.name : "Select Product"}
-                      </button>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <Tooltip
-                        title={meta_data.optionalDesc?.[0]?.desc || ""}
-                        arrow
-                      >
-                        <input
-                          type="text"
-                          name="param1"
-                          value={row.param1}
-                          onChange={(e) =>
-                            handleRowChange(index, e, "reduction")
-                          }
-                          placeholder="Param1"
-                          style={{
-                            width: "100%",
-                            color: "black",
-                            ...paramStyles,
-                          }}
-                        />
-                      </Tooltip>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <Tooltip
-                        title={meta_data.optionalDesc?.[1]?.desc || ""}
-                        arrow
-                      >
-                        <input
-                          type="text"
-                          name="param2"
-                          value={row.param2}
-                          onChange={(e) =>
-                            handleRowChange(index, e, "reduction")
-                          }
-                          placeholder="Param2"
-                          style={{
-                            width: "100%",
-                            color: "black",
-                            ...paramStyles,
-                          }}
-                        />
-                      </Tooltip>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <Tooltip
-                        title={meta_data.optionalDesc?.[2]?.desc || ""}
-                        arrow
-                      >
-                        <input
-                          type="text"
-                          name="param3"
-                          value={row.param3}
-                          onChange={(e) =>
-                            handleRowChange(index, e, "reduction")
-                          }
-                          placeholder="Param3"
-                          style={{
-                            width: "100%",
-                            color: "black",
-                            ...paramStyles,
-                          }}
-                        />
-                      </Tooltip>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRow(index, "reduction")}
-                        style={{
-                          backgroundColor: "red",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          padding: "5px 10px",
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <button
-            type="button"
-            onClick={() => handleAddRow("reduction")}
-            style={{
-              display: "block",
-              margin: "20px auto",
-              padding: "10px 20px",
-              backgroundColor: "#555",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-            }}
-          >
-            +
-          </button>
-        </div>
-        <label
-          style={{ width: "100%", marginTop: "1px", marginBottom: "50px" }}
-        >
-          Summary:
-          <textarea
-            value={reductionSummary}
-            readOnly
-            style={{
-              width: "100%",
-              color: "black",
-              backgroundColor: "#f5f5f5",
-              padding: "10px",
-              borderRadius: "4px",
-            }}
-          />
-        </label>
-
-        {/* Shipment Token Section */}
-        <div
-          style={{
-            width: "100%",
-            marginBottom: "1em",
-            backgroundColor: "#333",
-            padding: "20px",
-            borderRadius: "8px",
-          }}
-        >
-          <h3 style={{ color: "white" }}>Shipment Token</h3>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Index
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Class
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  ID
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Product
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Param1
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Param2
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Param3
-                </th>
-                <th
-                  style={{
-                    border: "1px solid black",
-                    padding: "10px",
-                    color: "white",
-                  }}
-                >
-                  Delete
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {shipmentRows.map((row, index) => {
-                const func = funcRegistry.find((func) => func.id === row.id);
-                const meta_data = func?.meta_data || {};
-                const paramStyles = {
-                  backgroundColor:
-                    meta_data.optionalParams > 0 ? "#f0f0f0" : "white",
-                };
-                return (
-                  <tr key={index}>
-                    <td
-                      style={{
-                        border: "1px solid black",
-                        padding: "10px",
-                        color: "white",
-                      }}
-                    >
-                      {index + 1}
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <select
-                        name="class"
-                        value={row.class}
-                        onChange={(e) => handleRowChange(index, e, "shipment")}
-                        style={{ width: "100%", color: "black" }}
-                      >
-                        <option value="">Select Class</option>
-                        <option value="SH">SH</option>
-                        <option value="UP">UP</option>
-                      </select>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <select
-                        name="id"
-                        value={row.id}
-                        onChange={(e) => handleRowChange(index, e, "shipment")}
-                        style={{ width: "100%", color: "black" }}
-                      >
-                        <option value="">Select ID</option>
-                        {filteredFuncRegistry(row.class).map((func) => (
-                          <option key={func.id} value={func.id}>
-                            {func.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <button
-                        type="button"
-                        onClick={() => openOverlay(index, "shipment")}
-                        style={{ width: "100%", color: "white" }}
-                      >
-                        {row.product.name ? row.product.name : "Select Product"}
-                      </button>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <Tooltip
-                        title={meta_data.optionalDesc?.[0]?.desc || ""}
-                        arrow
-                      >
-                        <input
-                          type="text"
-                          name="param1"
-                          value={row.param1}
-                          onChange={(e) =>
-                            handleRowChange(index, e, "shipment")
-                          }
-                          placeholder="Param1"
-                          style={{
-                            width: "100%",
-                            color: "black",
-                            ...paramStyles,
-                          }}
-                        />
-                      </Tooltip>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <Tooltip
-                        title={meta_data.optionalDesc?.[1]?.desc || ""}
-                        arrow
-                      >
-                        <input
-                          type="text"
-                          name="param2"
-                          value={row.param2}
-                          onChange={(e) =>
-                            handleRowChange(index, e, "shipment")
-                          }
-                          placeholder="Param2"
-                          style={{
-                            width: "100%",
-                            color: "black",
-                            ...paramStyles,
-                          }}
-                        />
-                      </Tooltip>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <Tooltip
-                        title={meta_data.optionalDesc?.[2]?.desc || ""}
-                        arrow
-                      >
-                        <input
-                          type="text"
-                          name="param3"
-                          value={row.param3}
-                          onChange={(e) =>
-                            handleRowChange(index, e, "shipment")
-                          }
-                          placeholder="Param3"
-                          style={{
-                            width: "100%",
-                            color: "black",
-                            ...paramStyles,
-                          }}
-                        />
-                      </Tooltip>
-                    </td>
-                    <td style={{ border: "1px solid black", padding: "10px" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRow(index, "shipment")}
-                        style={{
-                          backgroundColor: "red",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          padding: "5px 10px",
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <button
-            type="button"
-            onClick={() => handleAddRow("shipment")}
-            style={{
-              display: "block",
-              margin: "20px auto",
-              padding: "10px 20px",
-              backgroundColor: "#555",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-            }}
-          >
-            +
-          </button>
-        </div>
-        <label
-          style={{ width: "100%", marginTop: "1px", marginBottom: "50px" }}
-        >
-          Summary:
-          <textarea
-            value={shipmentSummary}
-            readOnly
-            style={{
-              width: "100%",
-              color: "black",
-              backgroundColor: "#f5f5f5",
-              padding: "10px",
-              borderRadius: "4px",
-            }}
-          />
-        </label>
-        <button
-          type="button"
-          onClick={handleTestProduct}
-          style={{
-            display: "block",
-            margin: "20px auto",
-            padding: "10px 20px",
-            backgroundColor: "orange",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          Test Product
-        </button>
-        <button
-          type="button"
-          onClick={handleCreateProduct}
-          style={{
-            display: "block",
-            margin: "20px auto",
-            padding: "10px 20px",
-            backgroundColor: "green",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-          }}
-        >
-          Create Product
-        </button>
-      </form>
-      {isOverlayVisible && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "20px",
-              borderRadius: "8px",
-              width: "80%",
-              maxHeight: "80%",
-              overflowY: "auto",
-            }}
-          >
+        {usePool && !linkStatus?.linked && (
+          <div style={{ marginTop: 12 }}>
             <div
               style={{
                 display: "flex",
-                justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: "1em",
+                gap: 16,
+                flexWrap: "wrap",
               }}
             >
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: "80%", color: "black" }}
-              />
+              <label style={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={creatingPool}
+                  onChange={(e) => setCreatingPool(e.target.checked)}
+                />
+                Create New Pool?
+              </label>
+
+              {creatingPool ? (
+                <>
+                  <label style={styles.field}>
+                    Pool Name
+                    <input
+                      value={poolName}
+                      onChange={(e) => setPoolName(e.target.value)}
+                      style={styles.input(!!poolName)}
+                      placeholder="e.g., 12oz Bottles"
+                    />
+                  </label>
+                </>
+              ) : (
+                <label style={styles.field}>
+                  Select Existing Pool
+                  <select
+                    value={selectedPoolId}
+                    onChange={(e) => setSelectedPoolId(e.target.value)}
+                    style={styles.input(!!selectedPoolId)}
+                  >
+                    <option value="">--</option>
+                    {virtualPools.map((p) => (
+                      <option key={p.poolID} value={p.poolID}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              <label style={styles.field}>
+                Normalize Ratio
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={normalizeRatio}
+                  onChange={(e) =>
+                    setNormalizeRatio(parseFloat(e.target.value) || 1)
+                  }
+                  style={styles.input(true)}
+                />
+              </label>
+
               <button
-                onClick={closeOverlay}
-                style={{
-                  backgroundColor: "red",
-                  color: "white",
-                  marginLeft: "10px",
-                  padding: "10px",
-                  borderRadius: "4px",
-                }}
+                type="button"
+                onClick={handleLinkPool}
+                style={styles.primaryBtn}
               >
-                Back
+                {creatingPool ? "Create Pool & Link" : "Link to Pool"}
               </button>
             </div>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      border: "1px solid black",
-                      padding: "10px",
-                      backgroundColor: "black",
-                      color: "white",
-                    }}
-                  >
-                    Product Name
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProducts.map((product, index) => (
-                  <tr
-                    key={product.PRODUCT_ID}
-                    onClick={() =>
-                      selectProduct(product.PRODUCT_ID, product.NAME)
-                    }
-                    style={{
-                      cursor: "pointer",
-                      borderBottom: "1px solid black",
-                      backgroundColor: index % 2 === 0 ? "white" : "#d1d5db", // gray-300
-                    }}
-                  >
-                    <td style={{ padding: "10px", color: "black" }}>
-                      {product.NAME}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <p style={{ marginTop: 8, color: "#666" }}>
+              This links <code>{productID}</code> to the chosen pool{" "}
+              <em>before</em> creating the product record.
+            </p>
           </div>
+        )}
+
+        {usePool && linkStatus?.linked && (
+          <div style={styles.linkedCard}>
+            <div>
+              <div>
+                <strong>Linked pool:</strong> {linkStatus.poolName}
+              </div>
+              <div>
+                <strong>Ratio:</strong> {linkStatus.ratio}
+              </div>
+              <div style={{ fontFamily: "monospace" }}>
+                <strong>PRODUCT_ID:</strong> {linkStatus.productID}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveLink}
+              style={styles.unlinkButton}
+            >
+              Remove Link
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ===== STEP 2: Product Form (enabled once linked or pool disabled) ===== */}
+      <form style={styles.form} onSubmit={(e) => e.preventDefault()}>
+        <div
+          style={{
+            opacity: usePool && !linkStatus?.linked ? 0.5 : 1,
+            pointerEvents: usePool && !linkStatus?.linked ? "none" : "auto",
+          }}
+        >
+          <div style={styles.row}>
+            {["name", "description", "price"].map((f) => (
+              <div key={f} style={styles.field}>
+                <label style={styles.label}>{f.toUpperCase()}</label>
+                <input
+                  name={f}
+                  value={formFields[f]}
+                  onChange={propChange}
+                  style={styles.input(isFilled(f))}
+                  placeholder={f === "price" ? "e.g., 12.99" : ""}
+                />
+              </div>
+            ))}
+
+            {/* TYPE */}
+            <div style={styles.field}>
+              <label style={styles.label}>TYPE</label>
+              <select
+                name="type"
+                value={formFields.type}
+                onChange={propChange}
+                style={styles.input(isFilled("type"))}
+              >
+                <option value="">Select type</option>
+                {productTypes.map((t) => (
+                  <option key={t.TYPE_ID} value={t.TYPE_ID}>
+                    {t.TYPE}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* COMPANY */}
+            <div style={styles.field}>
+              <label style={styles.label}>COMPANY</label>
+              <select
+                name="company"
+                value={formFields.company}
+                onChange={propChange}
+                style={styles.input(isFilled("company"))}
+              >
+                <option value="">Select company</option>
+                {companies.map((c) => (
+                  <option key={c.COMPANY_ID} value={c.COMPANY_ID}>
+                    {c.NAME}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* UNIT TYPE (UNIT/BUNDLE) */}
+            <div style={styles.field}>
+              <label style={styles.label}>UNIT TYPE</label>
+              <select
+                name="unitType"
+                value={formFields.unitType}
+                onChange={propChange}
+                style={styles.input(isFilled("unitType"))}
+              >
+                <option value="">Select</option>
+                <option value="UNIT">UNIT</option>
+                <option value="BUNDLE">BUNDLE</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={styles.checkRow}>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={createLabel}
+                onChange={(e) => setCreateLabel(e.target.checked)}
+              />
+              Create Label
+            </label>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={needBarcode}
+                onChange={(e) => setNeedBarcode(e.target.checked)}
+              />
+              Need Barcode
+            </label>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCreateProduct}
+            style={styles.submit}
+          >
+            Create Product
+          </button>
         </div>
-      )}
+        <p style={{ marginTop: 8, color: "#666" }}>
+          Pool ref:{" "}
+          <code>
+            {usePool && linkStatus?.linked ? linkStatus.poolID : "null"}
+          </code>
+        </p>
+      </form>
     </div>
   );
 }
+
+const styles = {
+  container: {
+    maxWidth: "920px",
+    margin: "auto",
+    padding: "24px",
+    fontFamily: "Arial, sans-serif",
+  },
+  sectionCard: {
+    border: "1px solid #ddd",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+    background: "#fafafa",
+  },
+  row: { display: "flex", flexWrap: "wrap", gap: 20 },
+  field: {
+    flex: "1 1 220px",
+    display: "flex",
+    flexDirection: "column",
+    marginBottom: 12,
+  },
+  label: { marginBottom: 4, fontWeight: 600, fontSize: 12 },
+  input: (filled) => ({
+    padding: "10px",
+    border: filled ? "2px solid #43a047" : "1px solid #aaa",
+    borderRadius: 6,
+    fontSize: 14,
+    background: "#fff",
+  }),
+  form: { marginTop: 8 },
+  checkRow: { display: "flex", gap: 30, margin: "12px 0" },
+  checkboxLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    fontSize: 14,
+  },
+  linkedCard: {
+    backgroundColor: "#e8f5e9",
+    border: "1px solid #2e7d32",
+    padding: 16,
+    borderRadius: 8,
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  unlinkButton: {
+    padding: "8px 16px",
+    backgroundColor: "#d32f2f",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontSize: 14,
+  },
+  primaryBtn: {
+    padding: "10px 16px",
+    backgroundColor: "#1976d2",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontWeight: 600,
+  },
+  secondaryBtn: {
+    padding: "8px 12px",
+    backgroundColor: "#eee",
+    color: "#333",
+    border: "1px solid #ccc",
+    borderRadius: 6,
+    cursor: "pointer",
+  },
+  submit: {
+    padding: "12px 28px",
+    backgroundColor: "#2e7d32",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    fontSize: 16,
+    cursor: "pointer",
+    marginTop: 12,
+  },
+  overlay: {
+    position: "fixed",
+    inset: 0,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  modal: {
+    backgroundColor: "#fff",
+    padding: "24px 40px",
+    borderRadius: 8,
+    fontSize: 18,
+  },
+  toast: {
+    position: "fixed",
+    bottom: 24,
+    left: "50%",
+    transform: "translateX(-50%)",
+    backgroundColor: "#323232",
+    color: "#fff",
+    padding: "10px 18px",
+    borderRadius: 6,
+    zIndex: 1001,
+  },
+};

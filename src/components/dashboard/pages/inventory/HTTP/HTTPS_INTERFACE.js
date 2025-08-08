@@ -26,12 +26,28 @@ import {
   deleteScanner,
   getProductHistory,
   getEmployeeData,
-  getProductByID
+  getProductByID,
+  getVirtualStockPools,
+  createVirtualPools,
+  virtualPoolProductAdd,
+  virtualPoolProductRemove,
 } from "./HTTPS";
 
 export default class http_handler {
+  getVirtualStockPools = async (args) => {
+    return await getVirtualStockPools(args);
+  };
+  createVirtualPools = async (args) => {
+    return await createVirtualPools(args);
+  };
+  virtualPoolProductAdd = async (args) => {
+    return await virtualPoolProductAdd(args);
+  };
+  virtualPoolProductRemove = async (args) => {
+    return await virtualPoolProductRemove(args);
+  };
   getProductByID = async (args) => {
-return await getProductByID(args)
+    return await getProductByID(args);
   };
   getEmployeeData = async () => {
     return await getEmployeeData();
