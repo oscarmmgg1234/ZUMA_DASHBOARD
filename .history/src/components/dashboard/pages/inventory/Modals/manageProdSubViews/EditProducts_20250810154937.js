@@ -7,7 +7,6 @@ import http_handler from "../../HTTP/HTTPS_INTERFACE";
 
 const http = new http_handler();
 
-
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -37,6 +36,27 @@ export default function EditProduct(props) {
   const [poolName, setPoolName] = useState("");
   const [selectedPoolId, setSelectedPoolId] = useState("");
   const [normalizeRatio, setNormalizeRatio] = useState(1);
+
+  // --- add near other refs/helpers ---
+  const baselineVirtualOpsRef = useRef(null);
+
+  const serializeVO = (vo) => (vo ? `${vo.productID}|${vo.poolID}` : "null");
+
+  // keep your computeVirtualOps from earlier
+  // const computeVirtualOps = useCallback( ... );
+
+  // When a product is selected, snapshot the current link state as baseline
+  useEffect(() => {
+    if (!selectedProduct) {
+      baselineVirtualOpsRef.current = null;
+      return;
+    }
+    const vo = computeVirtualOps(selectedProduct);
+    baselineVirtualOpsRef.current = serializeVO(vo);
+    // NOTE: intentionally NOT depending on virtualPools here,
+    // so baseline doesn't auto-shift when pools refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProduct]);
 
   // Helper: get current pool id from product (supports multiple shapes) — fallback only
   const getCurrentPoolId = (p) =>
@@ -122,54 +142,6 @@ export default function EditProduct(props) {
       return !prev;
     });
   };
-
-  const handleFieldChange = (field, value) =>
-    setEditedFields((prev) => ({ ...prev, [field]: value }));
-
-  const handleCommitChanges = async () => {
-    const updates = Object.keys(editedFields).reduce((acc, key) => {
-      if (editedFields[key] !== selectedProduct[key]) {
-        acc.push({ field: key, value: editedFields[key] });
-      }
-      return acc;
-    }, []);
-
-    if (updates.length === 0) return;
-
-    const payload = {
-      PRODUCT_ID: selectedProduct.PRODUCT_ID,
-      updates,
-      section: "form",
-    };
-    const response = await props.api.commitChanges(payload);
-    if (response?.status === true) {
-      setProductList((prevList) =>
-        prevList.map((product) =>
-          product.PRODUCT_ID === selectedProduct.PRODUCT_ID
-            ? { ...product, ...editedFields }
-            : product
-        )
-      );
-      setSelectedProduct((p) => ({ ...p, ...editedFields }));
-      setSuccess(true);
-    } else {
-      console.error("Failed to update product");
-    }
-  };
-
-  // ===== Pools: truth from LINKED_PRODUCTS (stringified JSON) =====
-  const normID = (x) => (x == null ? "" : String(x).trim().toUpperCase());
-  const parseLinkedProducts = (s) => {
-    if (!s) return [];
-    try {
-      const arr = JSON.parse(s);
-      return Array.isArray(arr) ? arr : [];
-    } catch {
-      return [];
-    }
-  };
-
-  // Authoritative link finder (pool name/id + ratio) for the selected product
   const findCurrentLink = React.useCallback(
     (productID) => {
       const needle = normID(productID);
@@ -191,6 +163,96 @@ export default function EditProduct(props) {
     },
     [virtualPools]
   );
+  const handleFieldChange = (field, value) =>
+    setEditedFields((prev) => ({ ...prev, [field]: value }));
+  // NEW — derive virtualops for a product (null if not linked)
+  const computeVirtualOps = useCallback(
+    (product) => {
+      if (!product) return null;
+
+      // Prefer authoritative link from pools (handles stringified LINKED_PRODUCTS)
+      const link = findCurrentLink(product.PRODUCT_ID);
+      if (link?.poolID) {
+        return {
+          productID: product.PRODUCT_ID,
+          poolID: String(link.poolID),
+        };
+      }
+
+      // Fallback to any local pool ref shape on the product
+      const fallbackPoolID = getCurrentPoolId(product);
+      if (fallbackPoolID) {
+        return {
+          productID: product.PRODUCT_ID,
+          poolID: String(fallbackPoolID),
+        };
+      }
+
+      return null;
+    },
+    [findCurrentLink]
+  );
+
+  const handleCommitChanges = async () => {
+  const updates = Object.keys(editedFields).reduce((acc, key) => {
+    if (editedFields[key] !== selectedProduct[key]) {
+      acc.push({ field: key, value: editedFields[key] });
+    }
+    return acc;
+  }, []);
+
+  const virtualops = computeVirtualOps(selectedProduct); // {productID, poolID} or null
+  const currentVO = serializeVO(virtualops);
+  const baselineVO = baselineVirtualOpsRef.current;
+  const virtualChanged = currentVO !== baselineVO;
+
+  // If nothing changed at all, bail
+  if (updates.length === 0 && !virtualChanged) return;
+
+  const payload = {
+    PRODUCT_ID: selectedProduct.PRODUCT_ID,
+    updates,                   // may be []
+    section: "form",           // or "form+link" if you want to distinguish
+    virtualops,                // always send snapshot; backend can no-op if same
+  };
+
+  const response = await props.api.commitChanges(payload);
+  if (response?.status === true) {
+    // apply form edits locally
+    if (updates.length > 0) {
+      setProductList((prevList) =>
+        prevList.map((product) =>
+          product.PRODUCT_ID === selectedProduct.PRODUCT_ID
+            ? { ...product, ...editedFields }
+            : product
+        )
+      );
+      setSelectedProduct((p) => ({ ...p, ...editedFields }));
+    }
+
+    // NEW: lock in the new baseline after a successful save
+    baselineVirtualOpsRef.current = currentVO;
+
+    setSuccess(true);
+  } else {
+    console.error("Failed to update product");
+  }
+};
+
+
+  // ===== Pools: truth from LINKED_PRODUCTS (stringified JSON) =====
+  const normID = (x) => (x == null ? "" : String(x).trim().toUpperCase());
+  const parseLinkedProducts = (s) => {
+    if (!s) return [];
+    try {
+      const arr = JSON.parse(s);
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  };
+
+  // Authoritative link finder (pool name/id + ratio) for the selected product
 
   // Keep the ratio input synced to the real link
   useEffect(() => {

@@ -1,5 +1,4 @@
-// EditProduct.jsx — card when linked (shows pool name), form when not linked.
-// Robust to LINKED_PRODUCTS being a stringified JSON array.
+// EditProduct.jsx — tables kept for picker, single Pool Link card, ratio update = remove→add
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch } from "react-icons/fa";
 import NodeRenderer from "./node/NodeRenderer";
@@ -7,21 +6,24 @@ import http_handler from "../../HTTP/HTTPS_INTERFACE";
 
 const http = new http_handler();
 
-
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showProductList, setShowProductList] = useState(false);
+
   const [companies, setCompanies] = useState([]);
   const [productTypes, setProductTypes] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState("All");
+
   const [editedFields, setEditedFields] = useState({});
   const [success, setSuccess] = useState(false);
+
   const productListRef = useRef(null);
   const rowRef = useRef(null);
   const previousSelectedProductIndex = useRef(null);
   const previousSelectedCompany = useRef("All");
+
   const [route, setRoute] = useState("activation");
   const [registry, setRegistry] = useState(null);
   const [refTrees, setRefTrees] = useState({
@@ -30,25 +32,16 @@ export default function EditProduct(props) {
     shipment: null,
   });
 
-  // ==== Virtual pools state ====
+  // === Virtual pools state ===
   const [virtualPools, setVirtualPools] = useState([]);
   const [poolLoading, setPoolLoading] = useState(false);
-  const [creatingPool, setCreatingPool] = useState(false);
   const [poolName, setPoolName] = useState("");
   const [selectedPoolId, setSelectedPoolId] = useState("");
   const [normalizeRatio, setNormalizeRatio] = useState(1);
 
-  // Helper: get current pool id from product (supports multiple shapes) — fallback only
-  const getCurrentPoolId = (p) =>
-    p?.poolRef?.poolID ??
-    p?.poolRef ??
-    p?.POOL_REF ??
-    p?.currentPoolRef ??
-    null;
-
-  // ===== Data load on mount =====
+  // ===== Data load =====
   useEffect(() => {
-    (async () => {
+    const fetchData = async () => {
       const companiesData = await props.api.getPartnerCompanies();
       setCompanies(companiesData.data || []);
 
@@ -63,19 +56,11 @@ export default function EditProduct(props) {
 
       const pools = await http.getVirtualStockPools();
       setVirtualPools(pools.arr || []);
-    })();
+    };
+    fetchData();
   }, [props.api]);
 
-  // Refresh pools when changing selected product (keeps card honest)
-  useEffect(() => {
-    if (!selectedProduct) return;
-    (async () => {
-      const pools = await http.getVirtualStockPools();
-      setVirtualPools(pools.arr || []);
-    })();
-  }, [selectedProduct]);
-
-  // ===== List & selection helpers =====
+  // ===== Helpers =====
   const handleProductClick = (product) => {
     setSelectedProduct(product);
     setEditedFields({
@@ -136,11 +121,7 @@ export default function EditProduct(props) {
 
     if (updates.length === 0) return;
 
-    const payload = {
-      PRODUCT_ID: selectedProduct.PRODUCT_ID,
-      updates,
-      section: "form",
-    };
+    const payload = { PRODUCT_ID: selectedProduct.PRODUCT_ID, updates, section: "form" };
     const response = await props.api.commitChanges(payload);
     if (response?.status === true) {
       setProductList((prevList) =>
@@ -157,33 +138,24 @@ export default function EditProduct(props) {
     }
   };
 
-  // ===== Pools: truth from LINKED_PRODUCTS (stringified JSON) =====
-  const normID = (x) => (x == null ? "" : String(x).trim().toUpperCase());
-  const parseLinkedProducts = (s) => {
-    if (!s) return [];
-    try {
-      const arr = JSON.parse(s);
-      return Array.isArray(arr) ? arr : [];
-    } catch {
-      return [];
-    }
+  // ===== Pools: truth from LINKED_PRODUCTS =====
+  const refreshPools = async () => {
+    const pools = await http.getVirtualStockPools();
+    setVirtualPools(pools.arr || []);
   };
 
-  // Authoritative link finder (pool name/id + ratio) for the selected product
-  const findCurrentLink = React.useCallback(
+  const findCurrentLink = useCallback(
     (productID) => {
-      const needle = normID(productID);
-      if (!needle || !Array.isArray(virtualPools)) return null;
-
-      for (const pool of virtualPools) {
-        const linked = parseLinkedProducts(pool?.LINKED_PRODUCTS);
-        const hit = linked.find((lp) => normID(lp?.productID) === needle);
+      if (!productID || !virtualPools?.length) return null;
+      for (const p of virtualPools) {
+        const linked = Array.isArray(p.LINKED_PRODUCTS) ? p.LINKED_PRODUCTS : [];
+        const hit = linked.find((lp) => lp?.productID === productID);
         if (hit) {
           return {
-            poolID: String(pool.poolID || ""),
-            poolName: pool.name || "",
+            poolID: p.poolID,
+            poolName: p.name,
+            ratio: Number(hit.ratio),
             productID: hit.productID,
-            ratio: Number(hit.normalizeRatio),
           };
         }
       }
@@ -192,24 +164,18 @@ export default function EditProduct(props) {
     [virtualPools]
   );
 
-  // Keep the ratio input synced to the real link
+  // Keep normalizeRatio synced to the currently linked ratio (if any)
   useEffect(() => {
     if (!selectedProduct) return;
-    const link = findCurrentLink(selectedProduct.PRODUCT_ID);
-    if (link && Number.isFinite(link.ratio)) {
-      setNormalizeRatio(link.ratio);
+    const current = findCurrentLink(selectedProduct.PRODUCT_ID);
+    if (current && Number.isFinite(current.ratio)) {
+      setNormalizeRatio(current.ratio);
     }
-  }, [selectedProduct, virtualPools, findCurrentLink]);
+  }, [selectedProduct, findCurrentLink]);
 
-  const refreshPools = async () => {
-    const pools = await http.getVirtualStockPools();
-    setVirtualPools(pools.arr || []);
-  };
-
-  // Link to existing pool (then refresh pools and local product shape)
+  // Link to existing pool
   const linkToExistingPool = async () => {
     if (!selectedProduct || !selectedPoolId) return;
-
     setPoolLoading(true);
     try {
       const res = await http.virtualPoolProductAdd({
@@ -217,7 +183,6 @@ export default function EditProduct(props) {
         productID: selectedProduct.PRODUCT_ID,
         normalizeRatio,
       });
-
       if (res?.linkedProduct) {
         await refreshPools();
         const updated = {
@@ -226,7 +191,9 @@ export default function EditProduct(props) {
         };
         setSelectedProduct(updated);
         setProductList((prev) =>
-          prev.map((p) => (p.PRODUCT_ID === updated.PRODUCT_ID ? updated : p))
+          prev.map((p) =>
+            p.PRODUCT_ID === updated.PRODUCT_ID ? updated : p
+          )
         );
       } else {
         console.error(res?.status || "Failed to link product to pool.");
@@ -236,10 +203,9 @@ export default function EditProduct(props) {
     }
   };
 
-  // Create pool then link (best-effort to find created pool by name)
+  // Create + link
   const createPoolAndLink = async () => {
     if (!selectedProduct || !poolName.trim()) return;
-
     setPoolLoading(true);
     try {
       const created = await http.createVirtualPools({
@@ -248,25 +214,25 @@ export default function EditProduct(props) {
         productID: selectedProduct.PRODUCT_ID,
         normalizeRatio,
       });
-
       if (created?.createdTable) {
         await refreshPools();
-        // Prefer API returning poolID; fallback: find by name.
+        // Prefer API to return poolID; fallback find-by-name:
         const pools = await http.getVirtualStockPools();
         const createdPool =
           (pools.arr || []).find((p) => p.name === poolName.trim()) || null;
-
         const poolID = createdPool?.poolID || "";
+
         const updated = {
           ...selectedProduct,
           poolRef: { poolID, ratio: normalizeRatio },
         };
         setSelectedProduct(updated);
         setProductList((prev) =>
-          prev.map((p) => (p.PRODUCT_ID === updated.PRODUCT_ID ? updated : p))
+          prev.map((p) =>
+            p.PRODUCT_ID === updated.PRODUCT_ID ? updated : p
+          )
         );
         setSelectedPoolId(poolID);
-        setCreatingPool(false);
         setPoolName("");
       } else {
         console.error(created?.status || "Failed to create & link pool.");
@@ -276,21 +242,18 @@ export default function EditProduct(props) {
     }
   };
 
-  // Remove link (authoritative pool ID from pools, fallback to product)
+  // Remove link (unlink only)
   const removeLink = async () => {
     if (!selectedProduct) return;
-
     const current = findCurrentLink(selectedProduct.PRODUCT_ID);
-    const currentPoolId = current?.poolID ?? getCurrentPoolId(selectedProduct);
-    if (!currentPoolId) return;
+    if (!current) return;
 
     setPoolLoading(true);
     try {
       const res = await http.virtualPoolProductRemove({
-        poolID: currentPoolId,
+        poolID: current.poolID,
         productID: selectedProduct.PRODUCT_ID,
       });
-
       if (res?.unlinkedProduct) {
         await refreshPools();
         const updated = { ...selectedProduct };
@@ -298,13 +261,56 @@ export default function EditProduct(props) {
         delete updated.POOL_REF;
         delete updated.currentPoolRef;
         delete updated.POOL_RATIO;
-
         setSelectedProduct(updated);
         setProductList((prev) =>
-          prev.map((p) => (p.PRODUCT_ID === updated.PRODUCT_ID ? updated : p))
+          prev.map((p) =>
+            p.PRODUCT_ID === updated.PRODUCT_ID ? updated : p
+          )
         );
       } else {
-        console.error(res?.status || "Failed to remove pool link.");
+        console.error(res?.status || "Failed to remove link.");
+      }
+    } finally {
+      setPoolLoading(false);
+    }
+  };
+
+  // Update ratio = remove old link → add new link (same pool)
+  const updateRatio = async (newRatio) => {
+    if (!selectedProduct) return;
+    const current = findCurrentLink(selectedProduct.PRODUCT_ID);
+    if (!current) return;
+
+    setPoolLoading(true);
+    try {
+      // 1) remove old link
+      await http.virtualPoolProductRemove({
+        poolID: current.poolID,
+        productID: selectedProduct.PRODUCT_ID,
+      });
+
+      // 2) add new link with updated ratio
+      const res = await http.virtualPoolProductAdd({
+        poolID: current.poolID,
+        productID: selectedProduct.PRODUCT_ID,
+        normalizeRatio: newRatio,
+      });
+
+      if (res?.linkedProduct) {
+        await refreshPools();
+        const updated = {
+          ...selectedProduct,
+          poolRef: { poolID: current.poolID, ratio: newRatio },
+        };
+        setSelectedProduct(updated);
+        setProductList((prev) =>
+          prev.map((p) =>
+            p.PRODUCT_ID === updated.PRODUCT_ID ? updated : p
+          )
+        );
+        setNormalizeRatio(newRatio);
+      } else {
+        console.error("Failed to update ratio (relink).");
       }
     } finally {
       setPoolLoading(false);
@@ -459,6 +465,7 @@ export default function EditProduct(props) {
                   </tbody>
                 </table>
               </div>
+
             </div>
           </div>
         </>
@@ -466,91 +473,103 @@ export default function EditProduct(props) {
 
       {selectedProduct && (
         <div className="mt-4">
-          {/* success toast */}
           {success && (
             <div className="mb-4 p-4 bg-green-100 text-green-800 rounded">
               Successfully changed objects
             </div>
           )}
 
-          {/* ======== POOL LINK SECTION (Card if linked, Form if not) ======== */}
+          {/* ======= Pool Link Card ======= */}
           <div className="mb-6">
             {(() => {
-              const link = findCurrentLink(selectedProduct.PRODUCT_ID);
+              const current = selectedProduct
+                ? findCurrentLink(selectedProduct.PRODUCT_ID)
+                : null;
 
-              if (link) {
-                // Linked card — mirror your create-product linked card vibe
+              if (current) {
+                // Linked card
                 return (
-                  <div className="bg-green-50 border border-green-700 rounded p-4 flex items-center justify-between">
-                    <div>
+                  <div className="rounded border border-green-700 bg-green-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-green-900">
+                        Linked to Pool
+                      </h3>
+                      {poolLoading && (
+                        <span className="text-sm text-green-700">
+                          Processing…
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-1 grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                       <div className="text-black">
-                        <strong>Linked pool:</strong> {link.poolName}
+                        <strong>Pool:</strong>{" "}
+                        <span className="text-green-900">{current.poolName}</span>
                       </div>
                       <div className="text-black">
-                        <strong>Ratio:</strong>{" "}
-                        {Number.isFinite(link.ratio) ? link.ratio : "—"}
+                        <strong>Pool ID:</strong>{" "}
+                        <code className="text-green-800">{current.poolID}</code>
                       </div>
-                      <div className="text-black font-mono">
-                        <strong>PRODUCT_ID:</strong> {link.productID}
+                      <div className="text-black">
+                        <strong>Product ID:</strong>{" "}
+                        <code className="text-green-800">{current.productID}</code>
+                      </div>
+                      <div className="text-black">
+                        <strong>Current Ratio:</strong>{" "}
+                        <code className="text-green-800">{current.ratio}</code>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={removeLink}
-                      disabled={poolLoading}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded disabled:opacity-60"
-                    >
-                      Remove Link
-                    </button>
+
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block mb-1 text-black">New Ratio</label>
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={normalizeRatio}
+                          onChange={(e) => {
+                            const v = parseFloat(e.target.value);
+                            setNormalizeRatio(
+                              Number.isFinite(v) ? v : current.ratio
+                            );
+                          }}
+                          className="w-full p-2 border border-green-300 rounded text-black bg-white"
+                        />
+                      </div>
+                      <div className="flex items-end gap-2">
+                        <button
+                          onClick={() => updateRatio(normalizeRatio)}
+                          disabled={poolLoading || normalizeRatio === current.ratio}
+                          className="w-full md:w-auto px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded disabled:opacity-60"
+                        >
+                          Update Ratio (remove → add)
+                        </button>
+                        <button
+                          onClick={removeLink}
+                          disabled={poolLoading}
+                          className="w-full md:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded disabled:opacity-60"
+                        >
+                          Remove Link
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 );
               }
 
-              // Not linked — show create/link form (as in CustomProduct)
+              // Not linked: minimal link/create controls
               return (
-                <div className="p-4 rounded border border-gray-300 bg-gray-50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <label className="flex items-center gap-2 text-black">
-                      <input
-                        type="checkbox"
-                        checked={creatingPool}
-                        onChange={(e) => setCreatingPool(e.target.checked)}
-                      />
-                      Create New Pool?
-                    </label>
+                <div className="rounded border border-gray-300 bg-gray-50 p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-black">Pool Link</h3>
+                    {poolLoading && (
+                      <span className="text-sm text-gray-600">Processing…</span>
+                    )}
                   </div>
 
-                  <div className="flex flex-col md:flex-row gap-4">
-                    {creatingPool ? (
-                      <label className="flex-1 text-black">
-                        Pool Name
-                        <input
-                          value={poolName}
-                          onChange={(e) => setPoolName(e.target.value)}
-                          placeholder="e.g., 12oz Bottles"
-                          className="w-full p-2 mt-1 border border-gray-300 rounded text-black bg-white"
-                        />
-                      </label>
-                    ) : (
-                      <label className="flex-1 text-black">
-                        Select Existing Pool
-                        <select
-                          value={selectedPoolId}
-                          onChange={(e) => setSelectedPoolId(e.target.value)}
-                          className="w-full p-2 mt-1 border border-gray-300 rounded text-black bg-white"
-                        >
-                          <option value="">--</option>
-                          {virtualPools.map((p) => (
-                            <option key={p.poolID} value={p.poolID}>
-                              {p.name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-
-                    <label className="flex-1 text-black">
-                      Normalize Ratio
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="md:col-span-1">
+                      <label className="block mb-1 text-black">Ratio</label>
                       <input
                         type="number"
                         step="0.0001"
@@ -559,29 +578,60 @@ export default function EditProduct(props) {
                           const v = parseFloat(e.target.value);
                           setNormalizeRatio(Number.isFinite(v) ? v : 1);
                         }}
-                        className="w-full p-2 mt-1 border border-gray-300 rounded text-black bg-white"
+                        className="w-full p-2 border border-gray-300 rounded text-black bg-white"
                       />
-                    </label>
-                  </div>
+                    </div>
 
-                  <button
-                    type="button"
-                    onClick={
-                      creatingPool ? createPoolAndLink : linkToExistingPool
-                    }
-                    disabled={
-                      poolLoading ||
-                      (creatingPool ? !poolName.trim() : !selectedPoolId)
-                    }
-                    className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-60"
-                  >
-                    {creatingPool ? "Create Pool & Link" : "Link to Pool"}
-                  </button>
+                    <div>
+                      <label className="block mb-1 text-black">
+                        Existing Pool
+                      </label>
+                      <select
+                        value={selectedPoolId}
+                        onChange={(e) => setSelectedPoolId(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded text-black bg-white"
+                      >
+                        <option value="">--</option>
+                        {virtualPools.map((p) => (
+                          <option key={p.poolID} value={p.poolID}>
+                            {p.name} ({p.poolID})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={linkToExistingPool}
+                        disabled={!selectedPoolId || poolLoading || !selectedProduct}
+                        className="mt-2 w-full md:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded disabled:opacity-60"
+                      >
+                        Link to Selected
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 text-black">Create Pool</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={poolName}
+                          onChange={(e) => setPoolName(e.target.value)}
+                          placeholder="e.g., 12oz Bottles"
+                          className="flex-1 p-2 border border-gray-300 rounded text-black bg-white"
+                        />
+                        <button
+                          onClick={createPoolAndLink}
+                          disabled={!poolName.trim() || poolLoading || !selectedProduct}
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded disabled:opacity-60"
+                        >
+                          Create & Link
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             })()}
           </div>
-          {/* ======== END POOL LINK SECTION ======== */}
+          {/* ======= /Pool Link Card ======= */}
 
           {/* Core editable fields */}
           {renderField("Name", "NAME")}
@@ -599,9 +649,7 @@ export default function EditProduct(props) {
             { value: "UNIT", label: "UNIT" },
             { value: "BUNDLE", label: "BUNDLE" },
           ])}
-          {renderField("Location", "LOCATION", [
-            { value: "4322", label: "4322" },
-          ])}
+          {renderField("Location", "LOCATION", [{ value: "4322", label: "4322" }])}
 
           {/* Save Edit Changes button */}
           <button
@@ -636,6 +684,7 @@ export default function EditProduct(props) {
             }
             setSelectedProduct={setSelectedProduct}
           />
+
           <div className="w-full p-4 text-white rounded text-lg font-semibold mt-8 mb-40" />
         </div>
       )}

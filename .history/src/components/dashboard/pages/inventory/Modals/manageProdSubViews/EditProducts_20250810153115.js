@@ -7,7 +7,6 @@ import http_handler from "../../HTTP/HTTPS_INTERFACE";
 
 const http = new http_handler();
 
-
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -310,6 +309,33 @@ export default function EditProduct(props) {
       setPoolLoading(false);
     }
   };
+  // NEW — derive virtualops for a product (null if not linked)
+  const computeVirtualOps = useCallback(
+    (product) => {
+      if (!product) return null;
+
+      // Prefer authoritative link from pools (handles stringified LINKED_PRODUCTS)
+      const link = findCurrentLink(product.PRODUCT_ID);
+      if (link?.poolID) {
+        return {
+          productID: product.PRODUCT_ID,
+          poolID: String(link.poolID),
+        };
+      }
+
+      // Fallback to any local pool ref shape on the product
+      const fallbackPoolID = getCurrentPoolId(product);
+      if (fallbackPoolID) {
+        return {
+          productID: product.PRODUCT_ID,
+          poolID: String(fallbackPoolID),
+        };
+      }
+
+      return null;
+    },
+    [findCurrentLink]
+  );
 
   // ===== UI helpers =====
   const renderField = (label, field, options = []) => {

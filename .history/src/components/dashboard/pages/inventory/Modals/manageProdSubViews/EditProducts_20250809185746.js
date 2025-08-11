@@ -1,12 +1,10 @@
-// EditProduct.jsx — card when linked (shows pool name), form when not linked.
-// Robust to LINKED_PRODUCTS being a stringified JSON array.
+// Cleaned version with tables removed, form preserved + POOL LINK EDITOR (card if linked)
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch } from "react-icons/fa";
 import NodeRenderer from "./node/NodeRenderer";
 import http_handler from "../../HTTP/HTTPS_INTERFACE";
 
 const http = new http_handler();
-
 
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
@@ -30,7 +28,7 @@ export default function EditProduct(props) {
     shipment: null,
   });
 
-  // ==== Virtual pools state ====
+  // ==== NEW: virtual pools state ====
   const [virtualPools, setVirtualPools] = useState([]);
   const [poolLoading, setPoolLoading] = useState(false);
   const [creatingPool, setCreatingPool] = useState(false);
@@ -38,7 +36,7 @@ export default function EditProduct(props) {
   const [selectedPoolId, setSelectedPoolId] = useState("");
   const [normalizeRatio, setNormalizeRatio] = useState(1);
 
-  // Helper: get current pool id from product (supports multiple shapes) — fallback only
+  // Helper: get current pool id from product (supports multiple shapes)
   const getCurrentPoolId = (p) =>
     p?.poolRef?.poolID ??
     p?.poolRef ??
@@ -46,36 +44,40 @@ export default function EditProduct(props) {
     p?.currentPoolRef ??
     null;
 
-  // ===== Data load on mount =====
+  // ===== Data load =====
   useEffect(() => {
-    (async () => {
+    const fetchData = async () => {
       const companiesData = await props.api.getPartnerCompanies();
-      setCompanies(companiesData.data || []);
+      setCompanies(companiesData.data);
 
       const products = await props.api.getProducts();
-      setProductList(products.data || []);
+      setProductList(products.data);
 
       const productTypesData = await props.api.getProductTypes();
-      setProductTypes(productTypesData.data || []);
+      setProductTypes(productTypesData.data);
 
       const fetchRegistry = await props.api.fetchRegistry();
       setRegistry(fetchRegistry);
 
+      // pools
       const pools = await http.getVirtualStockPools();
+      console
       setVirtualPools(pools.arr || []);
-    })();
+    };
+    fetchData();
   }, [props.api]);
 
-  // Refresh pools when changing selected product (keeps card honest)
+  // Keep ratio field reflecting selected product’s current link (if you store it server-side)
   useEffect(() => {
     if (!selectedProduct) return;
-    (async () => {
-      const pools = await http.getVirtualStockPools();
-      setVirtualPools(pools.arr || []);
-    })();
+    // best-effort: if product carried a stored ratio meta, prefer it; else keep current
+    const r =
+      selectedProduct?.poolRef?.ratio ??
+      selectedProduct?.POOL_RATIO ??
+      normalizeRatio;
+    if (Number.isFinite(r)) setNormalizeRatio(r);
   }, [selectedProduct]);
 
-  // ===== List & selection helpers =====
   const handleProductClick = (product) => {
     setSelectedProduct(product);
     setEditedFields({
@@ -93,7 +95,7 @@ export default function EditProduct(props) {
   const handleCompanyChange = (event) => setSelectedCompany(event.target.value);
 
   const filteredProducts = productList.filter((product) => {
-    const matchesSearch = product.NAME?.toLowerCase().includes(
+    const matchesSearch = product.NAME.toLowerCase().includes(
       searchQuery.toLowerCase()
     );
     const matchesCompany =
@@ -134,15 +136,9 @@ export default function EditProduct(props) {
       return acc;
     }, []);
 
-    if (updates.length === 0) return;
-
-    const payload = {
-      PRODUCT_ID: selectedProduct.PRODUCT_ID,
-      updates,
-      section: "form",
-    };
+    const payload = { PRODUCT_ID: selectedProduct.PRODUCT_ID, updates };
     const response = await props.api.commitChanges(payload);
-    if (response?.status === true) {
+    if (response.status === true) {
       setProductList((prevList) =>
         prevList.map((product) =>
           product.PRODUCT_ID === selectedProduct.PRODUCT_ID
@@ -157,33 +153,27 @@ export default function EditProduct(props) {
     }
   };
 
-  // ===== Pools: truth from LINKED_PRODUCTS (stringified JSON) =====
-  const normID = (x) => (x == null ? "" : String(x).trim().toUpperCase());
-  const parseLinkedProducts = (s) => {
-    if (!s) return [];
-    try {
-      const arr = JSON.parse(s);
-      return Array.isArray(arr) ? arr : [];
-    } catch {
-      return [];
-    }
+  // ====== Pool link truth from pools ======
+  const refreshPools = async () => {
+    const pools = await http.getVirtualStockPools();
+    setVirtualPools(pools.arr || []);
   };
 
-  // Authoritative link finder (pool name/id + ratio) for the selected product
+  // Find the authoritative current link (pool name/id + ratio) for the selected product
   const findCurrentLink = React.useCallback(
     (productID) => {
-      const needle = normID(productID);
-      if (!needle || !Array.isArray(virtualPools)) return null;
-
-      for (const pool of virtualPools) {
-        const linked = parseLinkedProducts(pool?.LINKED_PRODUCTS);
-        const hit = linked.find((lp) => normID(lp?.productID) === needle);
+      if (!productID || !virtualPools?.length) return null;
+      for (const p of virtualPools) {
+        const linked = Array.isArray(p.LINKED_PRODUCTS)
+          ? p.LINKED_PRODUCTS
+          : [];
+        const hit = linked.find((lp) => lp?.productID === productID);
         if (hit) {
           return {
-            poolID: String(pool.poolID || ""),
-            poolName: pool.name || "",
+            poolID: p.poolID,
+            poolName: p.name,
+            ratio: Number(hit.ratio),
             productID: hit.productID,
-            ratio: Number(hit.normalizeRatio),
           };
         }
       }
@@ -192,23 +182,9 @@ export default function EditProduct(props) {
     [virtualPools]
   );
 
-  // Keep the ratio input synced to the real link
-  useEffect(() => {
-    if (!selectedProduct) return;
-    const link = findCurrentLink(selectedProduct.PRODUCT_ID);
-    if (link && Number.isFinite(link.ratio)) {
-      setNormalizeRatio(link.ratio);
-    }
-  }, [selectedProduct, virtualPools, findCurrentLink]);
-
-  const refreshPools = async () => {
-    const pools = await http.getVirtualStockPools();
-    setVirtualPools(pools.arr || []);
-  };
-
-  // Link to existing pool (then refresh pools and local product shape)
   const linkToExistingPool = async () => {
-    if (!selectedProduct || !selectedPoolId) return;
+    if (!selectedProduct) return;
+    if (!selectedPoolId) return;
 
     setPoolLoading(true);
     try {
@@ -220,6 +196,7 @@ export default function EditProduct(props) {
 
       if (res?.linkedProduct) {
         await refreshPools();
+        // also keep local product shape in sync for downstream UI
         const updated = {
           ...selectedProduct,
           poolRef: { poolID: selectedPoolId, ratio: normalizeRatio },
@@ -236,9 +213,9 @@ export default function EditProduct(props) {
     }
   };
 
-  // Create pool then link (best-effort to find created pool by name)
   const createPoolAndLink = async () => {
-    if (!selectedProduct || !poolName.trim()) return;
+    if (!selectedProduct) return;
+    if (!poolName.trim()) return;
 
     setPoolLoading(true);
     try {
@@ -251,12 +228,13 @@ export default function EditProduct(props) {
 
       if (created?.createdTable) {
         await refreshPools();
-        // Prefer API returning poolID; fallback: find by name.
+        // If API returns poolID in the future, use it. For now, best-effort by name:
         const pools = await http.getVirtualStockPools();
+        
         const createdPool =
           (pools.arr || []).find((p) => p.name === poolName.trim()) || null;
 
-        const poolID = createdPool?.poolID || "";
+        const poolID = createdPool?.poolID;
         const updated = {
           ...selectedProduct,
           poolRef: { poolID, ratio: normalizeRatio },
@@ -265,7 +243,7 @@ export default function EditProduct(props) {
         setProductList((prev) =>
           prev.map((p) => (p.PRODUCT_ID === updated.PRODUCT_ID ? updated : p))
         );
-        setSelectedPoolId(poolID);
+        setSelectedPoolId(poolID || "");
         setCreatingPool(false);
         setPoolName("");
       } else {
@@ -276,10 +254,10 @@ export default function EditProduct(props) {
     }
   };
 
-  // Remove link (authoritative pool ID from pools, fallback to product)
   const removeLink = async () => {
     if (!selectedProduct) return;
 
+    // prefer truth from pools
     const current = findCurrentLink(selectedProduct.PRODUCT_ID);
     const currentPoolId = current?.poolID ?? getCurrentPoolId(selectedProduct);
     if (!currentPoolId) return;
@@ -294,6 +272,7 @@ export default function EditProduct(props) {
       if (res?.unlinkedProduct) {
         await refreshPools();
         const updated = { ...selectedProduct };
+        // clear any poolRef shape we might have
         delete updated.poolRef;
         delete updated.POOL_REF;
         delete updated.currentPoolRef;
@@ -311,7 +290,6 @@ export default function EditProduct(props) {
     }
   };
 
-  // ===== UI helpers =====
   const renderField = (label, field, options = []) => {
     const isEdited =
       editedFields[field] !== undefined &&
@@ -438,7 +416,7 @@ export default function EditProduct(props) {
                           selectedProduct === product
                             ? "bg-blue-600 text-white font-bold"
                             : index % 2 === 0
-                            ? "bg-gray-600 text-white"
+                            ? "bg-gray-6 00 text-white"
                             : "bg-gray-500 text-white"
                         }`}
                       >
@@ -473,13 +451,15 @@ export default function EditProduct(props) {
             </div>
           )}
 
-          {/* ======== POOL LINK SECTION (Card if linked, Form if not) ======== */}
+          {/* ======== POOL LINK SECTION (card if linked, else form) ======== */}
           <div className="mb-6">
             {(() => {
-              const link = findCurrentLink(selectedProduct.PRODUCT_ID);
+              const link = selectedProduct
+                ? findCurrentLink(selectedProduct.PRODUCT_ID)
+                : null;
 
               if (link) {
-                // Linked card — mirror your create-product linked card vibe
+                // Linked card — visual echo of CustomProduct.linkedCard
                 return (
                   <div className="bg-green-50 border border-green-700 rounded p-4 flex items-center justify-between">
                     <div>
@@ -487,8 +467,7 @@ export default function EditProduct(props) {
                         <strong>Linked pool:</strong> {link.poolName}
                       </div>
                       <div className="text-black">
-                        <strong>Ratio:</strong>{" "}
-                        {Number.isFinite(link.ratio) ? link.ratio : "—"}
+                        <strong>Ratio:</strong> {link.ratio}
                       </div>
                       <div className="text-black font-mono">
                         <strong>PRODUCT_ID:</strong> {link.productID}
@@ -506,7 +485,7 @@ export default function EditProduct(props) {
                 );
               }
 
-              // Not linked — show create/link form (as in CustomProduct)
+              // Not linked — show create/link form (like CustomProduct)
               return (
                 <div className="p-4 rounded border border-gray-300 bg-gray-50">
                   <div className="flex items-center gap-3 mb-3">

@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import http_handler from "../../HTTP/HTTPS_INTERFACE";
 const http = new http_handler();
-
 const headerTextColor = "black";
 const inputTextColor = "black";
-const LS_KEY = "customProductState_v1";
-
 // 8-char ID
 function generateShortUUID() {
+  // crypto path first when available, fallback otherwise
   if (typeof crypto !== "undefined" && crypto.getRandomValues) {
     const arr = new Uint8Array(4); // 4 bytes -> 8 hex chars
     crypto.getRandomValues(arr);
@@ -16,29 +14,6 @@ function generateShortUUID() {
       .toUpperCase();
   }
   return Math.random().toString(36).substring(2, 10).toUpperCase();
-}
-
-function safeLoad() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function safeSave(state) {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
-  } catch {
-    // ignore quota or private mode issues
-  }
-}
-
-function safeClear() {
-  try {
-    localStorage.removeItem(LS_KEY);
-  } catch {}
 }
 
 export default function CustomProduct(props) {
@@ -80,7 +55,7 @@ export default function CustomProduct(props) {
     price: "",
     type: "",
     company: "",
-    unitType: "", // "UNIT" | "BUNDLE"
+    unitType: "", // you can replace with UNIT/BUNDLE dropdown if you have it
   });
   const [createLabel, setCreateLabel] = useState(false);
   const [needBarcode, setNeedBarcode] = useState(false);
@@ -89,38 +64,48 @@ export default function CustomProduct(props) {
   const requiredFields = ["name", "price", "type", "company", "unitType"];
 
   function buildProductPacket() {
+    // basic required checks
     for (const f of requiredFields) {
       const v = (formFields[f] ?? "").toString().trim();
-      if (!v) throw new Error(`Missing required field: ${f}`);
+      if (!v) {
+        throw new Error(`Missing required field: ${f}`);
+      }
     }
+    // price sanity
     const priceNum = Number(formFields.price);
     if (Number.isNaN(priceNum) || priceNum < 0) {
       throw new Error("Price must be a non-negative number");
     }
 
+    // pool rules
     const currentPoolRef =
       usePool && linkStatus?.linked ? linkStatus.poolID : null;
 
-    return {
-      PRODUCT_ID: productID,
+    // compile final packet (what your backend expects)
+    const packet = {
+      PRODUCT_ID: productID, // 8-char ID we’ve been using
       name: formFields.name.trim(),
       description: (formFields.description ?? "").trim(),
       price: priceNum,
       type: formFields.type,
       company: formFields.company,
-      unitType: formFields.unitType,
+      unitType: formFields.unitType, // "UNIT" | "BUNDLE"
       createLabel,
       needBarcode,
-      currentPoolRef,
+      currentPoolRef, // null or poolID
+      // Optional: include extra context if helpful for backend logs
       _meta: {
         normalizeRatio: linkStatus?.linked ? linkStatus.ratio : normalizeRatio,
         linked: !!linkStatus?.linked,
         phase,
       },
     };
+
+    return packet;
   }
 
   const handleCreateProduct = async () => {
+    // Guard: if using pool, ensure we’re linked first
     if (usePool && !linkStatus?.linked) {
       return toast("Link the product to a pool first, or disable pool usage.");
     }
@@ -133,9 +118,7 @@ export default function CustomProduct(props) {
 
       toast("Compiled product packet logged to console.");
 
-      // CLEAR EVERYTHING (and clear persisted state)
-      safeClear();
-
+      // === CLEAR EVERYTHING ===
       setProductID(generateShortUUID());
       setFormFields({
         name: "",
@@ -147,13 +130,13 @@ export default function CustomProduct(props) {
       });
       setCreateLabel(false);
       setNeedBarcode(false);
-      setUsePool(true);
+      setUsePool(true); // default state if you want
       setCreatingPool(false);
       setPoolName("");
       setSelectedPoolId("");
       setNormalizeRatio(1);
       setLinkStatus(null);
-      setPhase("pool-setup");
+      setPhase("pool-setup"); // return to pool linking step
     } catch (err) {
       console.error("Packet build failed:", err);
       toast(err.message || "Invalid form data.");
@@ -190,65 +173,6 @@ export default function CustomProduct(props) {
     })();
   }, [props.api]);
 
-  // ===== Restore persisted state on mount =====
-  const didHydrate = useRef(false);
-  useEffect(() => {
-    const saved = safeLoad();
-    if (saved) {
-      // Guard each field so older saved states don’t crash newer code
-      if (saved.productID) setProductID(saved.productID);
-      if (saved.phase) setPhase(saved.phase);
-      if (typeof saved.usePool === "boolean") setUsePool(saved.usePool);
-      if (typeof saved.creatingPool === "boolean")
-        setCreatingPool(saved.creatingPool);
-      if (typeof saved.poolName === "string") setPoolName(saved.poolName);
-      if (typeof saved.selectedPoolId === "string")
-        setSelectedPoolId(saved.selectedPoolId);
-      if (typeof saved.normalizeRatio === "number")
-        setNormalizeRatio(saved.normalizeRatio);
-      if (saved.linkStatus) setLinkStatus(saved.linkStatus);
-      if (saved.formFields) setFormFields(saved.formFields);
-      if (typeof saved.createLabel === "boolean")
-        setCreateLabel(saved.createLabel);
-      if (typeof saved.needBarcode === "boolean")
-        setNeedBarcode(saved.needBarcode);
-    }
-    didHydrate.current = true;
-  }, []);
-
-  // ===== Persist on changes =====
-  useEffect(() => {
-    if (!didHydrate.current) return; // avoid saving defaults over restored state
-    const snapshot = {
-      productID,
-      phase,
-      usePool,
-      creatingPool,
-      poolName,
-      selectedPoolId,
-      normalizeRatio,
-      linkStatus,
-      formFields,
-      createLabel,
-      needBarcode,
-      _ts: Date.now(),
-      _version: 1,
-    };
-    safeSave(snapshot);
-  }, [
-    productID,
-    phase,
-    usePool,
-    creatingPool,
-    poolName,
-    selectedPoolId,
-    normalizeRatio,
-    linkStatus,
-    formFields,
-    createLabel,
-    needBarcode,
-  ]);
-
   // ===== Helpers =====
   const propChange = (e) =>
     setFormFields((s) => ({ ...s, [e.target.name]: e.target.value }));
@@ -273,6 +197,7 @@ export default function CustomProduct(props) {
       setIsLoading(true);
 
       if (creatingPool) {
+        // Create new pool and immediately link this productID in linked list
         const res = await http.createVirtualPools({
           name: poolName.trim(),
           virtualStock: 0,
@@ -280,41 +205,26 @@ export default function CustomProduct(props) {
           normalizeRatio,
         });
         if (res?.createdTable) {
+          // Re-load pools to get new poolID + name in dropdowns
           const pools = await http.getVirtualStockPools();
           setVirtualPools(pools.arr || []);
           const created = (pools.arr || []).find(
             (p) => p.name === poolName.trim()
           );
-          const newStatus = {
+          setLinkStatus({
             linked: true,
             poolID: created?.poolID,
             poolName: created?.name || poolName.trim(),
             ratio: normalizeRatio,
             productID,
-          };
-          setLinkStatus(newStatus);
+          });
           toast("Pool created & product linked.");
           setPhase("form");
-          // Save immediately after linking to avoid backend orphan if refresh happens right now
-          safeSave({
-            productID,
-            phase: "form",
-            usePool,
-            creatingPool,
-            poolName,
-            selectedPoolId,
-            normalizeRatio,
-            linkStatus: newStatus,
-            formFields,
-            createLabel,
-            needBarcode,
-            _ts: Date.now(),
-            _version: 1,
-          });
         } else {
           toast(res?.status || "Failed to create pool.");
         }
       } else {
+        // Link to existing pool
         const res = await http.virtualPoolProductAdd({
           poolID: selectedPoolId,
           productID,
@@ -322,33 +232,17 @@ export default function CustomProduct(props) {
         });
         if (res?.linkedProduct) {
           const pool = virtualPools.find((p) => p.poolID === selectedPoolId);
-          const newStatus = {
+          setLinkStatus({
             linked: true,
             poolID: selectedPoolId,
             poolName: pool?.name || "",
             ratio: normalizeRatio,
             productID,
-          };
-          setLinkStatus(newStatus);
+          });
           toast("Product linked to pool.");
           setPhase("form");
-          // Save immediately after linking
-          safeSave({
-            productID,
-            phase: "form",
-            usePool,
-            creatingPool,
-            poolName,
-            selectedPoolId,
-            normalizeRatio,
-            linkStatus: newStatus,
-            formFields,
-            createLabel,
-            needBarcode,
-            _ts: Date.now(),
-            _version: 1,
-          });
         } else {
+          // Show backend statuses (e.g., already linked)
           toast(res?.status || "Failed to link product.");
         }
       }
@@ -373,22 +267,6 @@ export default function CustomProduct(props) {
         setLinkStatus(null);
         toast("Link removed.");
         setPhase("pool-setup");
-        // Save immediately after unlink to keep UI consistent on refresh
-        safeSave({
-          productID,
-          phase: "pool-setup",
-          usePool,
-          creatingPool,
-          poolName,
-          selectedPoolId,
-          normalizeRatio,
-          linkStatus: null,
-          formFields,
-          createLabel,
-          needBarcode,
-          _ts: Date.now(),
-          _version: 1,
-        });
       } else {
         toast(res?.status || "Failed to remove link.");
       }
@@ -689,7 +567,6 @@ const styles = {
     margin: "auto",
     padding: "24px",
     fontFamily: "Arial, sans-serif",
-    color: headerTextColor,
   },
   sectionCard: {
     border: "1px solid #ddd",
@@ -705,21 +582,16 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     marginBottom: 12,
-    color: headerTextColor,
+    color: inputTextColor,
   },
-  label: {
-    marginBottom: 4,
-    fontWeight: 600,
-    fontSize: 12,
-    color: headerTextColor,
-  },
+  label: { marginBottom: 4, fontWeight: 600, fontSize: 12, color: headerTextColor },
   input: (filled) => ({
     padding: "10px",
     border: filled ? "2px solid #43a047" : "1px solid #aaa",
     borderRadius: 6,
     fontSize: 14,
     background: "#fff",
-    color: inputTextColor,
+    color: inpout
   }),
   form: { marginTop: 8 },
   checkRow: { display: "flex", gap: 30, margin: "12px 0" },

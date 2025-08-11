@@ -7,7 +7,6 @@ import http_handler from "../../HTTP/HTTPS_INTERFACE";
 
 const http = new http_handler();
 
-
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -310,6 +309,7 @@ export default function EditProduct(props) {
       setPoolLoading(false);
     }
   };
+  
 
   // ===== UI helpers =====
   const renderField = (label, field, options = []) => {

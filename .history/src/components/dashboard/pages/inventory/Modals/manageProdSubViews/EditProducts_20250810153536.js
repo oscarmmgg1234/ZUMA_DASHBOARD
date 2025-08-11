@@ -7,7 +7,6 @@ import http_handler from "../../HTTP/HTTPS_INTERFACE";
 
 const http = new http_handler();
 
-
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -122,40 +121,93 @@ export default function EditProduct(props) {
       return !prev;
     });
   };
+const findCurrentLink = React.useCallback(
+  (productID) => {
+    const needle = normID(productID);
+    if (!needle || !Array.isArray(virtualPools)) return null;
 
+    for (const pool of virtualPools) {
+      const linked = parseLinkedProducts(pool?.LINKED_PRODUCTS);
+      const hit = linked.find((lp) => normID(lp?.productID) === needle);
+      if (hit) {
+        return {
+          poolID: String(pool.poolID || ""),
+          poolName: pool.name || "",
+          productID: hit.productID,
+          ratio: Number(hit.normalizeRatio),
+        };
+      }
+    }
+    return null;
+  },
+  [virtualPools]
+);
   const handleFieldChange = (field, value) =>
     setEditedFields((prev) => ({ ...prev, [field]: value }));
+  // NEW — derive virtualops for a product (null if not linked)
+  const computeVirtualOps = useCallback(
+    (product) => {
+      if (!product) return null;
 
-  const handleCommitChanges = async () => {
-    const updates = Object.keys(editedFields).reduce((acc, key) => {
-      if (editedFields[key] !== selectedProduct[key]) {
-        acc.push({ field: key, value: editedFields[key] });
+      // Prefer authoritative link from pools (handles stringified LINKED_PRODUCTS)
+      const link = findCurrentLink(product.PRODUCT_ID);
+      if (link?.poolID) {
+        return {
+          productID: product.PRODUCT_ID,
+          poolID: String(link.poolID),
+        };
       }
-      return acc;
-    }, []);
 
-    if (updates.length === 0) return;
+      // Fallback to any local pool ref shape on the product
+      const fallbackPoolID = getCurrentPoolId(product);
+      if (fallbackPoolID) {
+        return {
+          productID: product.PRODUCT_ID,
+          poolID: String(fallbackPoolID),
+        };
+      }
 
-    const payload = {
-      PRODUCT_ID: selectedProduct.PRODUCT_ID,
-      updates,
-      section: "form",
-    };
-    const response = await props.api.commitChanges(payload);
-    if (response?.status === true) {
-      setProductList((prevList) =>
-        prevList.map((product) =>
-          product.PRODUCT_ID === selectedProduct.PRODUCT_ID
-            ? { ...product, ...editedFields }
-            : product
-        )
-      );
-      setSelectedProduct((p) => ({ ...p, ...editedFields }));
-      setSuccess(true);
-    } else {
-      console.error("Failed to update product");
-    }
-  };
+      return null;
+    },
+    [findCurrentLink]
+  );
+
+ const handleCommitChanges = async () => {
+   const updates = Object.keys(editedFields).reduce((acc, key) => {
+     if (editedFields[key] !== selectedProduct[key]) {
+       acc.push({ field: key, value: editedFields[key] });
+     }
+     return acc;
+   }, []);
+
+   if (updates.length === 0) return;
+
+   // NEW — compute virtualops snapshot at commit time
+   const virtualops = computeVirtualOps(selectedProduct); // either { productID, poolID } or null
+
+   const payload = {
+     PRODUCT_ID: selectedProduct.PRODUCT_ID,
+     updates,
+     section: "form",
+     virtualops, // NEW
+   };
+   console.log()
+
+   const response = await props.api.commitChanges(payload);
+   if (response?.status === true) {
+     setProductList((prevList) =>
+       prevList.map((product) =>
+         product.PRODUCT_ID === selectedProduct.PRODUCT_ID
+           ? { ...product, ...editedFields }
+           : product
+       )
+     );
+     setSelectedProduct((p) => ({ ...p, ...editedFields }));
+     setSuccess(true);
+   } else {
+     console.error("Failed to update product");
+   }
+ };
 
   // ===== Pools: truth from LINKED_PRODUCTS (stringified JSON) =====
   const normID = (x) => (x == null ? "" : String(x).trim().toUpperCase());
@@ -170,27 +222,7 @@ export default function EditProduct(props) {
   };
 
   // Authoritative link finder (pool name/id + ratio) for the selected product
-  const findCurrentLink = React.useCallback(
-    (productID) => {
-      const needle = normID(productID);
-      if (!needle || !Array.isArray(virtualPools)) return null;
-
-      for (const pool of virtualPools) {
-        const linked = parseLinkedProducts(pool?.LINKED_PRODUCTS);
-        const hit = linked.find((lp) => normID(lp?.productID) === needle);
-        if (hit) {
-          return {
-            poolID: String(pool.poolID || ""),
-            poolName: pool.name || "",
-            productID: hit.productID,
-            ratio: Number(hit.normalizeRatio),
-          };
-        }
-      }
-      return null;
-    },
-    [virtualPools]
-  );
+  
 
   // Keep the ratio input synced to the real link
   useEffect(() => {
