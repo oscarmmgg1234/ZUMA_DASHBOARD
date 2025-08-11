@@ -7,7 +7,6 @@ import http_handler from "../../HTTP/HTTPS_INTERFACE";
 
 const http = new http_handler();
 
-
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -216,6 +215,7 @@ export default function EditProduct(props) {
         poolID: selectedPoolId,
         productID: selectedProduct.PRODUCT_ID,
         normalizeRatio,
+        process: "edit",
       });
 
       if (res?.linkedProduct) {
@@ -247,6 +247,7 @@ export default function EditProduct(props) {
         virtualStock: 0,
         productID: selectedProduct.PRODUCT_ID,
         normalizeRatio,
+        process: "edit",
       });
 
       if (created?.createdTable) {
@@ -289,6 +290,7 @@ export default function EditProduct(props) {
       const res = await http.virtualPoolProductRemove({
         poolID: currentPoolId,
         productID: selectedProduct.PRODUCT_ID,
+        process: "edit",
       });
 
       if (res?.unlinkedProduct) {

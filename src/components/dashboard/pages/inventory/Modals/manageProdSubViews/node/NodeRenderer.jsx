@@ -1,30 +1,36 @@
-import React, { useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+} from "react";
 import ReactFlow, {
   MiniMap,
   Background,
   Controls,
   useNodesState,
   useEdgesState,
-  ReactFlowProvider
-} from 'reactflow';
-import { v4 as uuidv4 } from 'uuid';
-import 'reactflow/dist/style.css';
-import ProductNode from './nodes/ProductNode';
-import ActionNode from './nodes/ActionNode';
-import http_handler from '../../../HTTP/HTTPS_INTERFACE';
+  ReactFlowProvider,
+} from "reactflow";
+import { v4 as uuidv4 } from "uuid";
+import "reactflow/dist/style.css";
+import ProductNode from "./nodes/ProductNode";
+import ActionNode from "./nodes/ActionNode";
+import http_handler from "../../../HTTP/HTTPS_INTERFACE";
 const http = new http_handler();
 
 const nodeTypes = {
   productNode: ProductNode,
-  actionNode: ActionNode
-}
+  actionNode: ActionNode,
+};
 const initialTree = [
   {
     id: uuidv4(),
-    name: 'Product 1',
-    type: 'product',
-    children: []
-  }
+    name: "Product 1",
+    type: "product",
+    children: [],
+  },
 ];
 
 function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
@@ -34,18 +40,18 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
   let xOffset = 0;
 
   const mainEdgeStyle = {
-    stroke: '#00bcd4',
+    stroke: "#00bcd4",
     strokeWidth: 2,
   };
 
   const addEdgeStyle = {
-    stroke: '#888',
-    strokeDasharray: '3 3'
+    stroke: "#888",
+    strokeDasharray: "3 3",
   };
 
   const arrowSize = {
     width: 25,
-    height: 25
+    height: 25,
   };
 
   for (let i = 0; i < tree.length; i++) {
@@ -55,16 +61,16 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
 
     nodes.push({
       id: product.id,
-      type: 'productNode',
+      type: "productNode",
       data: {
         id: product.id,
         products: props.products,
-        selectedProductId: product.selectedProductId || '',
+        selectedProductId: product.selectedProductId || "",
         onFieldChange: handleNodeFieldChange,
-        name: product.name || ''
+        name: product.name || "",
       },
       position: { x: productX, y: productY },
-      deletable: true
+      deletable: true,
     });
 
     // Horizontal edge: previous product → current
@@ -76,10 +82,10 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
         animated: true,
         style: mainEdgeStyle,
         markerEnd: {
-          type: 'arrowclosed',
-          color: '#00bcd4',
-          ...arrowSize
-        }
+          type: "arrowclosed",
+          color: "#00bcd4",
+          ...arrowSize,
+        },
       });
     }
 
@@ -90,15 +96,15 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
 
       nodes.push({
         id: action.id,
-        type: 'actionNode',
+        type: "actionNode",
         data: {
           route: props.route,
           registryMap,
           token: action.token,
-           onFieldChange: handleNodeFieldChange
+          onFieldChange: handleNodeFieldChange,
         },
         position: { x: productX, y: actionY },
-        deletable: true
+        deletable: true,
       });
 
       edges.push({
@@ -108,10 +114,10 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
         animated: true,
         style: mainEdgeStyle,
         markerEnd: {
-          type: 'arrowclosed',
-          color: '#00bcd4',
-          ...arrowSize
-        }
+          type: "arrowclosed",
+          color: "#00bcd4",
+          ...arrowSize,
+        },
       });
 
       currentParentId = action.id;
@@ -121,20 +127,20 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
     const addY = productY + 450 * (product.children.length + 1);
     nodes.push({
       id: addId,
-      type: 'default',
-      data: { label: '+ Add Action' },
+      type: "default",
+      data: { label: "+ Add Action" },
       position: { x: productX, y: addY },
-       style: {
-    backgroundColor: '#1e1e1ed2',
-    color: '#fff',
-    border: '3px solid #00bcd4',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 14,
-    width: 260,
-    fontSize: 23
-  },
-      deletable: false
+      style: {
+        backgroundColor: "#1e1e1ed2",
+        color: "#fff",
+        border: "3px solid #00bcd4",
+        borderRadius: 8,
+        padding: 10,
+        fontSize: 14,
+        width: 260,
+        fontSize: 23,
+      },
+      deletable: false,
     });
 
     edges.push({
@@ -144,32 +150,32 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
       animated: true,
       style: mainEdgeStyle,
       markerEnd: {
-        type: 'arrowclosed',
-        color: '#00bcd4',
-        ...arrowSize
-      }
+        type: "arrowclosed",
+        color: "#00bcd4",
+        ...arrowSize,
+      },
     });
 
     xOffset += 500;
   }
 
-  const addProdId = 'add-product';
+  const addProdId = "add-product";
   nodes.push({
     id: addProdId,
-    type: 'default',
-    data: { label: '+ Add Product' },
+    type: "default",
+    data: { label: "+ Add Product" },
     position: { x: xOffset, y: 0 },
-     style: {
-    backgroundColor: '#000000b5',
-    color: '#fff',
-    border: '5px solid #00bcd4',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 14,
-    width: 260,
-    fontSize: 23
-  },
-    deletable: false
+    style: {
+      backgroundColor: "#000000b5",
+      color: "#fff",
+      border: "5px solid #00bcd4",
+      borderRadius: 8,
+      padding: 10,
+      fontSize: 14,
+      width: 260,
+      fontSize: 23,
+    },
+    deletable: false,
   });
 
   if (tree.length > 0) {
@@ -180,41 +186,42 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
       animated: true,
       style: mainEdgeStyle,
       markerEnd: {
-        type: 'arrowclosed',
-        color: '#00bcd4',
-        ...arrowSize
-      }
+        type: "arrowclosed",
+        color: "#00bcd4",
+        ...arrowSize,
+      },
     });
   }
 
   return { nodes, edges };
 }
 
-
-
-
-
 const parseTokensFromProduct = (product) => {
   const parse = (tokenStr, typeKey) => {
     if (!tokenStr) return [];
 
-    return tokenStr.split(' ').map(entry => {
-      const [type, func, id, p1, p2, p3] = entry.split(':');
-      return {
-        type: type?.toLowerCase() || null,
-        func: func?.toLowerCase() || null,
-        productId: id || product.PRODUCT_ID,
-        param1: p1 || null,
-        param2: p2 || null,
-        param3: p3 || null
-      };
-    }).filter(token => !['preops', 'postops'].includes(token.type));
+    return tokenStr
+      .split(" ")
+      .map((entry) => {
+        const [type, func, id, p1, p2, p3] = entry.split(":");
+        return {
+          type: type?.toLowerCase() || null,
+          func: func?.toLowerCase() || null,
+          productId: id || product.PRODUCT_ID,
+          param1: p1 || null,
+          param2: p2 || null,
+          param3: p3 || null,
+        };
+      })
+      .filter(
+        (token) => !["preops", "postops", "virtualops"].includes(token.type)
+      );
   };
 
   return {
-    activation: parse(product.ACTIVATION_TOKEN, 'activation'),
-    reduction: parse(product.REDUCTION_TOKEN, 'reduction'),
-    shipment: parse(product.SHIPMENT_TOKEN, 'shipment')
+    activation: parse(product.ACTIVATION_TOKEN, "activation"),
+    reduction: parse(product.REDUCTION_TOKEN, "reduction"),
+    shipment: parse(product.SHIPMENT_TOKEN, "shipment"),
   };
 };
 const buildFirstStageMap = (product) => {
@@ -224,7 +231,7 @@ const buildFirstStageMap = (product) => {
   Object.entries(parsed).forEach(([category, tokens]) => {
     if (!firstStage.has(category)) firstStage.set(category, new Map());
 
-    tokens.forEach(token => {
+    tokens.forEach((token) => {
       const productId = token.productId;
       if (!firstStage.get(category).has(productId)) {
         firstStage.get(category).set(productId, []);
@@ -242,7 +249,11 @@ const prepareRegistry = (registry) => {
     const classKey = item.class;
 
     // Skip preops and postops
-    if (classKey === 'PREOPS' || classKey === 'POSTOPS') {
+    if (
+      classKey === "PREOPS" ||
+      classKey === "POSTOPS" ||
+      classKey === "VIRTUALOPS"
+    ) {
       continue;
     }
 
@@ -255,8 +266,6 @@ const prepareRegistry = (registry) => {
   return registryMap;
 };
 
-
-
 function finalPhase(firstStage, route, allProducts) {
   const result = [];
 
@@ -264,26 +273,23 @@ function finalPhase(firstStage, route, allProducts) {
   if (!productMap) return result;
 
   for (const [productId, tokens] of productMap.entries()) {
-
-   const children = tokens.map(token => ({
-  id: `action-${uuidv4()}`,
-  name: token.func,
-  token: token  // ✅ preserve full token object
-}));
-
+    const children = tokens.map((token) => ({
+      id: `action-${uuidv4()}`,
+      name: token.func,
+      token: token, // ✅ preserve full token object
+    }));
 
     result.push({
       id: `prod-${productId}`,
       name: `Product ${productId.slice(0, 4)}`, // or matchingProduct?.NAME
-      type: 'product',
+      type: "product",
       selectedProductId: productId,
-      children
+      children,
     });
   }
 
   return result;
 }
-
 
 // function treeToTokenEncoder(currentTree){
 //   // so for this we need to create a token with format "CLASSID:FUNCTIONID:PORODUCTID:PARAM1:PARAM2:PARAM3
@@ -293,12 +299,12 @@ function finalPhase(firstStage, route, allProducts) {
 //   //work backwards
 // }
 
-
 function treeToTokenEncoder(tree, route) {
   const tokens = [];
 
   for (const product of tree) {
-    if (!product.selectedProductId || !Array.isArray(product.children)) continue;
+    if (!product.selectedProductId || !Array.isArray(product.children))
+      continue;
 
     for (const action of product.children) {
       const t = action.token || {};
@@ -311,7 +317,7 @@ function treeToTokenEncoder(tree, route) {
       const parts = [classId, funcId, productId];
 
       // Only push defined parameters (not null or empty strings)
-      [t.param1, t.param2, t.param3].forEach(p => {
+      [t.param1, t.param2, t.param3].forEach((p) => {
         if (p !== undefined && p !== null && p !== "") {
           parts.push(p);
         }
@@ -324,13 +330,12 @@ function treeToTokenEncoder(tree, route) {
   return tokens.join(" ");
 }
 
-
 const commitChangesIsValid = (currentTree, snapshotTree) => {
   if (!Array.isArray(currentTree) || !Array.isArray(snapshotTree)) return false;
   if (currentTree.length !== snapshotTree.length) return false;
 
-  const productKeys = ['selectedProductId', 'name', 'price', 'category']; // Add any product fields you track
-  const tokenKeys = ['type', 'func', 'productId', 'param1', 'param2', 'param3'];
+  const productKeys = ["selectedProductId", "name", "price", "category"]; // Add any product fields you track
+  const tokenKeys = ["type", "func", "productId", "param1", "param2", "param3"];
 
   for (let i = 0; i < currentTree.length; i++) {
     const currentProduct = currentTree[i];
@@ -338,8 +343,8 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
 
     // 🔍 Compare product-level fields
     for (const key of productKeys) {
-      const curVal = currentProduct[key] || '';
-      const snapVal = snapshotProduct[key] || '';
+      const curVal = currentProduct[key] || "";
+      const snapVal = snapshotProduct[key] || "";
       if (curVal !== snapVal) {
         return false;
       }
@@ -359,8 +364,8 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
       const snapToken = snapChild.token || {};
 
       for (const key of tokenKeys) {
-        const curVal = curToken[key] || '';
-        const snapVal = snapToken[key] || '';
+        const curVal = curToken[key] || "";
+        const snapVal = snapToken[key] || "";
         if (curVal !== snapVal) {
           return false;
         }
@@ -374,7 +379,7 @@ function getAllProductNodes(tree) {
   const result = [];
 
   function traverse(node) {
-    if (node.type === 'product') {
+    if (node.type === "product") {
       result.push(node);
       if (node.children && node.children.length > 0) {
         for (const child of node.children) {
@@ -391,12 +396,12 @@ function getAllProductNodes(tree) {
   return result;
 }
 
-
 const extractFromVisualTree = (tree, route, funcsToMatch) => {
   const result = [];
 
   for (const product of tree) {
-    if (!product.selectedProductId || !Array.isArray(product.children)) continue;
+    if (!product.selectedProductId || !Array.isArray(product.children))
+      continue;
 
     for (const action of product.children) {
       const token = action.token || {};
@@ -405,7 +410,7 @@ const extractFromVisualTree = (tree, route, funcsToMatch) => {
           productID: product.selectedProductId,
           ratio: token.param1 ? parseFloat(token.param1) : null,
           route,
-          func: token.func
+          func: token.func,
         });
       }
     }
@@ -426,7 +431,7 @@ const extractFromTokens = (product, activeRoute, funcsToMatch) => {
           productID: token.productId,
           ratio: token.param1 ? parseFloat(token.param1) : null,
           route,
-          func: token.func
+          func: token.func,
         });
       }
     }
@@ -435,25 +440,26 @@ const extractFromTokens = (product, activeRoute, funcsToMatch) => {
   return result;
 };
 
-
-const handleCommit = async (tree, treeSnapshot, route, setNotification, productID) => {
+const handleCommit = async (
+  tree,
+  treeSnapshot,
+  route,
+  setNotification,
+  productID
+) => {
   const isSame = commitChangesIsValid(tree, treeSnapshot);
   if (isSame) {
-    setNotification({ message: "No changes to commit.", type: 'error' });
+    setNotification({ message: "No changes to commit.", type: "error" });
     return true;
   }
-  
 
-// Detect across all three token types (activation, reduction, shipment)
-const visualPostops = extractFromVisualTree(tree, route, ['29wp', '2a1k']);
-const tokenPostops = extractFromTokens(productID, route, ['29wp', '2a1k']);
+  // Detect across all three token types (activation, reduction, shipment)
+  const visualPostops = extractFromVisualTree(tree, route, ["29wp", "2a1k"]);
+  const tokenPostops = extractFromTokens(productID, route, ["29wp", "2a1k"]);
 
-const allPostops = [...visualPostops, ...tokenPostops];
-
-
+  const allPostops = [...visualPostops, ...tokenPostops];
 
   const updatedToken = treeToTokenEncoder(tree, route);
-  
 
   const dataPacket = {
     route: route,
@@ -461,128 +467,132 @@ const allPostops = [...visualPostops, ...tokenPostops];
     newToken: updatedToken,
     section: "node",
     product: productID,
-  }
-  await http.commitChanges(dataPacket)
+  };
+  await http.commitChanges(dataPacket);
   //section: "form is for the form updates"
 
-  setNotification({ message: "Changes committed and token updated.", type: 'success' });
+  setNotification({
+    message: "Changes committed and token updated.",
+    type: "success",
+  });
   return false;
 };
 
-
-
- 
-
-
-
-function FlowComponentInner({props}) {
-  
- 
-
-
-const [notification, setNotification] = useState({ message: '', type: '' });
-
+function FlowComponentInner({ props }) {
+  const [notification, setNotification] = useState({ message: "", type: "" });
 
   const [tree, setTree] = useState(initialTree);
-  const [treeSnapshot, setTreeSnapshot] = useState(null)
+  const [treeSnapshot, setTreeSnapshot] = useState(null);
   const [rfNodes, setNodes, onNodesChange] = useNodesState([]);
   const [rfEdges, setEdges, onEdgesChange] = useEdgesState([]);
-  const registryMap = prepareRegistry(props.registry)
+  const registryMap = prepareRegistry(props.registry);
   const handleNodeFieldChange = (nodeId, field, value) => {
-  setTree(prevTree => {
-    return prevTree.map(product => {
-      if (product.id === nodeId) {
-        return {
-          ...product,
-          [field]: value
-        };
-      }
-
-      const updatedChildren = product.children.map(child => {
-        if (child.id === nodeId) {
+    setTree((prevTree) => {
+      return prevTree.map((product) => {
+        if (product.id === nodeId) {
           return {
-            ...child,
-            token: {
-              ...child.token,
-              [field]: value
-            }
+            ...product,
+            [field]: value,
           };
         }
-        return child;
-      });
 
-      return {
-        ...product,
-        children: updatedChildren
-      };
+        const updatedChildren = product.children.map((child) => {
+          if (child.id === nodeId) {
+            return {
+              ...child,
+              token: {
+                ...child.token,
+                [field]: value,
+              },
+            };
+          }
+          return child;
+        });
+
+        return {
+          ...product,
+          children: updatedChildren,
+        };
+      });
     });
-  });
-};
+  };
   // useEffect(()=>{
   //     if (props.commitNodeChange === true){ // skip initial mount
 
   // const isValid = handleCommit(tree, treeSnapshot, props.route);
   // setTreeSnapshot(JSON.parse(JSON.stringify(tree)))
-  
+
   //     }
-    
+
   // }, [props.commitNodeChange])
-// useEffect(()=>{
-//   console.log("TREE CHANGED", JSON.stringify(tree, null, 2));
-// }, [tree])
-
-useEffect(() => {
-  if (!props.selectedProduct || !props.products || !props.route) return;
-
-   if (props.refTree) {
-    // 👑 Trust existing visual tree if it exists
-    setTree(props.refTree);
-    setTreeSnapshot(JSON.parse(JSON.stringify(props.refTree)));
-    return;
-  }
-  const firstStage = buildFirstStageMap(props.selectedProduct);
-  const newTree = finalPhase(firstStage, props.route, props.products);
-  
-  setTree(newTree);
-   setTreeSnapshot((prevSnapshot) => {
-    // Only set if snapshot is empty OR product changed
-    const currentSnapshotProductId = prevSnapshot?.[0]?.productId || '';
-    if (props.selectedProduct.PRODUCT_ID !== currentSnapshotProductId) {
-      return JSON.parse(JSON.stringify(newTree)); // deep clone
-    }
-    return prevSnapshot;
-  });
-}, [props.selectedProduct, props.route, props.products]);
-
-
-useEffect(() => {
-  if (notification) {
-    const timer = setTimeout(() => setNotification(''), 2500);
-    return () => clearTimeout(timer);
-  }
-}, [notification]);
+  // useEffect(()=>{
+  //   console.log("TREE CHANGED", JSON.stringify(tree, null, 2));
+  // }, [tree])
 
   useEffect(() => {
-    const { nodes, edges } = buildLayout(tree, props, registryMap, handleNodeFieldChange);
+    if (!props.selectedProduct || !props.products || !props.route) return;
+
+    if (props.refTree) {
+      // 👑 Trust existing visual tree if it exists
+      setTree(props.refTree);
+      setTreeSnapshot(JSON.parse(JSON.stringify(props.refTree)));
+      return;
+    }
+    const firstStage = buildFirstStageMap(props.selectedProduct);
+    const newTree = finalPhase(firstStage, props.route, props.products);
+
+    setTree(newTree);
+    setTreeSnapshot((prevSnapshot) => {
+      // Only set if snapshot is empty OR product changed
+      const currentSnapshotProductId = prevSnapshot?.[0]?.productId || "";
+      if (props.selectedProduct.PRODUCT_ID !== currentSnapshotProductId) {
+        return JSON.parse(JSON.stringify(newTree)); // deep clone
+      }
+      return prevSnapshot;
+    });
+  }, [props.selectedProduct, props.route, props.products]);
+
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(""), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  useEffect(() => {
+    const { nodes, edges } = buildLayout(
+      tree,
+      props,
+      registryMap,
+      handleNodeFieldChange
+    );
     setNodes(nodes);
     setEdges(edges);
   }, [tree]);
 
   const onNodeClick = useCallback((_, node) => {
-    if (node.data.label === '+ Add Product') {
+    if (node.data.label === "+ Add Product") {
       const newProdId = uuidv4();
-      setTree(prev => {
+      setTree((prev) => {
         const newTree = [...prev];
-        newTree.push({ id: newProdId, name: 'New Product', type: 'product', children: [] });
+        newTree.push({
+          id: newProdId,
+          name: "New Product",
+          type: "product",
+          children: [],
+        });
         return newTree;
       });
-    } else if (node.data.label === '+ Add Action') {
-      setTree(prev => {
-        const newTree = prev.map(product => {
+    } else if (node.data.label === "+ Add Action") {
+      setTree((prev) => {
+        const newTree = prev.map((product) => {
           if (`${product.id}-add` === node.id) {
             return {
               ...product,
-              children: [...product.children, { id: uuidv4(), name: 'New Action' }]
+              children: [
+                ...product.children,
+                { id: uuidv4(), name: "New Action" },
+              ],
             };
           }
           return product;
@@ -592,120 +602,147 @@ useEffect(() => {
     }
   }, []);
 
-const onKeyDown = useCallback((e) => {
-  const tag = e.target.tagName.toLowerCase();
-  const isEditable = ['input', 'textarea'].includes(tag) || e.target.isContentEditable;
+  const onKeyDown = useCallback(
+    (e) => {
+      const tag = e.target.tagName.toLowerCase();
+      const isEditable =
+        ["input", "textarea"].includes(tag) || e.target.isContentEditable;
 
-  if (isEditable) return; // ❌ ignore when editing input
+      if (isEditable) return; // ❌ ignore when editing input
 
-  if (e.key === 'Backspace' || e.key === 'Delete') {
-    const selected = rfNodes.find(n => n.selected && n.deletable);
-    if (!selected) return;
+      if (e.key === "Backspace" || e.key === "Delete") {
+        const selected = rfNodes.find((n) => n.selected && n.deletable);
+        if (!selected) return;
 
-    const id = selected.id;
+        const id = selected.id;
 
-    setTree(prev => {
-      const productIndex = prev.findIndex(p => p.id === id);
-      if (productIndex !== -1) {
-        const newTree = [...prev];
-        newTree.splice(productIndex, 1);
-        return newTree;
+        setTree((prev) => {
+          const productIndex = prev.findIndex((p) => p.id === id);
+          if (productIndex !== -1) {
+            const newTree = [...prev];
+            newTree.splice(productIndex, 1);
+            return newTree;
+          }
+
+          return prev.map((product) => ({
+            ...product,
+            children: product.children.filter((c) => c.id !== id),
+          }));
+        });
       }
-
-      return prev.map(product => ({
-        ...product,
-        children: product.children.filter(c => c.id !== id)
-      }));
-    });
-  }
-}, [rfNodes]);
-
+    },
+    [rfNodes]
+  );
 
   return (
-    <div style={{ position: 'relative', width: '95%', height: '600px', borderStyle: "solid", borderWidth: "7px", borderColor: "rgba(0, 28, 62, 0.75)", borderRadius: "10px" }} tabIndex={0} onKeyDown={onKeyDown}>
-  {/* Save Button */}
-  {notification.message && (
-  <div style={{
-    position: 'absolute',
-    top: 15,
-    left: 25,
-    zIndex: 1001,
-    padding: '12px 24px',
-    borderRadius: '12px',
-    background: notification.type === 'error' ? '#c62828' : '#0b00a2ff',
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: '14px',
-    boxShadow: '0px 4px 8px rgba(0,0,0,0.5)',
-    transition: 'opacity 0.3s ease-in-out'
-  }}>
-    {notification.message}
-  </div>
-)}
+    <div
+      style={{
+        position: "relative",
+        width: "95%",
+        height: "600px",
+        borderStyle: "solid",
+        borderWidth: "7px",
+        borderColor: "rgba(0, 28, 62, 0.75)",
+        borderRadius: "10px",
+      }}
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+    >
+      {/* Save Button */}
+      {notification.message && (
+        <div
+          style={{
+            position: "absolute",
+            top: 15,
+            left: 25,
+            zIndex: 1001,
+            padding: "12px 24px",
+            borderRadius: "12px",
+            background: notification.type === "error" ? "#c62828" : "#0b00a2ff",
+            color: "#fff",
+            fontWeight: "bold",
+            fontSize: "14px",
+            boxShadow: "0px 4px 8px rgba(0,0,0,0.5)",
+            transition: "opacity 0.3s ease-in-out",
+          }}
+        >
+          {notification.message}
+        </div>
+      )}
 
+      <button
+        onClick={async () => {
+          const isSame = await handleCommit(
+            tree,
+            treeSnapshot,
+            props.route,
+            setNotification,
+            props.selectedProduct
+          );
 
-  <button
-    onClick={async () => {
-      const isSame = await handleCommit(tree, treeSnapshot, props.route, setNotification, props.selectedProduct);
+          if (!isSame) {
+            props.setRefTree(JSON.parse(JSON.stringify(tree))); // Updates current route's tree
+            setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
+          }
+        }}
+        style={{
+          position: "absolute",
+          top: 15,
+          right: 25,
+          zIndex: 1000,
+          padding: "12px 24px",
+          borderRadius: "12px",
+          background: "linear-gradient(145deg, #2f2f2f, #3e3e3e)",
+          border: "3px solid #00bcd4",
+          color: "#fff",
+          fontWeight: "bold",
+          fontSize: "16px",
+          boxShadow: "0px 4px 8px rgba(0,0,0,0.5)",
+          cursor: "pointer",
+          transition: "all 0.2s ease-in-out",
+        }}
+        onMouseEnter={(e) => (e.target.style.transform = "scale(1.05)")}
+        onMouseLeave={(e) => (e.target.style.transform = "scale(1.0)")}
+      >
+        Save Changes
+      </button>
 
-      if (!isSame) {
-         props.setRefTree(JSON.parse(JSON.stringify(tree))); // Updates current route's tree
-    setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
-      }
-    }}
-    style={{
-      position: 'absolute',
-      top: 15,
-      right: 25,
-      zIndex: 1000,
-      padding: '12px 24px',
-      borderRadius: '12px',
-      background: 'linear-gradient(145deg, #2f2f2f, #3e3e3e)',
-      border: '3px solid #00bcd4',
-      color: '#fff',
-      fontWeight: 'bold',
-      fontSize: '16px',
-      boxShadow: '0px 4px 8px rgba(0,0,0,0.5)',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease-in-out'
-    }}
-    onMouseEnter={(e) => (e.target.style.transform = 'scale(1.05)')}
-    onMouseLeave={(e) => (e.target.style.transform = 'scale(1.0)')}
-  >
-    Save Changes
-  </button>
+      {/* React Flow Canvas */}
+      <ReactFlow
+        nodes={rfNodes}
+        edges={rfEdges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeClick={onNodeClick}
+        nodesDraggable={false}
+        nodeTypes={nodeTypes}
+        style={{ width: "100%", height: "100%", backgroundColor: "#3e5778d4" }}
+        fitView
+      >
+        <MiniMap
+          nodeColor={(node) => {
+            if (node.type === "productNode") return "#886f15ff";
+            if (node.type === "actionNode") return "#b2c781ff";
+            return "#90caf9";
+          }}
+          maskColor="rgba(255, 255, 255, 0.09)"
+          style={{
+            backgroundColor: "#121212f1",
+            border: "1px solid #444",
+            borderRadius: 6,
+          }}
+        />
 
-  {/* React Flow Canvas */}
-  <ReactFlow
-    nodes={rfNodes}
-    edges={rfEdges}
-    onNodesChange={onNodesChange}
-    onEdgesChange={onEdgesChange}
-    onNodeClick={onNodeClick}
-    nodesDraggable={false}
-    nodeTypes={nodeTypes}
-    style={{ width: '100%', height: '100%', backgroundColor: '#3e5778d4' }}
-    fitView
-  >
-    <MiniMap
-  nodeColor={(node) => {
-    if (node.type === 'productNode') return '#886f15ff';
-    if (node.type === 'actionNode') return '#b2c781ff';
-    return '#90caf9';
-  }}
-  maskColor="rgba(255, 255, 255, 0.09)"
-  style={{
-    backgroundColor: '#121212f1',
-    border: '1px solid #444',
-    borderRadius: 6
-  }}
-/>
-
-    <Background variant="dots" gap={16} size={5} color="#4f4c4cf5" style={{ opacity: 0.4 }} />
-    <Controls />
-  </ReactFlow>
-</div>
-
+        <Background
+          variant="dots"
+          gap={16}
+          size={5}
+          color="#4f4c4cf5"
+          style={{ opacity: 0.4 }}
+        />
+        <Controls />
+      </ReactFlow>
+    </div>
   );
 }
 
