@@ -7,6 +7,57 @@ import http_handler from "../../HTTP/HTTPS_INTERFACE";
 
 const http = new http_handler();
 
+// --- helpers to resolve pool links from tokens & state ---
+const VOPS_WHITELIST = new Set(["4i57", "20", "20r4"]); // include all ops you use
+
+function parsePoolLinkFromTokens(tokensStr) {
+  const s = tokensStr ? String(tokensStr) : "";
+  const tokens = s.split(/\s+/).filter(Boolean);
+  for (const t of tokens) {
+    const parts = t.split(":"); // VIRTUALOPS:<op>:<productID>:<poolID>
+    if (parts.length >= 4 && /^VIRTUALOPS$/i.test(parts[0])) {
+      const op = parts[1];
+      if (VOPS_WHITELIST.has(op)) {
+        return { op, productID: parts[2], poolID: parts[3] };
+      }
+    }
+  }
+  return null;
+}
+
+function resolveEffectivePoolId({
+  selectedPoolId,
+  selectedProduct,
+  findCurrentLink,
+}) {
+  // 1) explicit user selection
+  if (selectedPoolId) return selectedPoolId;
+
+  // 2) parse from stored tokens (either activation or shipment)
+  const fromAct = parsePoolLinkFromTokens(
+    selectedProduct?.ACTIVATION_TOKEN
+  )?.poolID;
+  if (fromAct) return fromAct;
+  const fromShp = parsePoolLinkFromTokens(
+    selectedProduct?.SHIPMENT_TOKEN
+  )?.poolID;
+  if (fromShp) return fromShp;
+
+  // 3) authoritative pools table (LINKED_PRODUCTS)
+  const fromPools = findCurrentLink?.(selectedProduct?.PRODUCT_ID)?.poolID;
+  if (fromPools) return fromPools;
+
+  // 4) legacy shapes
+  const legacy =
+    selectedProduct?.poolRef?.poolID ??
+    selectedProduct?.poolRef ??
+    selectedProduct?.POOL_REF ??
+    selectedProduct?.currentPoolRef ??
+    null;
+
+  return legacy || "";
+}
+
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -211,14 +262,17 @@ export default function EditProduct(props) {
 
     setPoolLoading(true);
     try {
-      const res = await http.virtualPoolProductAdd({
+      const payload = {
         poolID: selectedPoolId,
         productID: selectedProduct.PRODUCT_ID,
         normalizeRatio,
         process: "edit",
-      });
+      };
+      console.log("[linkToExistingPool] →", payload);
 
-      if (res?.linkedProduct) {
+      const res = await http.virtualPoolProductAdd(payload);
+
+      if (res?.linkedProduct || res?.statusCode === 10) {
         await refreshPools();
         const updated = {
           ...selectedProduct,
@@ -252,21 +306,22 @@ export default function EditProduct(props) {
 
       if (created?.createdTable) {
         await refreshPools();
+
         // Prefer API returning poolID; fallback: find by name.
         const pools = await http.getVirtualStockPools();
         const createdPool =
           (pools.arr || []).find((p) => p.name === poolName.trim()) || null;
 
-        const poolID = createdPool?.poolID || "";
+        const newPoolId = created?.poolID || createdPool?.poolID || "";
         const updated = {
           ...selectedProduct,
-          poolRef: { poolID, ratio: normalizeRatio },
+          poolRef: { poolID: newPoolId, ratio: normalizeRatio },
         };
         setSelectedProduct(updated);
         setProductList((prev) =>
           prev.map((p) => (p.PRODUCT_ID === updated.PRODUCT_ID ? updated : p))
         );
-        setSelectedPoolId(poolID);
+        setSelectedPoolId(newPoolId);
         setCreatingPool(false);
         setPoolName("");
       } else {
@@ -277,21 +332,30 @@ export default function EditProduct(props) {
     }
   };
 
-  // Remove link (authoritative pool ID from pools, fallback to product)
+  // Remove link (resolves pool id from state/tokens/pools)
   const removeLink = async () => {
     if (!selectedProduct) return;
 
-    const current = findCurrentLink(selectedProduct.PRODUCT_ID);
-    const currentPoolId = current?.poolID ?? getCurrentPoolId(selectedProduct);
-    if (!currentPoolId) return;
+    const currentPoolId = resolveEffectivePoolId({
+      selectedPoolId,
+      selectedProduct,
+      findCurrentLink,
+    });
+    if (!currentPoolId) {
+      console.warn("[removeLink] No poolID resolved; aborting.");
+      return;
+    }
 
     setPoolLoading(true);
     try {
-      const res = await http.virtualPoolProductRemove({
+      const payload = {
         poolID: currentPoolId,
         productID: selectedProduct.PRODUCT_ID,
         process: "edit",
-      });
+      };
+      console.log("[removeLink] →", payload);
+
+      const res = await http.virtualPoolProductRemove(payload);
 
       if (res?.unlinkedProduct) {
         await refreshPools();
