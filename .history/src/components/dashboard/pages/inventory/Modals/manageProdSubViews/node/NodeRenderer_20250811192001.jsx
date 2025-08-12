@@ -206,7 +206,7 @@ const parseTokensFromProduct = (product) => {
         const [type, func, id, p1, p2, p3] = entry.split(":");
         return {
           type: type?.toLowerCase() || null,
-          func: func || null,
+          func: func? || null,
           productId: id || product.PRODUCT_ID,
           param1: p1 || null,
           param2: p2 || null,

@@ -30,7 +30,7 @@ export default function ActionNode({ data, id }) {
     if (selectedClass && data.registryMap) {
       const funcs = data.registryMap.get(selectedClass) || [];
       if (funcs.length === 1) {
-        const onlyId = funcs[0].id;
+        const onlyId = funcs[0].id.toLowerCase();
         setSelectedFunctionId(onlyId);
         data.onFieldChange?.(id, 'func', onlyId);
       }
@@ -39,7 +39,7 @@ export default function ActionNode({ data, id }) {
 
   const availableClasses = classOptionsMap[data.route] || [];
   const availableFunctions = selectedClass && data.registryMap.get(selectedClass) || [];
-  const selectedFunction = availableFunctions.find(fn => fn.id === selectedFunctionId);
+  const selectedFunction = availableFunctions.find(fn => fn.id.toLowerCase() === selectedFunctionId);
 
   return (
     <div style={{
@@ -83,7 +83,7 @@ export default function ActionNode({ data, id }) {
       >
         <option value="">-- Select Function --</option>
         {availableFunctions.map(fn => (
-          <option key={fn.id} value={fn.id}>{fn.name}</option>
+          <option key={fn.id} value={fn.id.toLowerCase()}>{fn.name}</option>
         ))}
       </select>
 

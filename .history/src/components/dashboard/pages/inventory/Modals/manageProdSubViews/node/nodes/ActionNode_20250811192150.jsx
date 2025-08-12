@@ -83,7 +83,7 @@ export default function ActionNode({ data, id }) {
       >
         <option value="">-- Select Function --</option>
         {availableFunctions.map(fn => (
-          <option key={fn.id} value={fn.id}>{fn.name}</option>
+          <option key={fn.id} value={fn.id.toLowerCase()}>{fn.name}</option>
         ))}
       </select>
 
