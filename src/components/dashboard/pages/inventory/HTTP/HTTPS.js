@@ -1,4 +1,4 @@
-const base_url = "http://localhost:3001";
+const base_url = "http://192.168.1.248:3001";
 // http://192.168.1.176:3002
 
 export const getVirtualStockPools = async () => {
