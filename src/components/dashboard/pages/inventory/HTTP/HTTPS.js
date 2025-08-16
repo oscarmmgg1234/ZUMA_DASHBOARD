@@ -1,6 +1,66 @@
-const base_url = "http://192.168.1.248:3001";
+const base_url = "http://localhost:3001";
 // http://192.168.1.176:3002
 
+export const apiRemoveVirtualPool = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/apiRemoveVirtualPool`, options);
+  return await response.json();
+};
+export const apiCreateVirtualPool = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(
+    `${base_url}/apiCreateVirtualStockPool`,
+    options
+  );
+  return await response.json();
+};
+
+export const apiUpdateVirtualLinkedProducts = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/apiUpdateVirtualPoolRefs`, options);
+  return await response.json();
+};
+
+export const apiUpdateVirtualStock = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/apiUpdateVirtualStock`, options);
+  return await response.json();
+};
+export const apiUpdateVirtualPoolName = async (data) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/apiUpdateVirtualPoolName`, options);
+  return await response.json();
+};
 export const getVirtualStockPools = async () => {
   const options = {
     method: "GET",

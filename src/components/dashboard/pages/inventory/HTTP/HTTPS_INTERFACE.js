@@ -31,9 +31,29 @@ import {
   createVirtualPools,
   virtualPoolProductAdd,
   virtualPoolProductRemove,
+  apiCreateVirtualPool,
+  apiRemoveVirtualPool,
+  apiUpdateVirtualLinkedProducts,
+  apiUpdateVirtualPoolName,
+  apiUpdateVirtualStock,
 } from "./HTTPS";
 
 export default class http_handler {
+  api_createVirtualPool = async (args) => {
+    return await apiCreateVirtualPool(args);
+  };
+  api_removeVirtualPool = async (args) => {
+    return await apiRemoveVirtualPool(args);
+  };
+  api_updateVirtualLinkedProducts = async (args) => {
+    return await apiUpdateVirtualLinkedProducts(args);
+  };
+  api_updateVirtualPoolName = async (args) => {
+    return await apiUpdateVirtualPoolName(args);
+  };
+  api_updateVirtualStock = async (args) => {
+    return await apiUpdateVirtualStock(args);
+  };
   getVirtualStockPools = async (args) => {
     return await getVirtualStockPools(args);
   };

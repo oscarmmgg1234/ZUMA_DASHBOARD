@@ -11,6 +11,7 @@ import ProductTracking from "./Modals/ProductTracking";
 import SetGlobalGlycerin from "./Modals/SetGlobalGlycerin";
 import HardwareManager from "./Modals/HardwareManager";
 import ProductHistory from "./Modals/ProductHistory";
+import VirtualStockManagement from "./Modals/VirtualStock";
 
 const Overlay = tw.div`
 
@@ -101,8 +102,13 @@ export default function Inventory() {
   const [hardwareModalVisible, setHardwareModalVisible] = useState(false);
   const [productHistoryModalVisible, setProductHistoryModalVisible] =
     useState(false);
+  const [VirtualStockModalVisible, setVirtualStockModalVisisble] =
+    useState(false);
 
   const closeHandler = (args) => {
+    if (args === "virtualManager") {
+      setVirtualStockModalVisisble(false);
+    }
     if (args === "productHistory") {
       setProductHistoryModalVisible(false);
     }
@@ -139,6 +145,9 @@ export default function Inventory() {
   };
 
   const openHandler = (args) => {
+    if (args === "virtualManager") {
+      setVirtualStockModalVisisble(true);
+    }
     if (args === "productHistory") {
       setProductHistoryModalVisible(true);
     }
@@ -291,8 +300,21 @@ export default function Inventory() {
             </p>
           </SubComponent>
         </Card>
+        <Card onClick={() => openHandler("virtualManager")}>
+          <h2 className="text-black mb-3">Manage Virtual Stocks</h2>
+          <SubComponent>
+            <h3 className="text-gray-800/50">Utility</h3>
+            <p className="text-gray-800/50">
+              Configure and manage product pools
+            </p>
+          </SubComponent>
+        </Card>
       </CardGrid>
 
+      <VirtualStockManagement
+        visible={VirtualStockModalVisible}
+        closeHandler={closeHandler}
+      />
       <ViewInventoryModal
         visible={viewInvModalVisible}
         closeHandler={closeHandler}

@@ -1,323 +1,478 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import BaseModal from "../Modals/Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
-import BaseModal from "./Base";
-import { format } from "date-fns";
+import { format, isAfter, parseISO } from "date-fns";
 
 const http = new http_handler();
 
+/**
+ * ProductHistory — Professional UI/UX refactor
+ * - Searchable product picker modal (filters by NAME/ID; TYPE ∈ {122, 44})
+ * - Date-range inputs with validation
+ * - Fetch history with overlay + banners (no alerts)
+ * - Fullscreen overlay showing grouped-by-day transactions
+ * - Compact stock tables for before/after snapshots
+ */
 export default function ProductHistory(props) {
+  const { visible, closeHandler } = props;
+
+  // Data
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
   const [productHistory, setProductHistory] = useState([]);
-  const [startRange, setStartRange] = useState(
-    format(new Date(), "yyyy-MM-dd")
-  );
-  const [endRange, setEndRange] = useState(format(new Date(), "yyyy-MM-dd"));
+
+  // UI state
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [historyOverlayVisible, setHistoryOverlayVisible] = useState(false);
 
+  const [startRange, setStartRange] = useState(
+    format(new Date(), "yyyy-MM-dd")
+  );
+  const [endRange, setEndRange] = useState(format(new Date(), "yyyy-MM-dd"));
+
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+
+  const [banner, setBanner] = useState("");
+  const [error, setError] = useState("");
+
+  // -------------------- Init --------------------
   useEffect(() => {
-    const init = async () => {
-      const products = await http.getProducts();
-      const sortedProducts = products.data.sort((a, b) =>
-        a.NAME.localeCompare(b.NAME)
-      );
-      const filteredProducts = sortedProducts.filter(
-        (product) => product.TYPE === "122" || product.TYPE === "44"
-      );
-      setProducts(filteredProducts);
-      setFilteredProducts(filteredProducts);
-    };
-    init();
-  }, []);
+    if (!visible) return;
+    (async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await http.getProducts();
+        const sorted = (res?.data || []).sort((a, b) =>
+          String(a.NAME || "").localeCompare(String(b.NAME || ""))
+        );
+        const filtered = sorted.filter(
+          (p) => p.TYPE === "122" || p.TYPE === "44"
+        );
+        setProducts(filtered);
+        setFilteredProducts(filtered);
+      } catch (e) {
+        setError(e?.message || "Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [visible]);
+
+  // -------------------- Derived --------------------
+  const groupedHistory = useMemo(() => {
+    const acc = {};
+    for (const entry of productHistory) {
+      const dayKey = format(new Date(entry.DATE), "yyyy-MM-dd");
+      if (!acc[dayKey]) acc[dayKey] = [];
+      acc[dayKey].push(entry);
+    }
+    return acc; // { '2025-08-14': [entry, ...], ... }
+  }, [productHistory]);
+
+  const totalTransactions = useMemo(
+    () => productHistory.length,
+    [productHistory]
+  );
+
+  // -------------------- Handlers --------------------
+  const openPicker = () => {
+    setProductModalVisible(true);
+    setSearchQuery("");
+    setFilteredProducts(products);
+  };
+
+  const handleSearchChange = (e) => {
+    const q = e.target.value.toLowerCase();
+    setSearchQuery(q);
+    setFilteredProducts(
+      products.filter(
+        (p) =>
+          String(p.NAME || "")
+            .toLowerCase()
+            .includes(q) ||
+          String(p.PRODUCT_ID || "")
+            .toLowerCase()
+            .includes(q)
+      )
+    );
+  };
 
   const handleProductSelect = (product) => {
     setSelectedProduct(product);
     setProductModalVisible(false);
+    setBanner("");
+    setError("");
   };
 
-  const handleSearchChange = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-    const filtered = products.filter((product) =>
-      product.NAME.toLowerCase().includes(query)
-    );
-    setFilteredProducts(filtered);
+  const validateRange = () => {
+    const start = parseISO(startRange);
+    const end = parseISO(endRange);
+    if (isAfter(start, end)) {
+      setError("Start date must be on or before end date");
+      return false;
+    }
+    return true;
   };
 
   const fetchProductHistory = async () => {
     if (!selectedProduct) {
-      return alert("Please select a product");
+      setError("Please select a product first");
+      return;
     }
-    const range = {
-      start: startRange,
-      end: endRange,
-    };
+    if (!validateRange()) return;
+
+    setFetching(true);
+    setError("");
+    setBanner("");
 
     try {
+      const range = { start: startRange, end: endRange };
       const history = await http.getProductHistory(
         selectedProduct.PRODUCT_ID,
         range
       );
 
-      if (history.status) {
-        if (history.data.length === 0) {
-          alert(
-            "No product transaction found during the specified date range."
-          );
-          setProductHistory([]);
-          setHistoryOverlayVisible(false);
-        } else {
-          setProductHistory(history.data);
-          setHistoryOverlayVisible(true);
-        }
+      if (
+        history?.status &&
+        Array.isArray(history?.data) &&
+        history.data.length > 0
+      ) {
+        setProductHistory(history.data);
+        setHistoryOverlayVisible(true);
       } else {
-        alert("No product transaction found during the specified date range.");
         setProductHistory([]);
         setHistoryOverlayVisible(false);
+        setBanner("No product transactions in the specified date range.");
       }
-    } catch (error) {
-      console.error("Failed to fetch product history:", error);
-      alert(
-        "An error occurred while fetching the product history. Please try again later."
+    } catch (e) {
+      setError(
+        e?.message || "An error occurred while fetching product history"
       );
+    } finally {
+      setFetching(false);
     }
   };
 
-  const renderProductModal = () => (
-    <BaseModal
-      visible={productModalVisible}
-      closeHandler={() => setProductModalVisible(false)}
-      title={"Select Product"}
-    >
-      <div className="p-4">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={handleSearchChange}
-          placeholder="Search products..."
-          className="w-full p-2 mb-4 border border-gray-300 rounded text-black"
-        />
-        <div className="max-h-80 overflow-y-auto">
-          {filteredProducts.map((product, index) => (
-            <div
-              key={product.PRODUCT_ID}
-              className={`p-3 mb-2 rounded-md cursor-pointer transition-colors duration-300 
-                ${
-                  product.PRODUCT_ID === selectedProduct?.PRODUCT_ID
-                    ? "bg-blue-100 border-l-4 border-blue-500"
-                    : index % 2 === 0
-                    ? "bg-white hover:bg-gray-100"
-                    : "bg-gray-100 hover:bg-gray-200"
-                }`}
-              onClick={() => handleProductSelect(product)}
-            >
-              <p className="font-semibold text-gray-800">{product.NAME}</p>
-              <p className="text-sm text-gray-600">ID: {product.PRODUCT_ID}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </BaseModal>
+  // -------------------- UI helpers --------------------
+  const Spinner = () => (
+    <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
   );
 
-  const renderStockTable = (stockData) => {
-    return (
-      <table className="w-full text-xs text-left text-gray-700 mt-2">
-        <thead>
+  const Overlay = ({ show, label }) =>
+    show ? (
+      <div className="absolute inset-0 z-10 grid place-items-center bg-white/60 backdrop-blur-sm">
+        <div className="flex items-center gap-3 rounded-xl bg-white px-4 py-2 shadow">
+          <Spinner />
+          <span className="text-sm text-gray-700">{label || "Working..."}</span>
+        </div>
+      </div>
+    ) : null;
+
+  const Badge = ({ tone = "slate", children }) => (
+    <span
+      className={`rounded-full bg-${tone}-50 px-2 py-0.5 text-[10px] font-medium text-${tone}-700`}
+    >
+      {children}
+    </span>
+  );
+  // If Tailwind purge is strict, whitelist these classes or inline variants.
+
+  const StockTable = ({ data }) => (
+    <div className="mt-2 overflow-hidden rounded-xl border border-gray-200">
+      <table className="min-w-full text-left text-xs">
+        <thead className="bg-gray-50 text-[10px] uppercase text-gray-500">
           <tr>
-            <th className="border px-2 py-1">Product Name</th>
-            <th className="border px-2 py-1">Stock</th>
-            <th className="border px-2 py-1">Stored Stock</th>
-            <th className="border px-2 py-1">Active Stock</th>
+            <th className="px-3 py-2">Product Name</th>
+            <th className="px-3 py-2">Stock</th>
+            <th className="px-3 py-2">Stored</th>
+            <th className="px-3 py-2">Active</th>
           </tr>
         </thead>
         <tbody>
-          {stockData.map((item, index) => (
-            <tr key={index}>
-              <td className="border px-2 py-1 text-black">
-                {item.product_name}
-              </td>
-              <td className="border px-2 py-1">{item.stock}</td>
-              <td className="border px-2 py-1">{item.stored}</td>
-              <td className="border px-2 py-1">{item.active}</td>
+          {data.map((row, idx) => (
+            <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+              <td className="px-3 py-2 text-gray-900">{row.product_name}</td>
+              <td className="px-3 py-2">{row.stock}</td>
+              <td className="px-3 py-2">{row.stored}</td>
+              <td className="px-3 py-2">{row.active}</td>
             </tr>
           ))}
         </tbody>
       </table>
-    );
-  };
+    </div>
+  );
 
-  const groupedHistory = productHistory.reduce((acc, entry) => {
-    const entryDate = new Date(entry.DATE);
-    const dayKey = format(entryDate, "yyyy-MM-dd");
-    if (!acc[dayKey]) {
-      acc[dayKey] = [];
-    }
-    acc[dayKey].push(entry);
-    return acc;
-  }, {});
-
-  const getTotalTransactions = () => {
-    let total = 0;
-    for (const product in productHistory) {
-      total += 1;
-    }
-    return total;
-  };
-  const renderHistory = () => {
-    const dayEntries = Object.keys(groupedHistory)
-      .sort((a, b) => new Date(b) - new Date(a)) // Sort by most recent date
-      .map((dayKey) => {
-        const entries = groupedHistory[dayKey];
-        return (
-          <div
-            key={dayKey}
-            className="mb-6 bg-white rounded-lg p-4 shadow-md border border-orange-200 bg-orange-50"
-          >
-            <h3 className="font-bold text-lg text-gray-700 mb-4">
-              {format(new Date(dayKey), "eeee, MMMM do, yyyy")}
-            </h3>
-            {entries.map((entry, index) => (
-              <div key={index} className="border-b border-gray-200 py-2">
-                <p className="text-xs text-gray-600">
-                  Transaction ID: {entry.TRANSACTIONID}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Employee: {entry.EMPLOYEE_NAME}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Product Name: {entry.PRODUCT_NAME}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Source Quantity: {entry.QUANTITY}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Protocol Reference: {entry.ACTION}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Status:{" "}
-                  {entry.REVERSED == 0 ? "Committed" : "Error and Reverted"}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Date: {format(new Date(entry.DATE), "yyyy-MM-dd HH:mm:ss")}
-                </p>
-                {entry.before_stock && (
-                  <>
-                    <p className="text-sm font-semibold text-gray-700 mt-2">
-                      Before Stock:
-                    </p>
-                    {renderStockTable(entry.before_stock)}
-                  </>
-                )}
-                {entry.after_stock && (
-                  <>
-                    <p className="text-sm font-semibold text-gray-700 mt-2">
-                      After Stock:
-                    </p>
-                    {renderStockTable(entry.after_stock)}
-                  </>
+  const DaySection = ({ dayKey, entries }) => (
+    <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+      <h3 className="mb-3 text-base font-bold text-gray-800">
+        {format(new Date(dayKey), "eeee, MMMM do, yyyy")}
+      </h3>
+      <div className="divide-y divide-gray-200">
+        {entries.map((entry, i) => (
+          <div key={`${entry.TRANSACTIONID}-${i}`} className="py-3">
+            <div className="mb-2 grid grid-cols-1 gap-2 md:grid-cols-3">
+              <div className="text-sm text-gray-700">
+                <div>
+                  <span className="font-medium">Transaction:</span>{" "}
+                  {entry.TRANSACTIONID}
+                </div>
+                <div>
+                  <span className="font-medium">Protocol:</span> {entry.ACTION}
+                </div>
+              </div>
+              <div className="text-sm text-gray-700">
+                <div>
+                  <span className="font-medium">Employee:</span>{" "}
+                  {entry.EMPLOYEE_NAME}
+                </div>
+                <div>
+                  <span className="font-medium">Date:</span>{" "}
+                  {format(new Date(entry.DATE), "yyyy-MM-dd HH:mm:ss")}
+                </div>
+              </div>
+              <div className="text-sm text-gray-700 flex items-center gap-2">
+                <span className="font-medium">Status:</span>
+                {Number(entry.REVERSED) === 0 ? (
+                  <Badge tone="emerald">Committed</Badge>
+                ) : (
+                  <Badge tone="rose">Error & Reverted</Badge>
                 )}
               </div>
-            ))}
+            </div>
+
+            <div className="mt-2 text-sm text-gray-700">
+              <div>
+                <span className="font-medium">Product:</span>{" "}
+                {entry.PRODUCT_NAME}
+              </div>
+              <div>
+                <span className="font-medium">Source Quantity:</span>{" "}
+                {entry.QUANTITY}
+              </div>
+            </div>
+
+            {Array.isArray(entry.before_stock) &&
+              entry.before_stock.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Before Stock
+                  </div>
+                  <StockTable data={entry.before_stock} />
+                </div>
+              )}
+            {Array.isArray(entry.after_stock) &&
+              entry.after_stock.length > 0 && (
+                <div className="mt-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    After Stock
+                  </div>
+                  <StockTable data={entry.after_stock} />
+                </div>
+              )}
           </div>
-        );
-      });
-    return dayEntries;
-  };
+        ))}
+      </div>
+    </div>
+  );
 
-  const FullPageOverlay = ({ visible, onClose, children }) => {
+  const HistoryOverlay = ({ visible, onClose }) => {
     if (!visible) return null;
-
+    const days = Object.keys(groupedHistory).sort(
+      (a, b) => new Date(b) - new Date(a)
+    );
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-        <div className="bg-white w-full h-full p-5 overflow-y-auto relative">
-          <button
-            className="fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-md z-10"
-            onClick={onClose}
-          >
-            Back
-          </button>
-          <div className="mt-16">
-            <div className="mb-4 p-4 bg-blue-100 border-l-4 border-blue-500 rounded-md">
-              <h2 className="font-semibold text-gray-800 text-lg">
-                Product: {selectedProduct.NAME}
-              </h2>
-              <p className="text-sm text-gray-600">
-                Date Range: {startRange} to {endRange}
-              </p>
-              <p className="text-sm text-gray-600">
-                Total Transactions: {getTotalTransactions()}
-              </p>
-            </div>{" "}
-            {/* This adds space below the Back button */}
-            {children}
+      <div className="fixed inset-0 z-50 bg-black/50 p-4">
+        <div className="relative mx-auto h-full w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-xl">
+          <div className="sticky top-0 z-[1] flex items-center justify-between border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur">
+            <div>
+              <div className="text-sm font-semibold text-gray-900">
+                {selectedProduct?.NAME}
+              </div>
+              <div className="text-xs text-gray-500">
+                ID:{" "}
+                <span className="font-mono">{selectedProduct?.PRODUCT_ID}</span>{" "}
+                • Range: {startRange} → {endRange} • Transactions:{" "}
+                {totalTransactions}
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              Close
+            </button>
+          </div>
+          <div className="h-[75vh] overflow-auto p-4">
+            {days.length === 0 ? (
+              <div className="grid place-items-center py-20 text-sm text-gray-500">
+                No history
+              </div>
+            ) : (
+              days.map((dayKey) => (
+                <DaySection
+                  key={dayKey}
+                  dayKey={dayKey}
+                  entries={groupedHistory[dayKey]}
+                />
+              ))
+            )}
           </div>
         </div>
       </div>
     );
   };
 
+  // -------------------- Render --------------------
   return (
     <BaseModal
-      visible={props.visible}
-      closeHandler={props.closeHandler}
+      visible={visible}
+      closeHandler={closeHandler}
       title={"Product History"}
       closeName={"productHistory"}
     >
-      <div className="p-5 bg-gray-100">
-        <div className="mb-5 p-4 bg-white rounded-lg shadow-md">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Start Date:
-          </label>
-          <input
-            type="date"
-            className="border border-gray-300 rounded-md p-2 text-sm w-full mb-4 text-black"
-            value={startRange}
-            onChange={(e) => setStartRange(e.target.value)}
-            placeholder="YYYY-MM-DD"
-          />
-          <label className="block text-sm font-semibold text-gray-700 mb-2 text-black">
-            End Date:
-          </label>
-          <input
-            type="date"
-            className="border border-gray-300 rounded-md p-2 text-sm w-full mb-4 text-black"
-            value={endRange}
-            onChange={(e) => setEndRange(e.target.value)}
-            placeholder="YYYY-MM-DD"
-          />
-          <button
-            className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition mb-4"
-            onClick={() => setProductModalVisible(true)}
-          >
-            Select Product
-          </button>
-          {selectedProduct && (
-            <div className="p-2 bg-gray-200 rounded-md mb-4">
-              <p className="font-semibold text-black">Selected Product:</p>
-              <p className="text-black">{selectedProduct.NAME}</p>
-              <p className="text-sm text-gray-600">
-                ID: {selectedProduct.PRODUCT_ID}
-              </p>
+      <div className="relative">
+        <Overlay
+          show={loading || fetching}
+          label={loading ? "Loading products..." : "Fetching history..."}
+        />
+
+        <div className="p-4">
+          {banner && (
+            <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {banner}
             </div>
           )}
-          <button
-            className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition"
-            onClick={fetchProductHistory}
-          >
-            Fetch History
-          </button>
+          {error && (
+            <div className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </div>
+          )}
+
+          <div className="mx-auto w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-900/20"
+                  value={startRange}
+                  onChange={(e) => setStartRange(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-900/20"
+                  value={endRange}
+                  onChange={(e) => setEndRange(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <button
+                className="rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                onClick={openPicker}
+              >
+                {selectedProduct ? "Change Product" : "Select Product"}
+              </button>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                {selectedProduct ? (
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="truncate">{selectedProduct.NAME}</span>
+                    <span className="font-mono text-xs text-gray-500">
+                      {selectedProduct.PRODUCT_ID}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-gray-500">No product selected</span>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-end">
+              <button
+                className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+                onClick={fetchProductHistory}
+                disabled={fetching}
+              >
+                {fetching ? (
+                  <>
+                    <Spinner /> Fetching
+                  </>
+                ) : (
+                  "Fetch History"
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-        <FullPageOverlay
+
+        {/* Product Picker Modal */}
+        <BaseModal
+          visible={productModalVisible}
+          closeHandler={() => setProductModalVisible(false)}
+          title={"Select Product"}
+        >
+          <div className="p-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search products by name or ID..."
+              className="mb-3 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-gray-900/20"
+            />
+            <div className="max-h-80 overflow-auto rounded-2xl border border-gray-200">
+              {filteredProducts.length === 0 ? (
+                <div className="grid place-items-center p-6 text-sm text-gray-500">
+                  No results
+                </div>
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {filteredProducts.map((product) => (
+                    <li
+                      key={product.PRODUCT_ID}
+                      className={`cursor-pointer px-3 py-2 hover:bg-gray-50 ${
+                        selectedProduct?.PRODUCT_ID === product.PRODUCT_ID
+                          ? "bg-blue-50"
+                          : "bg-white"
+                      }`}
+                      onClick={() => handleProductSelect(product)}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-medium text-gray-900">
+                            {product.NAME}
+                          </div>
+                          <div className="truncate font-mono text-[11px] text-gray-500">
+                            {product.PRODUCT_ID}
+                          </div>
+                        </div>
+                        <Badge tone="indigo">{product.TYPE}</Badge>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </BaseModal>
+
+        {/* History Fullscreen Overlay */}
+        <HistoryOverlay
           visible={historyOverlayVisible}
           onClose={() => setHistoryOverlayVisible(false)}
-        >
-          {renderHistory()}
-        </FullPageOverlay>
-        {renderProductModal()}
+        />
       </div>
     </BaseModal>
   );
