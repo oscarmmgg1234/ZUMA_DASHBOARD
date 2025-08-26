@@ -73,65 +73,9 @@ function Modal({ open, onClose, children }) {
 }
 
 const runtimeTestHandler = async (productID) => {
-  // Open synchronously so popups aren't blocked
-  const win = window.open("", "_blank"); // 2nd arg must be a name/target
-  if (!win) {
-    alert("Popup blocked. Please allow popups for this site.");
-    return;
-  }
-
-  // Temporary placeholder UI
-  win.document.open();
-  win.document.write(`<!doctype html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Generating Test Report</title>
-        <style>
-          body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; height:100vh; display:grid; place-items:center; color:#111; }
-          .wrap { text-align:center; }
-          .spinner { width:42px; height:42px; border:4px solid #ddd; border-top-color:#4f46e5; border-radius:50%; animation:spin 1s linear infinite; margin:12px auto 0; }
-          @keyframes spin { to { transform: rotate(360deg); } }
-        </style>
-      </head>
-      <body>
-        <div class="wrap">
-          <h1>Generating Test Report…</h1>
-          <div class="spinner"></div>
-        </div>
-      </body>
-    </html>`);
-  win.document.close();
-
-  try {
-    // Fetch the full HTML document from your API
-    const html = await http.runtimeTest({ productID }); // must return a string (use res.text() on fetch)
-
-    // Navigate the opened tab to a Blob URL (most reliable cross-browser)
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    win.location.replace(url);
-
-    // Cleanup later
-    setTimeout(() => URL.revokeObjectURL(url), 120_000);
-  } catch (err) {
-    const esc = (s) =>
-      String(s)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;");
-
-    // Render error in the same tab
-    win.document.open();
-    win.document.write(`<!doctype html><meta charset="utf-8" />
-      <title>Report Error</title>
-      <style>body{font-family:system-ui;padding:24px;color:#111}</style>
-      <h1>Report Error</h1><pre>${esc(
-        err?.stack || err?.message || err
-      )}</pre>`);
-    win.document.close();
-  }
-};
+  const data  = http.runtimeTest({productID: productID })
+  //open 
+}
 
 export default function EditProduct(props) {
   const [productList, setProductList] = useState([]);
@@ -827,18 +771,12 @@ export default function EditProduct(props) {
             <select
               value={route}
               onChange={(e) => setRoute(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded text-black mb-4"
+              className="w-full p-2 border border-gray-300 rounded text-black"
             >
               <option value="activation">Activation</option>
               <option value="reduction">Reduction</option>
               <option value="shipment">Shipment</option>
             </select>
-            <button
-              onClick={() => runtimeTestHandler(selectedProduct.PRODUCT_ID)}
-              className="w-full p-3 bg-blue-600 hover:bg-blue-700 text-white rounded text-md font-semibold shadow transition duration-150"
-            >
-              Run Token Test
-            </button>
           </div>
 
           <NodeRenderer

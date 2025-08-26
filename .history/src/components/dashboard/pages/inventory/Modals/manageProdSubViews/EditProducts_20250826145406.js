@@ -73,57 +73,34 @@ function Modal({ open, onClose, children }) {
 }
 
 const runtimeTestHandler = async (productID) => {
-  // Open synchronously so popups aren't blocked
-  const win = window.open("", "_blank"); // 2nd arg must be a name/target
+  // Open tab synchronously so it isn’t popup-blocked
+  const win = window.open("", "_blank", "noopener,noreferrer");
   if (!win) {
     alert("Popup blocked. Please allow popups for this site.");
     return;
   }
 
-  // Temporary placeholder UI
+  // Optional placeholder
   win.document.open();
-  win.document.write(`<!doctype html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <title>Generating Test Report</title>
-        <style>
-          body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; height:100vh; display:grid; place-items:center; color:#111; }
-          .wrap { text-align:center; }
-          .spinner { width:42px; height:42px; border:4px solid #ddd; border-top-color:#4f46e5; border-radius:50%; animation:spin 1s linear infinite; margin:12px auto 0; }
-          @keyframes spin { to { transform: rotate(360deg); } }
-        </style>
-      </head>
-      <body>
-        <div class="wrap">
-          <h1>Generating Test Report…</h1>
-          <div class="spinner"></div>
-        </div>
-      </body>
-    </html>`);
+  win.document.write(`<!doctype html><meta charset="utf-8">
+    <title>Generating report…</title>
+    <style>body{font-family:system-ui;padding:24px;color:#111}</style>
+    <h2>Generating report…</h2>`);
   win.document.close();
 
   try {
-    // Fetch the full HTML document from your API
-    const html = await http.runtimeTest({ productID }); // must return a string (use res.text() on fetch)
-
-    // Navigate the opened tab to a Blob URL (most reliable cross-browser)
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    win.location.replace(url);
-
-    // Cleanup later
-    setTimeout(() => URL.revokeObjectURL(url), 120_000);
+    const html = await http.runtimeTest({ productID }); // <- string now
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
   } catch (err) {
     const esc = (s) =>
       String(s)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;");
-
-    // Render error in the same tab
     win.document.open();
-    win.document.write(`<!doctype html><meta charset="utf-8" />
+    win.document.write(`<!doctype html><meta charset="utf-8">
       <title>Report Error</title>
       <style>body{font-family:system-ui;padding:24px;color:#111}</style>
       <h1>Report Error</h1><pre>${esc(

@@ -245,7 +245,7 @@ export const runtimeTest = async (data) => {
     body: JSON.stringify(data),
   };
   const response = await fetch(`${base_url}/runtimeTest`, options);
-  return await response.text();
+  return response.text();
 };
 
 export const fetchRegistry = async () => {
