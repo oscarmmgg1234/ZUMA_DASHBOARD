@@ -481,7 +481,7 @@ export default function ViewInventoryModal(props) {
                   <th className="px-4 py-2 border">Active Stock</th>
                   <th className="px-4 py-2 border">Stored Stock</th>
                   <th className="px-4 py-2 border">
-                    Today's Reduction Rate (hr/day)
+                    {"Today's Reduction Rate (hr/day)"}
                   </th>
                 </tr>
               </thead>
