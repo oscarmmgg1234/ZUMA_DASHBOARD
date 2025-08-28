@@ -1,18 +1,17 @@
-const base_url = "http://localhost:3001";
+const base_url = "http://192.168.1.248:3001";
 // http://192.168.1.176:3002
 
-
 export const tokenPreCheck = async (data) => {
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    };
-    const response = await fetch(`${base_url}/tokenPreCheck`, options);
-    return await response.json();
-}
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  };
+  const response = await fetch(`${base_url}/tokenPreCheck`, options);
+  return await response.json();
+};
 
 export const apiRemoveVirtualPool = async (data) => {
   const options = {
