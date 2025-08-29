@@ -660,7 +660,7 @@ export default function CustomProduct(props) {
                 checked={needBarcode}
                 onChange={(e) => setNeedBarcode(e.target.checked)}
               />
-              {"Needs Barcode For Shipment"}
+              {"Need Barcode (for shen "}
             </label>
           </div>
 

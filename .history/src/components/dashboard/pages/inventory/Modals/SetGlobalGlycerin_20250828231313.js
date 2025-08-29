@@ -8,20 +8,6 @@ const Spinner = () => (
   <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent align-[-2px]" />
 );
 
-// 8-char UUID (4 random bytes → hex)
-function genId8() {
-  const bytes = new Uint8Array(4);
-  if (globalThis.crypto?.getRandomValues) {
-    globalThis.crypto.getRandomValues(bytes);
-  } else {
-    // fallback (non-crypto) — fine for UI ids; DB still validates uniqueness
-    for (let i = 0; i < 4; i++) bytes[i] = Math.floor(Math.random() * 256);
-  }
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 export default function SetGlobalGlycerin({ visible, closeHandler }) {
   // section toggles
   const [open, setOpen] = useState({
@@ -491,7 +477,7 @@ export default function SetGlobalGlycerin({ visible, closeHandler }) {
     <BaseModal
       visible={visible}
       closeHandler={closeHandler}
-      title="System Global Configurations"
+      title="Set Global Glycerin"
       closeName="GlobalGlycerin"
     >
       <div className="space-y-4 p-4 text-black">
@@ -570,7 +556,7 @@ export default function SetGlobalGlycerin({ visible, closeHandler }) {
                   <span className="font-medium">
                     {Number.isFinite(glyParsed) ? glyParsed : "N"}
                   </span>
-                  {" × 3785.41 = "}
+                  {" × 3555 = "}
                   <span className="font-medium">{glyPreview ?? "—"}</span>
                 </p>
               </div>
@@ -920,25 +906,26 @@ function CompaniesPanel({
 }
 
 /* ---------- Creating Rows ---------- */
+
 function CreateTypeRow({ onCreate, creating }) {
-  const [draft, setDraft] = useState({ TYPE: "", DESCRIPTION: "", RISK: "" });
-
-  const handleCreate = () => {
-    const TYPE_ID = genId8();
-    onCreate({ ...draft, TYPE_ID });
-  };
-
+  const [draft, setDraft] = useState({
+    TYPE_ID: "",
+    TYPE: "",
+    DESCRIPTION: "",
+    RISK: "",
+  });
   return (
     <div className="rounded-xl border border-gray-200 p-3 text-black">
-      <div className="flex items-center justify-between">
-        <div className="text-xs font-semibold uppercase text-gray-600">
-          Create Type
-        </div>
-        <div className="text-[11px] text-gray-500">
-          ID will be auto-generated (8 chars)
-        </div>
+      <div className="text-xs font-semibold uppercase text-gray-600">
+        Create Type
       </div>
-      <div className="mt-2 grid gap-2 md:grid-cols-3">
+      <div className="mt-2 grid gap-2 md:grid-cols-4">
+        <input
+          className="rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          placeholder="TYPE_ID *"
+          value={draft.TYPE_ID}
+          onChange={(e) => setDraft((s) => ({ ...s, TYPE_ID: e.target.value }))}
+        />
         <input
           className="rounded-xl border border-gray-300 px-3 py-2 text-sm"
           placeholder="TYPE *"
@@ -962,8 +949,8 @@ function CreateTypeRow({ onCreate, creating }) {
           />
           <button
             className="rounded-xl px-3 py-2 text-sm font-medium bg-black text-white hover:bg-gray-800 disabled:opacity-50"
-            onClick={handleCreate}
-            disabled={creating || !draft.TYPE.trim()}
+            onClick={() => onCreate(draft)}
+            disabled={creating}
           >
             {creating ? "Creating…" : "Create"}
           </button>
@@ -975,28 +962,26 @@ function CreateTypeRow({ onCreate, creating }) {
 
 function CreateCompanyRow({ onCreate, creating }) {
   const [draft, setDraft] = useState({
+    COMPANY_ID: "",
     NAME: "",
     ADDRESS: "",
     TYPE: "",
     PHONE: "",
   });
-
-  const handleCreate = () => {
-    const COMPANY_ID = genId8();
-    onCreate({ ...draft, COMPANY_ID });
-  };
-
   return (
     <div className="rounded-xl border border-gray-200 p-3 text-black">
-      <div className="flex items-center justify-between">
-        <div className="text-xs font-semibold uppercase text-gray-600">
-          Create Company
-        </div>
-        <div className="text-[11px] text-gray-500">
-          ID will be auto-generated (8 chars)
-        </div>
+      <div className="text-xs font-semibold uppercase text-gray-600">
+        Create Company
       </div>
-      <div className="mt-2 grid gap-2 md:grid-cols-4">
+      <div className="mt-2 grid gap-2 md:grid-cols-5">
+        <input
+          className="rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          placeholder="COMPANY_ID *"
+          value={draft.COMPANY_ID}
+          onChange={(e) =>
+            setDraft((s) => ({ ...s, COMPANY_ID: e.target.value }))
+          }
+        />
         <input
           className="rounded-xl border border-gray-300 px-3 py-2 text-sm"
           placeholder="NAME *"
@@ -1024,8 +1009,8 @@ function CreateCompanyRow({ onCreate, creating }) {
           />
           <button
             className="rounded-xl px-3 py-2 text-sm font-medium bg-black text-white hover:bg-gray-800 disabled:opacity-50"
-            onClick={handleCreate}
-            disabled={creating || !draft.NAME.trim()}
+            onClick={() => onCreate(draft)}
+            disabled={creating}
           >
             {creating ? "Creating…" : "Create"}
           </button>

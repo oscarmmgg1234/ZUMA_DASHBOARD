@@ -17,9 +17,7 @@ function genId8() {
     // fallback (non-crypto) — fine for UI ids; DB still validates uniqueness
     for (let i = 0; i < 4; i++) bytes[i] = Math.floor(Math.random() * 256);
   }
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 export default function SetGlobalGlycerin({ visible, closeHandler }) {
@@ -973,6 +971,7 @@ function CreateTypeRow({ onCreate, creating }) {
   );
 }
 
+
 function CreateCompanyRow({ onCreate, creating }) {
   const [draft, setDraft] = useState({
     NAME: "",
@@ -1034,6 +1033,7 @@ function CreateCompanyRow({ onCreate, creating }) {
     </div>
   );
 }
+
 
 /* ---------- Detail Cards with selection ---------- */
 
