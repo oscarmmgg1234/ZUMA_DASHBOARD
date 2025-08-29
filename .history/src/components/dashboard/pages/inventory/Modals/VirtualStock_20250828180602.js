@@ -7,13 +7,7 @@
 
  Virtual Stock Manager UI — single-file, drop-in component
 */
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
@@ -185,7 +179,7 @@ export default function VirtualStockManagement(props) {
           {/* Create */}
           <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
-              <SectionTitle>Create a Pool</SectionTitle>
+              <SectionTitle >Create a Pool</SectionTitle>
             </div>
             <form
               onSubmit={onCreate}
@@ -375,15 +369,11 @@ function PoolRow({ pool, onChanged, allProducts = [] }) {
   };
 
   return (
-    <div
-      className={`relative overflow-hidden rounded-2xl border border-gray-200 p-4 shadow-sm transition-colors ${
-        open ? "bg-gray-200" : "bg-white"
-      }`}
-    >
+    <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
       <Overlay show={busy} label="Updating..." />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between ">
-        <div className="flex items-center gap-3 ">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3 bg-black">
           <button
             onClick={() => setOpen((s) => !s)}
             className="grid h-8 w-8 place-items-center rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -463,7 +453,7 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
   const [ratio, setRatio] = useState("1");
 
   const inputRef = useRef(null);
-  const anchorRef = useRef(null); // wraps the input; used to compute dropdown position
+  const anchorRef = useRef(null);   // wraps the input; used to compute dropdown position
   const popRef = useRef(null);
 
   // --- Map PRODUCT_ID -> NAME for fast lookup ---
@@ -503,21 +493,17 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
     if (!anchor) return;
 
     const rect = anchor.getBoundingClientRect();
-    const viewportH =
-      window.innerHeight || document.documentElement.clientHeight;
+    const viewportH = window.innerHeight || document.documentElement.clientHeight;
 
     const desired = 320; // px
-    const gap = 6; // px between input and list
+    const gap = 6;       // px between input and list
     const spaceBelow = viewportH - (rect.top + rect.height) - 8;
     const spaceAbove = rect.top - 8;
 
     const canOpenDown = spaceBelow >= 120; // heuristic
     const openUp = !canOpenDown && spaceAbove > spaceBelow;
 
-    const maxHeight = Math.min(
-      desired,
-      openUp ? spaceAbove - gap : spaceBelow - gap
-    );
+    const maxHeight = Math.min(desired, openUp ? spaceAbove - gap : spaceBelow - gap);
 
     setPopStyle({
       top: openUp ? rect.top - maxHeight - gap : rect.top + rect.height + gap,
@@ -559,8 +545,7 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
       setOpen(false);
     };
     document.addEventListener("pointerdown", onDocPointerDown, true);
-    return () =>
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onDocPointerDown, true);
   }, [open]);
 
   // Keyboard handling
@@ -708,22 +693,15 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
                 const id = String(l.productID ?? "");
                 const displayName = nameById.get(id) || "Unnamed";
                 return (
-                  <tr
-                    key={`${id}-${idx}`}
-                    className="odd:bg-white even:bg-gray-50"
-                  >
+                  <tr key={`${id}-${idx}`} className="odd:bg-white even:bg-gray-50">
                     <td className="px-3 py-2">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {displayName}
-                        </span>
+                        <span className="text-sm font-medium">{displayName}</span>
                         {/* Uncomment if you want to also show ID */}
                         {/* <span className="font-mono text-[11px] text-gray-500">{id}</span> */}
                       </div>
                     </td>
-                    <td className="px-3 py-2">
-                      {String(l.normalizeRatio ?? 1)}
-                    </td>
+                    <td className="px-3 py-2">{String(l.normalizeRatio ?? 1)}</td>
                     <td className="px-3 py-2 text-xs text-gray-500">
                       {Array.isArray(l.meta_data) && l.meta_data.length > 0
                         ? `${l.meta_data.length} entries`

@@ -3,74 +3,7 @@ const base_url = "http://localhost:3001";
 
 
 
-export const updateTypeInfo = async (data) => {
-  const res = await fetch(`${base_url}/updateTypeInfo`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return await res.json();
-};
 
-export const manageTypes = async (data) => {
-  const res = await fetch(`${base_url}/manageTypes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return await res.json();
-};
-
-export const updateProductType = async (data) => {
-  const res = await fetch(`${base_url}/updateProductType`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return await res.json();
-};
-
-export const getTypesWithProducts = async () => {
-  const res = await fetch(`${base_url}/getTypesWithProducts`, {
-    method: "GET",
-  });
-  return await res.json();
-};
-
-// --- COMPANY HELPERS ---
-export const updateCompanyInfo = async (data) => {
-  const res = await fetch(`${base_url}/updateCompanyInfo`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return await res.json();
-};
-
-export const manageCompanies = async (data) => {
-  const res = await fetch(`${base_url}/manageCompanies`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return await res.json();
-};
-
-export const updateProductCompany = async (data) => {
-  const res = await fetch(`${base_url}/updateProductCompany`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return await res.json();
-};
-
-export const getCompaniesWithProducts = async () => {
-  const res = await fetch(`${base_url}/getCompaniesWithProducts`, {
-    method: "GET",
-  });
-  return await res.json();
-};
 
 export const tokenPreCheck = async (data) => {
   const options = {

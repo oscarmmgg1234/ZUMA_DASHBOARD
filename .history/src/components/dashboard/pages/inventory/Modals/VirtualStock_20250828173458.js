@@ -14,7 +14,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { createPortal } from "react-dom";
 import BaseModal from "./Base";
 import http_handler from "../HTTP/HTTPS_INTERFACE";
 
@@ -179,13 +178,13 @@ export default function VirtualStockManagement(props) {
       title={"Manage Virtual Stock"}
       closeName={"virtualManager"}
     >
-      <div className="relative text-black ">
+      <div className="relative text-black [&_*]:!text-black">
         <Overlay show={loading} label="Loading pools..." />
         <div className="flex flex-col gap-6">
           {/* Create */}
           <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
-              <SectionTitle>Create a Pool</SectionTitle>
+              <SectionTitle className="text-white">Create a Pool</SectionTitle>
             </div>
             <form
               onSubmit={onCreate}
@@ -375,15 +374,11 @@ function PoolRow({ pool, onChanged, allProducts = [] }) {
   };
 
   return (
-    <div
-      className={`relative overflow-hidden rounded-2xl border border-gray-200 p-4 shadow-sm transition-colors ${
-        open ? "bg-gray-200" : "bg-white"
-      }`}
-    >
+    <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
       <Overlay show={busy} label="Updating..." />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between ">
-        <div className="flex items-center gap-3 ">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setOpen((s) => !s)}
             className="grid h-8 w-8 place-items-center rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -462,21 +457,6 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
   const [selected, setSelected] = useState(null); // { PRODUCT_ID, NAME }
   const [ratio, setRatio] = useState("1");
 
-  const inputRef = useRef(null);
-  const anchorRef = useRef(null); // wraps the input; used to compute dropdown position
-  const popRef = useRef(null);
-
-  // --- Map PRODUCT_ID -> NAME for fast lookup ---
-  const nameById = useMemo(() => {
-    const map = new Map();
-    for (const p of allProducts) {
-      const id = String(p.PRODUCT_ID ?? "");
-      if (id) map.set(id, p.NAME || "Unnamed");
-    }
-    return map;
-  }, [allProducts]);
-
-  // --- Filter products by ID or NAME ---
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return allProducts.slice(0, 20);
@@ -486,118 +466,23 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
         const name = String(p.NAME || "").toLowerCase();
         return id.includes(q) || name.includes(q);
       })
-      .slice(0, 50);
+      .slice(0, 30);
   }, [allProducts, query]);
-
-  // ---- Positioning state for the portal popover ----
-  const [popStyle, setPopStyle] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-    maxHeight: 320,
-    openUp: false,
-  });
-
-  const computePosition = useCallback(() => {
-    const anchor = anchorRef.current;
-    if (!anchor) return;
-
-    const rect = anchor.getBoundingClientRect();
-    const viewportH =
-      window.innerHeight || document.documentElement.clientHeight;
-
-    const desired = 320; // px
-    const gap = 6; // px between input and list
-    const spaceBelow = viewportH - (rect.top + rect.height) - 8;
-    const spaceAbove = rect.top - 8;
-
-    const canOpenDown = spaceBelow >= 120; // heuristic
-    const openUp = !canOpenDown && spaceAbove > spaceBelow;
-
-    const maxHeight = Math.min(
-      desired,
-      openUp ? spaceAbove - gap : spaceBelow - gap
-    );
-
-    setPopStyle({
-      top: openUp ? rect.top - maxHeight - gap : rect.top + rect.height + gap,
-      left: rect.left,
-      width: rect.width,
-      maxHeight: Math.max(160, maxHeight), // keep at least 160px visible
-      openUp,
-    });
-  }, []);
-
-  // Recompute on open, scroll, resize
-  useEffect(() => {
-    if (!open) return;
-
-    computePosition();
-    const onScroll = () => computePosition();
-    const onResize = () => computePosition();
-
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onResize, true);
-
-    // Use a tiny rAF to get accurate layout after paint
-    const raf = requestAnimationFrame(computePosition);
-
-    return () => {
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onResize, true);
-      cancelAnimationFrame(raf);
-    };
-  }, [open, computePosition]);
-
-  // Close on click outside
-  useEffect(() => {
-    if (!open) return;
-    const onDocPointerDown = (e) => {
-      const a = anchorRef.current;
-      const p = popRef.current;
-      if (a?.contains(e.target) || p?.contains(e.target)) return;
-      setOpen(false);
-    };
-    document.addEventListener("pointerdown", onDocPointerDown, true);
-    return () =>
-      document.removeEventListener("pointerdown", onDocPointerDown, true);
-  }, [open]);
-
-  // Keyboard handling
-  const onKeyDown = (e) => {
-    if (e.key === "Escape") {
-      setOpen(false);
-      inputRef.current?.blur();
-    }
-  };
-
-  // Blur handling: defer so list-item click can run first
-  const onBlur = () => setTimeout(() => setOpen(false), 0);
 
   const pick = (p) => {
     setSelected({ PRODUCT_ID: p.PRODUCT_ID, NAME: p.NAME });
     setQuery("");
     setOpen(false);
-    inputRef.current?.focus();
   };
 
-  // --- Render ---
   return (
     <div className="mt-2 flex flex-col gap-3">
       <div className="flex flex-col items-stretch gap-2">
         <div className="relative">
           <div className="flex items-center gap-2">
-            {/* Anchor: used for positioning */}
-            <div className="relative w-full" ref={anchorRef}>
+            <div className="relative w-full">
               <input
-                ref={inputRef}
-                onFocus={() => {
-                  setOpen(true);
-                  // slight delay so computePosition sees final layout
-                  setTimeout(computePosition, 0);
-                }}
-                onBlur={onBlur}
-                onKeyDown={onKeyDown}
+                onFocus={() => setOpen(true)}
                 placeholder={
                   selected
                     ? `${selected.NAME} (${selected.PRODUCT_ID})`
@@ -605,13 +490,43 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
                 }
                 className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-900/20"
                 value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  if (!open) setOpen(true);
-                }}
+                onChange={(e) => setQuery(e.target.value)}
               />
+              {open && (
+                <div className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+                  {filtered.length === 0 ? (
+                    <div className="p-3 text-sm text-gray-500">No matches</div>
+                  ) : (
+                    <ul className="divide-y divide-gray-100">
+                      {filtered.map((p) => (
+                        <li
+                          key={p.PRODUCT_ID}
+                          className="cursor-pointer px-3 py-2 hover:bg-gray-50"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => pick(p)}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-medium text-gray-900">
+                                {p.NAME || "Unnamed"}
+                              </div>
+                              <div className="truncate font-mono text-[11px] text-gray-500">
+                                {p.PRODUCT_ID}
+                              </div>
+                            </div>
+                            {p.UNIT_TYPE && (
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-700">
+                                {p.UNIT_TYPE}
+                              </span>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </div>
-
             <input
               type="number"
               step="0.0001"
@@ -627,8 +542,6 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
                 onAdd?.({ productID, normalizeRatio: ratio });
                 setSelected(null);
                 setRatio("1");
-                setOpen(false);
-                inputRef.current?.focus();
               }}
             >
               + Add Link
@@ -637,57 +550,6 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
         </div>
       </div>
 
-      {/* Results popover via portal (escapes overflow clipping) */}
-      {open &&
-        createPortal(
-          <div
-            ref={popRef}
-            style={{
-              position: "fixed",
-              top: `${popStyle.top}px`,
-              left: `${popStyle.left}px`,
-              width: `${popStyle.width}px`,
-              maxHeight: `${popStyle.maxHeight}px`,
-              zIndex: 1000,
-            }}
-            className="overflow-auto rounded-xl border border-gray-200 bg-white shadow-2xl"
-            // Prevent input blur from closing before click runs
-            onMouseDown={(e) => e.preventDefault()}
-          >
-            {filtered.length === 0 ? (
-              <div className="p-3 text-sm text-gray-500">No matches</div>
-            ) : (
-              <ul className="divide-y divide-gray-100">
-                {filtered.map((p) => (
-                  <li
-                    key={p.PRODUCT_ID}
-                    className="cursor-pointer px-3 py-2 hover:bg-gray-50"
-                    onClick={() => pick(p)}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-medium text-gray-900">
-                          {p.NAME || "Unnamed"}
-                        </div>
-                        <div className="truncate font-mono text-[11px] text-gray-500">
-                          {p.PRODUCT_ID}
-                        </div>
-                      </div>
-                      {p.UNIT_TYPE && (
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-700">
-                          {p.UNIT_TYPE}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>,
-          document.body
-        )}
-
-      {/* Linked products table (unchanged) */}
       {!links || links.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-500">
           No linked products.
@@ -704,39 +566,32 @@ function LinkEditor({ links, onAdd, onRemove, allProducts = [] }) {
               </tr>
             </thead>
             <tbody>
-              {links.map((l, idx) => {
-                const id = String(l.productID ?? "");
-                const displayName = nameById.get(id) || "Unnamed";
-                return (
-                  <tr
-                    key={`${id}-${idx}`}
-                    className="odd:bg-white even:bg-gray-50"
-                  >
-                    <td className="px-3 py-2">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {displayName}
-                        </span>
-                        {/* Uncomment if you want to also show ID */}
-                        {/* <span className="font-mono text-[11px] text-gray-500">{id}</span> */}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">
-                      {String(l.normalizeRatio ?? 1)}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-500">
-                      {Array.isArray(l.meta_data) && l.meta_data.length > 0
-                        ? `${l.meta_data.length} entries`
-                        : "—"}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <Button variant="ghost" onClick={() => onRemove?.(id)}>
-                        Unlink
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
+              {links.map((l, idx) => (
+                <tr
+                  key={`${l.productID}-${idx}`}
+                  className="odd:bg-white even:bg-gray-50"
+                >
+                  <td className="px-3 py-2">
+                    <div className="flex flex-col">
+                      <span className="font-mono text-xs">{l.productID}</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">{String(l.normalizeRatio ?? 1)}</td>
+                  <td className="px-3 py-2 text-xs text-gray-500">
+                    {Array.isArray(l.meta_data) && l.meta_data.length > 0
+                      ? `${l.meta_data.length} entries`
+                      : "—"}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <Button
+                      variant="ghost"
+                      onClick={() => onRemove?.(l.productID)}
+                    >
+                      Unlink
+                    </Button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

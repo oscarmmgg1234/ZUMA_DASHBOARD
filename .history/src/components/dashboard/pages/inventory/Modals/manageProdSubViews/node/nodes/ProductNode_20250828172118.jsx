@@ -37,7 +37,7 @@ const displayName =
         padding: 6,
         backgroundColor: '#919de2dd',
         width: 260,
-        fontSize: 30,
+        fontSize: ,
         textAlign: 'center',
       }}
     >
@@ -72,8 +72,7 @@ const displayName =
   }}
   style={{
     width: '100%',
-    fontSize: 30,
-    fontWeight: "bold",
+    fontSize: 23,
     padding: 3,
     color: 'black',
   }}

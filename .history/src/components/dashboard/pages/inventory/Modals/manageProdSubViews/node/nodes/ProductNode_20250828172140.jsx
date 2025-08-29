@@ -73,7 +73,7 @@ const displayName =
   style={{
     width: '100%',
     fontSize: 30,
-    fontWeight: "bold",
+    font
     padding: 3,
     color: 'black',
   }}

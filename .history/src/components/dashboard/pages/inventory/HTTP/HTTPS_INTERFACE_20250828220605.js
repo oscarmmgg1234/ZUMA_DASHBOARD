@@ -41,6 +41,7 @@ import {
   manageCompanies,
   updateProductCompany,
   getCompaniesWithProducts,
+
   updateTypeInfo,
   manageTypes,
   updateProductType,
@@ -48,16 +49,6 @@ import {
 } from "./HTTPS";
 
 export default class http_handler {
-  update_companyInfo = async (args) => await updateCompanyInfo(args);
-  manage_companies = async (args) => await manageCompanies(args);
-  update_productCompany = async (args) => await updateProductCompany(args);
-  get_companiesWithProducts = async () => await getCompaniesWithProducts();
-
-  // --- TYPE ---
-  update_typeInfo = async (args) => await updateTypeInfo(args);
-  manage_types = async (args) => await manageTypes(args);
-  update_productType = async (args) => await updateProductType(args);
-  get_typesWithProducts = async () => await getTypesWithProducts();
   _tokenPreCheck = async (args) => {
     return await tokenPreCheck(args);
   };

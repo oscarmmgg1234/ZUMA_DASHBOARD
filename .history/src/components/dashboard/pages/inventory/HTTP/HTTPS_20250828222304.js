@@ -66,7 +66,7 @@ export const updateProductCompany = async (data) => {
 };
 
 export const getCompaniesWithProducts = async () => {
-  const res = await fetch(`${base_url}/getCompaniesWithProducts`, {
+  const res = await fetch(`${base_url}/dashboard/getCompaniesWithProducts`, {
     method: "GET",
   });
   return await res.json();

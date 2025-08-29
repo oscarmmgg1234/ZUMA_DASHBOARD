@@ -377,7 +377,7 @@ function PoolRow({ pool, onChanged, allProducts = [] }) {
   return (
     <div
       className={`relative overflow-hidden rounded-2xl border border-gray-200 p-4 shadow-sm transition-colors ${
-        open ? "bg-gray-200" : "bg-white"
+        open ? "bg-gray-50" : "bg-white"
       }`}
     >
       <Overlay show={busy} label="Updating..." />

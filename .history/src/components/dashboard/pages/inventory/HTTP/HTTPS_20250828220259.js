@@ -4,7 +4,7 @@ const base_url = "http://localhost:3001";
 
 
 export const updateTypeInfo = async (data) => {
-  const res = await fetch(`${base_url}/updateTypeInfo`, {
+  const res = await fetch(`${base_url}/dashboard/updateTypeInfo`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -13,7 +13,7 @@ export const updateTypeInfo = async (data) => {
 };
 
 export const manageTypes = async (data) => {
-  const res = await fetch(`${base_url}/manageTypes`, {
+  const res = await fetch(`${base_url}/dashboard/manageTypes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -22,7 +22,7 @@ export const manageTypes = async (data) => {
 };
 
 export const updateProductType = async (data) => {
-  const res = await fetch(`${base_url}/updateProductType`, {
+  const res = await fetch(`${base_url}/dashboard/updateProductType`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -31,7 +31,7 @@ export const updateProductType = async (data) => {
 };
 
 export const getTypesWithProducts = async () => {
-  const res = await fetch(`${base_url}/getTypesWithProducts`, {
+  const res = await fetch(`${base_url}/dashboard/getTypesWithProducts`, {
     method: "GET",
   });
   return await res.json();
@@ -39,7 +39,7 @@ export const getTypesWithProducts = async () => {
 
 // --- COMPANY HELPERS ---
 export const updateCompanyInfo = async (data) => {
-  const res = await fetch(`${base_url}/updateCompanyInfo`, {
+  const res = await fetch(`${base_url}/dashboard/updateCompanyInfo`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -48,7 +48,7 @@ export const updateCompanyInfo = async (data) => {
 };
 
 export const manageCompanies = async (data) => {
-  const res = await fetch(`${base_url}/manageCompanies`, {
+  const res = await fetch(`${base_url}/dashboard/manageCompanies`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -57,7 +57,7 @@ export const manageCompanies = async (data) => {
 };
 
 export const updateProductCompany = async (data) => {
-  const res = await fetch(`${base_url}/updateProductCompany`, {
+  const res = await fetch(`${base_url}/dashboard/updateProductCompany`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -66,7 +66,7 @@ export const updateProductCompany = async (data) => {
 };
 
 export const getCompaniesWithProducts = async () => {
-  const res = await fetch(`${base_url}/getCompaniesWithProducts`, {
+  const res = await fetch(`${base_url}/dashboard/getCompaniesWithProducts`, {
     method: "GET",
   });
   return await res.json();
