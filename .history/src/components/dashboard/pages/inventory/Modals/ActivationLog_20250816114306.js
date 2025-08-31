@@ -4,13 +4,12 @@ import http_handler from "../HTTP/HTTPS_INTERFACE";
 const http = new http_handler();
 
 /**
- * ActivationLog — Shipment-style UX with bounded probing & cancellation
+ * ActivationLog — Shipment-style UX
  * - LA-timezone dates end-to-end (server string + display)
  * - Sticky controls with Today + ← Prev/Next activation day →
  * - Slim info/error banners; loading overlay
  * - Zebra table with sticky header; totals bar (rows + total quantity)
- * - Prev/Next: bounded probe (21 days) + stop at "today" going forward
- * - Cancellation token prevents stale loops from keeping spinner alive
+ * - Prev/Next implemented by probing nearby days (up to 365) until data found
  */
 export default function ActivationLog(props) {
   const { visible, closeHandler } = props;
@@ -25,23 +24,7 @@ export default function ActivationLog(props) {
   // avoid double-fetch when we already fetched during jumpTo()
   const skipNextFetchRef = useRef(false);
 
-  // cancellation / in-flight marker
-  const inFlightRef = useRef(0);
-
   // ---------- Time helpers (America/Los_Angeles) ----------
-  const laMidnight = (d) => {
-    const fmt = new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Los_Angeles",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(d);
-    const [mm, dd, yyyy] = fmt.split("/");
-    return new Date(Number(yyyy), Number(mm) - 1, Number(dd), 0, 0, 0, 0);
-  };
-
-  const isAfterTodayLA = (d) => laMidnight(d) > laMidnight(new Date());
-
   const toServerDate = (date) => {
     const fmt = new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Los_Angeles",
@@ -74,60 +57,43 @@ export default function ActivationLog(props) {
 
   // ---------- Fetchers ----------
   const fetchActivations = async (date) => {
-    const requestId = ++inFlightRef.current;
     setLoading(true);
     setError("");
-    setBanner("");
-
     try {
       const res = await http.getActivationByDate({ date: toServerDate(date) });
-      if (inFlightRef.current !== requestId) return; // stale
-
       const data = Array.isArray(res?.data) ? res.data : [];
       setActivations(data);
       setBanner(
         data.length === 0 ? "No product activations for this date." : ""
       );
     } catch (e) {
-      if (inFlightRef.current !== requestId) return; // stale
       setError(e?.message || "Failed to fetch activations");
       setActivations([]);
     } finally {
-      if (inFlightRef.current === requestId) setLoading(false);
+      setLoading(false);
     }
   };
 
-  // Probe previous/next date (bounded) to find the closest day with data
+  // Probe previous/next date (up to 365 days) to find the closest day with data
   const jumpToNeighborWithData = async (direction /* 'prev' | 'next' */) => {
-    const requestId = ++inFlightRef.current;
     const step = direction === "prev" ? -1 : 1;
     const start = new Date(filterDate);
-    const MAX_HOPS = 21; // ~3 weeks window
+    const maxHops = 365; // safety bound
 
     setLoading(true);
     setError("");
     setBanner("");
 
     try {
-      for (let i = 1; i <= MAX_HOPS; i++) {
+      for (let i = 1; i <= maxHops; i++) {
         const candidate = new Date(start);
         candidate.setDate(candidate.getDate() + step * i);
-
-        // Hard ceiling when going forward: don't search past today (LA)
-        if (direction === "next" && isAfterTodayLA(candidate)) {
-          setBanner("You’re already at the most recent activations.");
-          break;
-        }
-
         const res = await http.getActivationByDate({
           date: toServerDate(candidate),
         });
-
-        if (inFlightRef.current !== requestId) return; // stale
-
         const data = Array.isArray(res?.data) ? res.data : [];
         if (data.length > 0) {
-          skipNextFetchRef.current = true; // prevent duplicate fetch on date change
+          skipNextFetchRef.current = true; // prevent duplicate fetch
           setFilterDate(candidate);
           setActivations(data);
           setBanner("");
@@ -135,18 +101,11 @@ export default function ActivationLog(props) {
           return;
         }
       }
-
-      // nothing found within the bounded window
-      setBanner(
-        direction === "prev"
-          ? "No earlier days with activations within the search window."
-          : "No later days with activations within the search window."
-      );
+      setBanner("No activations found within the searched range.");
     } catch (e) {
-      if (inFlightRef.current !== requestId) return; // stale
       setError(e?.message || "Failed searching for nearby days");
     } finally {
-      if (inFlightRef.current === requestId) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -166,14 +125,6 @@ export default function ActivationLog(props) {
     fetchActivations(filterDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterDate]);
-
-  // Clear any in-flight work when modal hides
-  useEffect(() => {
-    if (!visible) {
-      inFlightRef.current += 1; // invalidate any in-flight loops
-      setLoading(false);
-    }
-  }, [visible]);
 
   // ---------- Derived ----------
   const totals = useMemo(() => {
@@ -239,23 +190,20 @@ export default function ActivationLog(props) {
                   className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   onClick={() => setFilterDate(new Date())}
                   title="Jump to today"
-                  disabled={loading}
                 >
                   Today
                 </button>
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   onClick={() => jumpToNeighborWithData("prev")}
-                  disabled={loading}
                 >
                   ← Prev day with activations
                 </button>
                 <button
-                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   onClick={() => jumpToNeighborWithData("next")}
-                  disabled={loading}
                 >
                   Next day with activations →
                 </button>
@@ -306,7 +254,7 @@ export default function ActivationLog(props) {
                 <tbody>
                   {activations.map((a, index) => (
                     <tr
-                      key={a.ACTIVATION_ID || `${a.PRODUCT_ID}-${index}`}
+                      key={a.ACTIVATION_ID}
                       className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                     >
                       <td className="px-4 py-2 border font-mono text-xs text-gray-800">
@@ -322,7 +270,7 @@ export default function ActivationLog(props) {
                         {formatDisplay(a.DATE)}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {a.COMPANY_ID ?? "N/A"}
+                        {"N/A"}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
                         {a.EMPLOYEE_NAME || "N/A"}

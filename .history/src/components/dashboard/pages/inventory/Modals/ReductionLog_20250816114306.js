@@ -4,19 +4,18 @@ import http_handler from "../HTTP/HTTPS_INTERFACE";
 const http = new http_handler();
 
 /**
- * ActivationLog — Shipment-style UX with bounded probing & cancellation
+ * ReductionLog — Shipment-style UX
  * - LA-timezone dates end-to-end (server string + display)
- * - Sticky controls with Today + ← Prev/Next activation day →
+ * - Sticky controls with Today + ← Prev/Next reduction day →
  * - Slim info/error banners; loading overlay
  * - Zebra table with sticky header; totals bar (rows + total quantity)
- * - Prev/Next: bounded probe (21 days) + stop at "today" going forward
- * - Cancellation token prevents stale loops from keeping spinner alive
+ * - Prev/Next implemented by probing nearby days (up to 365) until data found
  */
-export default function ActivationLog(props) {
+export default function ReductionLog(props) {
   const { visible, closeHandler } = props;
 
   const [filterDate, setFilterDate] = useState(() => new Date());
-  const [activations, setActivations] = useState([]);
+  const [reductions, setReductions] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -25,23 +24,7 @@ export default function ActivationLog(props) {
   // avoid double-fetch when we already fetched during jumpTo()
   const skipNextFetchRef = useRef(false);
 
-  // cancellation / in-flight marker
-  const inFlightRef = useRef(0);
-
   // ---------- Time helpers (America/Los_Angeles) ----------
-  const laMidnight = (d) => {
-    const fmt = new Intl.DateTimeFormat("en-US", {
-      timeZone: "America/Los_Angeles",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(d);
-    const [mm, dd, yyyy] = fmt.split("/");
-    return new Date(Number(yyyy), Number(mm) - 1, Number(dd), 0, 0, 0, 0);
-  };
-
-  const isAfterTodayLA = (d) => laMidnight(d) > laMidnight(new Date());
-
   const toServerDate = (date) => {
     const fmt = new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Los_Angeles",
@@ -73,87 +56,63 @@ export default function ActivationLog(props) {
   };
 
   // ---------- Fetchers ----------
-  const fetchActivations = async (date) => {
-    const requestId = ++inFlightRef.current;
+  const fetchReductions = async (date) => {
     setLoading(true);
     setError("");
-    setBanner("");
-
     try {
-      const res = await http.getActivationByDate({ date: toServerDate(date) });
-      if (inFlightRef.current !== requestId) return; // stale
-
+      const res = await http.getReductionbyDate({ date: toServerDate(date) });
       const data = Array.isArray(res?.data) ? res.data : [];
-      setActivations(data);
+      setReductions(data);
       setBanner(
-        data.length === 0 ? "No product activations for this date." : ""
+        data.length === 0 ? "No product reductions for this date." : ""
       );
     } catch (e) {
-      if (inFlightRef.current !== requestId) return; // stale
-      setError(e?.message || "Failed to fetch activations");
-      setActivations([]);
+      setError(e?.message || "Failed to fetch reductions");
+      setReductions([]);
     } finally {
-      if (inFlightRef.current === requestId) setLoading(false);
+      setLoading(false);
     }
   };
 
-  // Probe previous/next date (bounded) to find the closest day with data
+  // Probe previous/next date (up to 365 days) to find the closest day with data
   const jumpToNeighborWithData = async (direction /* 'prev' | 'next' */) => {
-    const requestId = ++inFlightRef.current;
     const step = direction === "prev" ? -1 : 1;
     const start = new Date(filterDate);
-    const MAX_HOPS = 21; // ~3 weeks window
+    const maxHops = 365; // safety bound
 
     setLoading(true);
     setError("");
     setBanner("");
 
     try {
-      for (let i = 1; i <= MAX_HOPS; i++) {
+      for (let i = 1; i <= maxHops; i++) {
         const candidate = new Date(start);
         candidate.setDate(candidate.getDate() + step * i);
-
-        // Hard ceiling when going forward: don't search past today (LA)
-        if (direction === "next" && isAfterTodayLA(candidate)) {
-          setBanner("You’re already at the most recent activations.");
-          break;
-        }
-
-        const res = await http.getActivationByDate({
+        const res = await http.getReductionbyDate({
           date: toServerDate(candidate),
         });
-
-        if (inFlightRef.current !== requestId) return; // stale
-
         const data = Array.isArray(res?.data) ? res.data : [];
         if (data.length > 0) {
-          skipNextFetchRef.current = true; // prevent duplicate fetch on date change
+          skipNextFetchRef.current = true; // prevent duplicate fetch
           setFilterDate(candidate);
-          setActivations(data);
+          setReductions(data);
           setBanner("");
           setLoading(false);
           return;
         }
       }
-
-      // nothing found within the bounded window
-      setBanner(
-        direction === "prev"
-          ? "No earlier days with activations within the search window."
-          : "No later days with activations within the search window."
-      );
+      setBanner("No reductions found within the searched range.");
     } catch (e) {
-      if (inFlightRef.current !== requestId) return; // stale
       setError(e?.message || "Failed searching for nearby days");
     } finally {
-      if (inFlightRef.current === requestId) setLoading(false);
+      setLoading(false);
     }
   };
 
   // ---------- Effects ----------
   useEffect(() => {
     if (!visible) return;
-    fetchActivations(filterDate);
+    fetchReductions(filterDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
@@ -163,27 +122,19 @@ export default function ActivationLog(props) {
       skipNextFetchRef.current = false;
       return; // we already set data during jump
     }
-    fetchActivations(filterDate);
+    fetchReductions(filterDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterDate]);
 
-  // Clear any in-flight work when modal hides
-  useEffect(() => {
-    if (!visible) {
-      inFlightRef.current += 1; // invalidate any in-flight loops
-      setLoading(false);
-    }
-  }, [visible]);
-
   // ---------- Derived ----------
   const totals = useMemo(() => {
-    const count = activations.length;
-    const qty = activations.reduce(
-      (acc, a) => acc + (Number(a.QUANTITY) || 0),
+    const count = reductions.length;
+    const qty = reductions.reduce(
+      (acc, r) => acc + (Number(r.QUANTITY) || 0),
       0
     );
     return { count, qty: Number.isFinite(qty) ? Number(qty.toFixed(2)) : 0 };
-  }, [activations]);
+  }, [reductions]);
 
   // ---------- UI helpers ----------
   const Spinner = () => (
@@ -205,11 +156,11 @@ export default function ActivationLog(props) {
     <BaseModal
       visible={visible}
       closeHandler={closeHandler}
-      title={"View Product Activations"}
-      closeName={"activation"}
+      title={"View Product Reductions"}
+      closeName={"reduction"}
     >
       <div className="relative">
-        <Overlay show={loading} label="Loading activations..." />
+        <Overlay show={loading} label="Loading reductions..." />
 
         <div className="p-4">
           {banner && (
@@ -239,25 +190,22 @@ export default function ActivationLog(props) {
                   className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   onClick={() => setFilterDate(new Date())}
                   title="Jump to today"
-                  disabled={loading}
                 >
                   Today
                 </button>
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   onClick={() => jumpToNeighborWithData("prev")}
-                  disabled={loading}
                 >
-                  ← Prev day with activations
+                  ← Prev day with reductions
                 </button>
                 <button
-                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
                   onClick={() => jumpToNeighborWithData("next")}
-                  disabled={loading}
                 >
-                  Next day with activations →
+                  Next day with reductions →
                 </button>
               </div>
             </div>
@@ -287,9 +235,9 @@ export default function ActivationLog(props) {
 
           {/* Table */}
           <div className="max-h-[65vh] overflow-auto rounded-2xl border border-gray-200">
-            {activations.length === 0 ? (
+            {reductions.length === 0 ? (
               <div className="grid place-items-center p-10 text-sm text-gray-500">
-                No activations
+                No reductions
               </div>
             ) : (
               <table className="min-w-full border-collapse text-sm">
@@ -304,28 +252,28 @@ export default function ActivationLog(props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {activations.map((a, index) => (
+                  {reductions.map((r, index) => (
                     <tr
-                      key={a.ACTIVATION_ID || `${a.PRODUCT_ID}-${index}`}
+                      key={r.CONSUMP_ID}
                       className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                     >
                       <td className="px-4 py-2 border font-mono text-xs text-gray-800">
-                        {a.PRODUCT_ID}
+                        {r.PRODUCT_ID}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {a.PRODUCT_NAME || "N/A"}
+                        {r.PRODUCT_NAME || "N/A"}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {Number(a.QUANTITY) || 0}
+                        {Number(r.QUANTITY)?.toFixed(2)}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {formatDisplay(a.DATE)}
+                        {formatDisplay(r.DATETIME)}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {a.COMPANY_ID ?? "N/A"}
+                        {"N/A"}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {a.EMPLOYEE_NAME || "N/A"}
+                        {r.EMPLOYEE_NAME || "N/A"}
                       </td>
                     </tr>
                   ))}
