@@ -1,8 +1,3 @@
-// NodeRenderer.jsx — Pure client-side precheck (no backend precheck)
-// - On product select: clean tokens using props.products list (drop entries with unknown PRODUCT_ID)
-// - Render graph from cleaned tokens only
-// - On Save: encode token from tree and call commitChanges; keep local state in sync
-
 import React, {
   useState,
   useCallback,
@@ -22,7 +17,6 @@ import "reactflow/dist/style.css";
 import ProductNode from "./nodes/ProductNode";
 import ActionNode from "./nodes/ActionNode";
 import http_handler from "../../../HTTP/HTTPS_INTERFACE";
-
 const http = new http_handler();
 
 const nodeTypes = {
@@ -31,66 +25,13 @@ const nodeTypes = {
 };
 
 const initialTree = [
-  { id: uuidv4(), name: "Product 1", type: "product", children: [] },
+  {
+    id: uuidv4(),
+    name: "Product 1",
+    type: "product",
+    children: [],
+  },
 ];
-
-/* -------------------- PURE token helpers (no HTTP) -------------------- */
-
-// normalize to single spaces
-const norm = (s) =>
-  typeof s === "string" ? s.trim().replace(/\s+/g, " ") : "";
-
-// split into raw token entries
-const splitEntries = (s) => norm(s).split(" ").filter(Boolean);
-
-// parse one entry (permissive)
-const parseEntry = (entry, fallbackPid) => {
-  const [type, func, id, p1, p2, p3] = entry.split(":");
-  return {
-    raw: entry,
-    type: type?.toLowerCase() || null,
-    func: func || null,
-    productId: id || fallbackPid || "",
-    param1: p1 ?? null,
-    param2: p2 ?? null,
-    param3: p3 ?? null,
-  };
-};
-
-// remove entries whose 3rd field (productId) is NOT present in validIds
-const cleanOneRoute = (tokenStr, validIds) => {
-  const cleaned = splitEntries(tokenStr).filter((entry) => {
-    const parts = entry.split(":");
-    if (parts.length < 3) return false; // must have at least CLASS:FUNC:PRODUCT_ID
-    const pid = String(parts[2] || "").trim();
-    return pid && validIds.has(pid);
-  });
-  return cleaned.join(" ");
-};
-
-// Clean all three routes, purely client-side
-const purePrecheckTokens = (product, products) => {
-  const validIds = new Set((products || []).map((p) => String(p.PRODUCT_ID)));
-  const act = cleanOneRoute(product?.ACTIVATION_TOKEN || "", validIds);
-  const red = cleanOneRoute(product?.REDUCTION_TOKEN || "", validIds);
-  const shp = cleanOneRoute(product?.SHIPMENT_TOKEN || "", validIds);
-  return {
-    productID: product?.PRODUCT_ID || "",
-    activation: act,
-    reduction: red,
-    shipment: shp,
-  };
-};
-
-// Parser that excludes maintenance classes for the graph
-const parseForGraph = (tokenStr, pid) =>
-  splitEntries(tokenStr)
-    .map((e) => parseEntry(e, pid))
-    .filter(
-      (t) => t.type && !["preops", "postops", "virtualops"].includes(t.type)
-    );
-
-/* --------------------------------------------------------------------- */
 
 function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
   const nodes = [];
@@ -131,8 +72,7 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
     }
 
     let currentParentId = product.id;
-
-    for (let j = 0; j < (product.children || []).length; j++) {
+    for (let j = 0; j < product.children.length; j++) {
       const action = product.children[j];
       const actionY = productY + 450 * (j + 1);
 
@@ -162,8 +102,7 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
     }
 
     const addId = `${product.id}-add`;
-    const addY = productY + 450 * ((product.children || []).length + 1);
-
+    const addY = productY + 450 * (product.children.length + 1);
     nodes.push({
       id: addId,
       type: "default",
@@ -208,6 +147,7 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
       fontSize: 23,
       width: 260,
     },
+    deletable: false,
   });
 
   if (tree.length > 0) {
@@ -224,50 +164,93 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
   return { nodes, edges };
 }
 
+const parseTokensFromProduct = async (product) => {
+  const parse = (tokenStr) => {
+    if (!tokenStr) return [];
+    return tokenStr
+      .trim()
+      .split(/\s+/)
+      .map((entry) => {
+        const [type, func, id, p1, p2, p3] = entry.split(":");
+        return {
+          type: type?.toLowerCase() || null,
+          func: func || null,
+          productId: id || product.PRODUCT_ID,
+          param1: p1 ?? null,
+          param2: p2 ?? null,
+          param3: p3 ?? null,
+        };
+      })
+      .filter(
+        (token) => !["preops", "postops", "virtualops"].includes(token.type)
+      );
+  };
+
+  // run three prechecks in parallel; support {cleanedToken} or {token}
+  const [actRes, redRes, shipRes] = await Promise.all([
+    http._tokenPreCheck({token: product.ACTIVATION_TOKEN, productID: product.PRODUCT_ID}),
+    http._tokenPreCheck({token: product.REDUCTION_TOKEN, productID: product.PRODUCT_ID}),
+    http._tokenPreCheck({token: product.SHIPMENT_TOKEN, productID: product.PRODUCT_ID}),
+  ]);
+
+  const actToken = (actRes?.cleanedToken ?? actRes?.token ?? "").trim();
+  const redToken = (redRes?.cleanedToken ?? redRes?.token ?? "").trim();
+  const shipToken = (shipRes?.cleanedToken ?? shipRes?.token ?? "").trim();
+
+  return {
+    activation: parse(actToken),
+    reduction: parse(redToken),
+    shipment: parse(shipToken),
+  };
+};
+
+const buildFirstStageMap = async (product) => {
+  const parsed = await parseTokensFromProduct(product);
+  const firstStage = new Map();
+
+  Object.entries(parsed).forEach(([category, tokens]) => {
+    if (!firstStage.has(category)) firstStage.set(category, new Map());
+
+    tokens.forEach((token) => {
+      const productId = token.productId;
+      if (!firstStage.get(category).has(productId)) {
+        firstStage.get(category).set(productId, []);
+      }
+      firstStage.get(category).get(productId).push(token);
+    });
+  });
+
+  return firstStage;
+};
+
 const prepareRegistry = (registry) => {
   const registryMap = new Map();
-  for (const item of registry || []) {
+  for (const item of registry) {
     const classKey = item.class;
-    if (
-      classKey === "PREOPS" ||
-      classKey === "POSTOPS" ||
-      classKey === "VIRTUALOPS"
-    )
+    if (classKey === "PREOPS" || classKey === "POSTOPS" || classKey === "VIRTUALOPS") {
       continue;
+    }
     if (!registryMap.has(classKey)) registryMap.set(classKey, []);
     registryMap.get(classKey).push(item);
   }
   return registryMap;
 };
 
-const buildFirstStageFromParsed = (parsed) => {
-  const firstStage = new Map();
-  Object.entries(parsed).forEach(([category, tokens]) => {
-    if (!firstStage.has(category)) firstStage.set(category, new Map());
-    (tokens || []).forEach((t) => {
-      const pid = t.productId;
-      if (!firstStage.get(category).has(pid))
-        firstStage.get(category).set(pid, []);
-      firstStage.get(category).get(pid).push(t);
-    });
-  });
-  return firstStage;
-};
-
-function finalPhase(firstStage, route) {
+function finalPhase(firstStage, route, allProducts) {
   const result = [];
   const productMap = firstStage.get(route);
   if (!productMap) return result;
 
   for (const [productId, tokens] of productMap.entries()) {
-    const children = (tokens || []).map((token) => ({
+    const children = tokens.map((token) => ({
       id: `action-${uuidv4()}`,
       name: token.func,
       token,
     }));
+
     result.push({
       id: `prod-${productId}`,
-      name: `Product ${String(productId).slice(0, 4)}`,
+      name: `Product ${productId.slice(0, 4)}`, // or lookup real name from allProducts
       type: "product",
       selectedProductId: productId,
       children,
@@ -276,7 +259,7 @@ function finalPhase(firstStage, route) {
   return result;
 }
 
-function treeToTokenEncoder(tree /*, route */) {
+function treeToTokenEncoder(tree, route) {
   const tokens = [];
   for (const product of tree) {
     if (!product.selectedProductId || !Array.isArray(product.children)) continue;
@@ -301,7 +284,7 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
   if (!Array.isArray(currentTree) || !Array.isArray(snapshotTree)) return false;
   if (currentTree.length !== snapshotTree.length) return false;
 
-  const productKeys = ["selectedProductId", "name"]; // keep minimal & safe
+  const productKeys = ["selectedProductId", "name", "price", "category"];
   const tokenKeys = ["type", "func", "productId", "param1", "param2", "param3"];
 
   for (let i = 0; i < currentTree.length; i++) {
@@ -314,11 +297,11 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
       if (curVal !== snapVal) return false;
     }
 
-    if ((currentProduct.children || []).length !== (snapshotProduct.children || []).length) {
+    if (currentProduct.children.length !== snapshotProduct.children.length) {
       return false;
     }
 
-    for (let j = 0; j < (currentProduct.children || []).length; j++) {
+    for (let j = 0; j < currentProduct.children.length; j++) {
       const curToken = currentProduct.children[j].token || {};
       const snapToken = snapshotProduct.children[j].token || {};
       for (const key of tokenKeys) {
@@ -331,184 +314,222 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
   return true;
 };
 
+function getAllProductNodes(tree) {
+  const result = [];
+  function traverse(node) {
+    if (node.type === "product") {
+      result.push(node);
+      if (node.children && node.children.length > 0) {
+        for (const child of node.children) traverse(child);
+      }
+    }
+  }
+  for (const node of tree) traverse(node);
+  return result;
+}
+
+const extractFromVisualTree = (tree, route, funcsToMatch) => {
+  const result = [];
+  for (const product of tree) {
+    if (!product.selectedProductId || !Array.isArray(product.children)) continue;
+    for (const action of product.children) {
+      const token = action.token || {};
+      if (funcsToMatch.includes(token.func)) {
+        result.push({
+          productID: product.selectedProductId,
+          ratio: token.param1 ? parseFloat(token.param1) : null,
+          route,
+          func: token.func,
+        });
+      }
+    }
+  }
+  return result;
+};
+
+const extractFromTokens = async (product, activeRoute, funcsToMatch) => {
+  const parsed = await parseTokensFromProduct(product);
+  const result = [];
+  for (const route in parsed) {
+    if (route === activeRoute) continue;
+    for (const token of parsed[route]) {
+      if (funcsToMatch.includes(token.func)) {
+        result.push({
+          productID: token.productId,
+          ratio: token.param1 ? parseFloat(token.param1) : null,
+          route,
+          func: token.func,
+        });
+      }
+    }
+  }
+  return result;
+};
+
+const handleCommit = async (
+  tree,
+  treeSnapshot,
+  route,
+  setNotification,
+  product // full product object
+) => {
+  const isSame = commitChangesIsValid(tree, treeSnapshot);
+  if (isSame) {
+    setNotification({ message: "No changes to commit.", type: "error" });
+    return true;
+  }
+
+  const visualPostops = extractFromVisualTree(tree, route, ["29wp", "2a1k"]);
+  const tokenPostops = await extractFromTokens(product, route, ["29wp", "2a1k"]);
+  const allPostops = [...visualPostops, ...tokenPostops];
+
+  const updatedToken = treeToTokenEncoder(tree, route);
+
+  const dataPacket = {
+    route,
+    postops: allPostops,
+    newToken: updatedToken,
+    section: "node",
+    product: product.PRODUCT_ID,
+  };
+
+  await http.commitChanges(dataPacket);
+
+  setNotification({ message: "Changes committed and token updated.", type: "success" });
+  return false;
+};
+
 function FlowComponentInner({ props }) {
   const [notification, setNotification] = useState({ message: "", type: "" });
 
-  // cleaned tokens for the currently selected product (client-side only)
-  const [cleanedTokens, setCleanedTokens] = useState(null); // { productID, activation, reduction, shipment }
-
   const [tree, setTree] = useState(initialTree);
-  const [treeSnapshot, setTreeSnapshot] = useState(initialTree);
+  const [treeSnapshot, setTreeSnapshot] = useState(null);
   const [rfNodes, setNodes, onNodesChange] = useNodesState([]);
   const [rfEdges, setEdges, onEdgesChange] = useEdgesState([]);
-  const registryMap = useMemo(
-    () => prepareRegistry(props.registry),
-    [props.registry]
-  );
+  const registryMap = useMemo(() => prepareRegistry(props.registry), [props.registry]);
 
   const handleNodeFieldChange = (nodeId, field, value) => {
-    setTree((prevTree) =>
-      prevTree.map((product) => {
-        if (product.id === nodeId) return { ...product, [field]: value };
-        const updatedChildren = (product.children || []).map((child) =>
-          child.id === nodeId
-            ? { ...child, token: { ...child.token, [field]: value } }
-            : child
-        );
+    setTree((prevTree) => {
+      return prevTree.map((product) => {
+        if (product.id === nodeId) {
+          return { ...product, [field]: value };
+        }
+
+        const updatedChildren = product.children.map((child) => {
+          if (child.id === nodeId) {
+            return {
+              ...child,
+              token: { ...child.token, [field]: value },
+            };
+          }
+          return child;
+        });
+
         return { ...product, children: updatedChildren };
-      })
-    );
+      });
+    });
   };
 
   useEffect(() => {
-    if (!notification?.message) return;
-    const t = setTimeout(() => setNotification({ message: "", type: "" }), 2500);
-    return () => clearTimeout(t);
+    if (notification?.message) {
+      const timer = setTimeout(() => setNotification({ message: "", type: "" }), 2500);
+      return () => clearTimeout(timer);
+    }
   }, [notification]);
 
-  /* A) On product or products-list change: client-side clean, no HTTP */
+  // Build the visual tree asynchronously (precheck → parse → map → final)
   useEffect(() => {
-    const p = props.selectedProduct;
-    if (!p?.PRODUCT_ID) {
-      setCleanedTokens(null);
-      setTree(initialTree);
-      setTreeSnapshot(initialTree);
-      return;
-    }
-    const cleaned = purePrecheckTokens(p, props.products || []);
-    setCleanedTokens(cleaned);
-  }, [props.selectedProduct?.PRODUCT_ID, props.products]);
+    let cancelled = false;
 
-  /* B) Build tree strictly from cleaned tokens (pure, no HTTP) */
-  useEffect(() => {
-    const pid = props.selectedProduct?.PRODUCT_ID;
-    if (!pid || !cleanedTokens || cleanedTokens.productID !== pid) return;
+    (async () => {
+      if (!props.selectedProduct || !props.products || !props.route) return;
 
-    const parsed = {
-      activation: parseForGraph(cleanedTokens.activation, pid),
-      reduction: parseForGraph(cleanedTokens.reduction, pid),
-      shipment: parseForGraph(cleanedTokens.shipment, pid),
+      if (props.refTree) {
+        setTree(props.refTree);
+        setTreeSnapshot(JSON.parse(JSON.stringify(props.refTree)));
+        return;
+      }
+
+      const firstStage = await buildFirstStageMap(props.selectedProduct);
+      if (cancelled) return;
+
+      const newTree = finalPhase(firstStage, props.route, props.products);
+      if (cancelled) return;
+
+      setTree(newTree);
+      setTreeSnapshot((prevSnapshot) => {
+        const currentSnapshotProductId = prevSnapshot?.[0]?.productId || "";
+        if (props.selectedProduct.PRODUCT_ID !== currentSnapshotProductId) {
+          return JSON.parse(JSON.stringify(newTree));
+        }
+        return prevSnapshot;
+      });
+    })();
+
+    return () => {
+      cancelled = true;
     };
+  }, [props.selectedProduct, props.route, props.products, props.refTree]);
 
-    const firstStage = buildFirstStageFromParsed(parsed);
-    const newTree = finalPhase(firstStage, props.route || "activation");
-
-    setTree(newTree);
-    setTreeSnapshot(JSON.parse(JSON.stringify(newTree)));
-  }, [props.route, cleanedTokens?.productID, cleanedTokens, props.selectedProduct?.PRODUCT_ID]);
-
-  /* C) Rebuild RF graph on tree changes */
+  // Rebuild RF nodes/edges whenever the visual tree changes
   useEffect(() => {
-    const { nodes, edges } = buildLayout(
-      tree,
-      props,
-      registryMap,
-      handleNodeFieldChange
-    );
+    const { nodes, edges } = buildLayout(tree, props, registryMap, handleNodeFieldChange);
     setNodes(nodes);
     setEdges(edges);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tree, registryMap, props.products, props.route]);
-
-  /* D) Save: encode token, commit, then update local cleaned state ONLY for active route */
-  const handleCommit = useCallback(async () => {
-    if (!props.selectedProduct?.PRODUCT_ID) return;
-
-    const isSame = commitChangesIsValid(tree, treeSnapshot);
-    if (isSame) {
-      setNotification({ message: "No changes to commit.", type: "error" });
-      return;
-    }
-
-    // Encode new token from visual tree (for the current route)
-    const updatedToken = norm(treeToTokenEncoder(tree /*, props.route*/));
-
-    // Commit to backend: write the new token for the active route
-    const dataPacket = {
-      route: props.route, // "activation" | "reduction" | "shipment"
-      postops: [],        // keep if you still need; otherwise leave as []
-      newToken: updatedToken,
-      section: "node",
-      product: props.selectedProduct.PRODUCT_ID,
-    };
-
-    await http.commitChanges(dataPacket);
-
-    // Update local cleanedTokens for current route (keep other routes intact)
-    setCleanedTokens((prev) =>
-      prev && prev.productID === props.selectedProduct.PRODUCT_ID
-        ? { ...prev, [props.route]: updatedToken }
-        : prev
-    );
-
-    // Optionally mirror into selectedProduct (UI only; not DB readback)
-    const columnByRoute = {
-      activation: "ACTIVATION_TOKEN",
-      reduction: "REDUCTION_TOKEN",
-      shipment: "SHIPMENT_TOKEN",
-    };
-    props.setSelectedProduct?.((prev) =>
-      prev && prev.PRODUCT_ID === props.selectedProduct.PRODUCT_ID
-        ? { ...prev, [columnByRoute[props.route]]: updatedToken }
-        : prev
-    );
-
-    // New snapshot
-    const cloned = JSON.parse(JSON.stringify(tree));
-    setTreeSnapshot(cloned);
-
-    setNotification({ message: "Changes committed.", type: "success" });
-
-    // Keep refTree flow if you use it elsewhere
-    props.setRefTree?.(cloned);
-  }, [tree, treeSnapshot, props.route, props.selectedProduct?.PRODUCT_ID, props.setSelectedProduct, props.setRefTree]);
+  }, [tree]);
 
   const onNodeClick = useCallback((_, node) => {
-    if (node?.data?.label === "+ Add Product") {
+    if (node.data?.label === "+ Add Product") {
       const newProdId = uuidv4();
-      setTree((prev) => [
-        ...prev,
-        { id: newProdId, name: "New Product", type: "product", children: [] },
-      ]);
-    } else if (node?.data?.label === "+ Add Action") {
-      setTree((prev) =>
-        prev.map((product) =>
-          `${product.id}-add` === node.id
-            ? {
-                ...product,
-                children: [
-                  ...(product.children || []),
-                  { id: uuidv4(), name: "New Action" },
-                ],
-              }
-            : product
-        )
-      );
+      setTree((prev) => {
+        const newTree = [...prev];
+        newTree.push({
+          id: newProdId,
+          name: "New Product",
+          type: "product",
+          children: [],
+        });
+        return newTree;
+      });
+    } else if (node.data?.label === "+ Add Action") {
+      setTree((prev) => {
+        const newTree = prev.map((product) => {
+          if (`${product.id}-add` === node.id) {
+            return {
+              ...product,
+              children: [...product.children, { id: uuidv4(), name: "New Action" }],
+            };
+          }
+          return product;
+        });
+        return newTree;
+      });
     }
   }, []);
 
   const onKeyDown = useCallback(
     (e) => {
-      const tag = e.target.tagName?.toLowerCase?.() || "";
+      const tag = e.target.tagName.toLowerCase();
       const isEditable =
         ["input", "textarea"].includes(tag) || e.target.isContentEditable;
       if (isEditable) return;
 
       if (e.key === "Backspace" || e.key === "Delete") {
-        const selected = rfNodes.find((n) => n.selected && n.deletable !== false);
+        const selected = rfNodes.find((n) => n.selected && n.deletable);
         if (!selected) return;
-        const id = selected.id;
 
+        const id = selected.id;
         setTree((prev) => {
-          const idx = prev.findIndex((p) => p.id === id);
-          if (idx !== -1) {
-            const next = [...prev];
-            next.splice(idx, 1);
-            return next;
+          const productIndex = prev.findIndex((p) => p.id === id);
+          if (productIndex !== -1) {
+            const newTree = [...prev];
+            newTree.splice(productIndex, 1);
+            return newTree;
           }
-          return prev.map((p) => ({
-            ...p,
-            children: (p.children || []).filter((c) => c.id !== id),
+          return prev.map((product) => ({
+            ...product,
+            children: product.children.filter((c) => c.id !== id),
           }));
         });
       }
@@ -552,7 +573,20 @@ function FlowComponentInner({ props }) {
       )}
 
       <button
-        onClick={handleCommit}
+        onClick={async () => {
+          const isSame = await handleCommit(
+            tree,
+            treeSnapshot,
+            props.route,
+            setNotification,
+            props.selectedProduct // pass full product object
+          );
+
+          if (!isSame) {
+            props.setRefTree(JSON.parse(JSON.stringify(tree)));
+            setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
+          }
+        }}
         style={{
           position: "absolute",
           top: 15,
@@ -599,24 +633,17 @@ function FlowComponentInner({ props }) {
             borderRadius: 6,
           }}
         />
-        <Background
-          variant="dots"
-          gap={16}
-          size={5}
-          color="#4f4c4cf5"
-          style={{ opacity: 0.4 }}
-        />
+        <Background variant="dots" gap={16} size={5} color="#4f4c4cf5" style={{ opacity: 0.4 }} />
         <Controls />
       </ReactFlow>
     </div>
   );
 }
 
-export default function NodeRenderer(props) {
+export default function FlowComponent(props) {
   return (
     <ReactFlowProvider>
       <FlowComponentInner props={props} />
     </ReactFlowProvider>
   );
 }
-//pure non-precheck

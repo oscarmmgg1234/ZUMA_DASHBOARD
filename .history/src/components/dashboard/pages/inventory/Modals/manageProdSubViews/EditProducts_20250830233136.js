@@ -6,7 +6,7 @@ import { FaSearch } from "react-icons/fa";
 import NodeRenderer from "./node/NodeRenderer";
 import http_handler from "../../HTTP/HTTPS_INTERFACE";
 // NOTE: adjust the import path if your file is named differently
-import NodeFlowGuide from "./node/NodeFLowGuide"
+import NodeFlowGuide from "./node/"
 
 const http = new http_handler();
 

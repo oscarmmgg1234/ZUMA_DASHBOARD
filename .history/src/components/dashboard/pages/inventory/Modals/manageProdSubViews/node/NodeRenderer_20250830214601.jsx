@@ -1,7 +1,8 @@
-// NodeRenderer.jsx — Pure client-side precheck (no backend precheck)
-// - On product select: clean tokens using props.products list (drop entries with unknown PRODUCT_ID)
-// - Render graph from cleaned tokens only
-// - On Save: encode token from tree and call commitChanges; keep local state in sync
+// NodeRenderer.jsx — Optimized, pure client-side precheck
+// - Cleans tokens by removing entries whose 3rd field (PRODUCT_ID) isn't in props.products
+// - Uses props.refTree when present (for restoring a saved tree)
+// - Only calls backend on Save (commitChanges)
+// - Memoized validIds + disabled Save when unchanged
 
 import React, {
   useState,
@@ -61,7 +62,8 @@ const parseEntry = (entry, fallbackPid) => {
 const cleanOneRoute = (tokenStr, validIds) => {
   const cleaned = splitEntries(tokenStr).filter((entry) => {
     const parts = entry.split(":");
-    if (parts.length < 3) return false; // must have at least CLASS:FUNC:PRODUCT_ID
+    // Must be CLASS:FUNC:PRODUCT_ID at minimum
+    if (parts.length < 3) return false;
     const pid = String(parts[2] || "").trim();
     return pid && validIds.has(pid);
   });
@@ -69,8 +71,7 @@ const cleanOneRoute = (tokenStr, validIds) => {
 };
 
 // Clean all three routes, purely client-side
-const purePrecheckTokens = (product, products) => {
-  const validIds = new Set((products || []).map((p) => String(p.PRODUCT_ID)));
+const purePrecheckTokens = (product, validIds) => {
   const act = cleanOneRoute(product?.ACTIVATION_TOKEN || "", validIds);
   const red = cleanOneRoute(product?.REDUCTION_TOKEN || "", validIds);
   const shp = cleanOneRoute(product?.SHIPMENT_TOKEN || "", validIds);
@@ -301,7 +302,7 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
   if (!Array.isArray(currentTree) || !Array.isArray(snapshotTree)) return false;
   if (currentTree.length !== snapshotTree.length) return false;
 
-  const productKeys = ["selectedProductId", "name"]; // keep minimal & safe
+  const productKeys = ["selectedProductId", "name"]; // minimal + safe
   const tokenKeys = ["type", "func", "productId", "param1", "param2", "param3"];
 
   for (let i = 0; i < currentTree.length; i++) {
@@ -346,6 +347,18 @@ function FlowComponentInner({ props }) {
     [props.registry]
   );
 
+  // 🔹 memoize valid product IDs
+  const validIds = useMemo(
+    () => new Set((props.products || []).map((p) => String(p.PRODUCT_ID))),
+    [props.products]
+  );
+
+  // Save disabled if nothing changed
+  const disableSave = useMemo(
+    () => commitChangesIsValid(tree, treeSnapshot),
+    [tree, treeSnapshot]
+  );
+
   const handleNodeFieldChange = (nodeId, field, value) => {
     setTree((prevTree) =>
       prevTree.map((product) => {
@@ -375,14 +388,28 @@ function FlowComponentInner({ props }) {
       setTreeSnapshot(initialTree);
       return;
     }
-    const cleaned = purePrecheckTokens(p, props.products || []);
-    setCleanedTokens(cleaned);
-  }, [props.selectedProduct?.PRODUCT_ID, props.products]);
+    setCleanedTokens(purePrecheckTokens(p, validIds));
+  }, [props.selectedProduct?.PRODUCT_ID, validIds]);
 
-  /* B) Build tree strictly from cleaned tokens (pure, no HTTP) */
+  /* B) Build tree strictly from cleaned tokens OR props.refTree */
   useEffect(() => {
     const pid = props.selectedProduct?.PRODUCT_ID;
-    if (!pid || !cleanedTokens || cleanedTokens.productID !== pid) return;
+    if (!pid) {
+      setTree(initialTree);
+      setTreeSnapshot(initialTree);
+      return;
+    }
+
+    // If a reference tree is handed in, prefer it (user's last saved work)
+    if (props.refTree) {
+      const snapshot = JSON.parse(JSON.stringify(props.refTree));
+      setTree(snapshot);
+      setTreeSnapshot(snapshot);
+      return;
+    }
+
+    // Otherwise, rebuild from cleaned tokens
+    if (!cleanedTokens || cleanedTokens.productID !== pid) return;
 
     const parsed = {
       activation: parseForGraph(cleanedTokens.activation, pid),
@@ -395,7 +422,13 @@ function FlowComponentInner({ props }) {
 
     setTree(newTree);
     setTreeSnapshot(JSON.parse(JSON.stringify(newTree)));
-  }, [props.route, cleanedTokens?.productID, cleanedTokens, props.selectedProduct?.PRODUCT_ID]);
+  }, [
+    props.route,
+    props.refTree,
+    cleanedTokens?.productID,
+    cleanedTokens,
+    props.selectedProduct?.PRODUCT_ID,
+  ]);
 
   /* C) Rebuild RF graph on tree changes */
   useEffect(() => {
@@ -414,8 +447,7 @@ function FlowComponentInner({ props }) {
   const handleCommit = useCallback(async () => {
     if (!props.selectedProduct?.PRODUCT_ID) return;
 
-    const isSame = commitChangesIsValid(tree, treeSnapshot);
-    if (isSame) {
+    if (commitChangesIsValid(tree, treeSnapshot)) {
       setNotification({ message: "No changes to commit.", type: "error" });
       return;
     }
@@ -426,7 +458,7 @@ function FlowComponentInner({ props }) {
     // Commit to backend: write the new token for the active route
     const dataPacket = {
       route: props.route, // "activation" | "reduction" | "shipment"
-      postops: [],        // keep if you still need; otherwise leave as []
+      postops: [],        // keep or populate if needed
       newToken: updatedToken,
       section: "node",
       product: props.selectedProduct.PRODUCT_ID,
@@ -434,7 +466,7 @@ function FlowComponentInner({ props }) {
 
     await http.commitChanges(dataPacket);
 
-    // Update local cleanedTokens for current route (keep other routes intact)
+    // Update local cleanedTokens for current route
     setCleanedTokens((prev) =>
       prev && prev.productID === props.selectedProduct.PRODUCT_ID
         ? { ...prev, [props.route]: updatedToken }
@@ -453,15 +485,20 @@ function FlowComponentInner({ props }) {
         : prev
     );
 
-    // New snapshot
+    // New snapshot and refTree
     const cloned = JSON.parse(JSON.stringify(tree));
     setTreeSnapshot(cloned);
+    props.setRefTree?.(cloned);
 
     setNotification({ message: "Changes committed.", type: "success" });
-
-    // Keep refTree flow if you use it elsewhere
-    props.setRefTree?.(cloned);
-  }, [tree, treeSnapshot, props.route, props.selectedProduct?.PRODUCT_ID, props.setSelectedProduct, props.setRefTree]);
+  }, [
+    tree,
+    treeSnapshot,
+    props.route,
+    props.selectedProduct?.PRODUCT_ID,
+    props.setSelectedProduct,
+    props.setRefTree,
+  ]);
 
   const onNodeClick = useCallback((_, node) => {
     if (node?.data?.label === "+ Add Product") {
@@ -553,6 +590,7 @@ function FlowComponentInner({ props }) {
 
       <button
         onClick={handleCommit}
+        disabled={disableSave}
         style={{
           position: "absolute",
           top: 15,
@@ -566,10 +604,13 @@ function FlowComponentInner({ props }) {
           fontWeight: "bold",
           fontSize: "16px",
           boxShadow: "0px 4px 8px rgba(0,0,0,0.5)",
-          cursor: "pointer",
+          cursor: disableSave ? "not-allowed" : "pointer",
+          opacity: disableSave ? 0.6 : 1,
           transition: "all 0.2s ease-in-out",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+        onMouseEnter={(e) => {
+          if (!disableSave) e.currentTarget.style.transform = "scale(1.05)";
+        }}
         onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1.0)")}
       >
         Save Changes
@@ -619,4 +660,3 @@ export default function NodeRenderer(props) {
     </ReactFlowProvider>
   );
 }
-//pure non-precheck

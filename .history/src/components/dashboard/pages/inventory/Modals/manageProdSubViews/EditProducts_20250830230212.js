@@ -1,22 +1,15 @@
-// EditProduct.jsx — full component with BarcodeGeneration toggle,
-// delete flow, pool linking, node guide, and token test.
-
+// EditProduct.jsx — adds Delete button + 2-step confirmation + reload on success
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch } from "react-icons/fa";
 import NodeRenderer from "./node/NodeRenderer";
 import http_handler from "../../HTTP/HTTPS_INTERFACE";
-// NOTE: adjust the import path if your file is named differently
-import NodeFlowGuide from "./node/NodeFLowGuide"
+import NodeFlowGuide from "./node/NodeFLowGuide";
 
 const http = new http_handler();
 
 // --- helpers to resolve pool links from tokens & state ---
 const VOPS_WHITELIST = new Set(["4i57", "20", "20r4"]); // include all ops you use
 
-// Normalize any truthy shape from DB to a strict boolean
-const toBool = (v) => v === true || v === 1 || v === "1";
-
-// --- token parsing helpers for pool links ---
 function parsePoolLinkFromTokens(tokensStr) {
   const s = tokensStr ? String(tokensStr) : "";
   const tokens = s.split(/\s+/).filter(Boolean);
@@ -82,7 +75,7 @@ function Modal({ open, onClose, children }) {
 
 const runtimeTestHandler = async (productID) => {
   // Open synchronously so popups aren't blocked
-  const win = window.open("", "_blank");
+  const win = window.open("", "_blank"); // 2nd arg must be a name/target
   if (!win) {
     alert("Popup blocked. Please allow popups for this site.");
     return;
@@ -112,12 +105,15 @@ const runtimeTestHandler = async (productID) => {
   win.document.close();
 
   try {
-    const html = await http.runtimeTest({ productID }); // API should return a string (res.text())
+    // Fetch the full HTML document from your API
+    const html = await http.runtimeTest({ productID }); // must return a string (use res.text() on fetch)
 
+    // Navigate the opened tab to a Blob URL (most reliable cross-browser)
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     win.location.replace(url);
 
+    // Cleanup later
     setTimeout(() => URL.revokeObjectURL(url), 120_000);
   } catch (err) {
     const esc = (s) =>
@@ -126,6 +122,7 @@ const runtimeTestHandler = async (productID) => {
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;");
 
+    // Render error in the same tab
     win.document.open();
     win.document.write(`<!doctype html><meta charset="utf-8" />
       <title>Report Error</title>
@@ -173,6 +170,14 @@ export default function EditProduct(props) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
+  // Helper: get current pool id from product (supports multiple shapes) — fallback only
+  const getCurrentPoolId = (p) =>
+    p?.poolRef?.poolID ??
+    p?.poolRef ??
+    p?.POOL_REF ??
+    p?.currentPoolRef ??
+    null;
+
   // ===== Data load on mount =====
   useEffect(() => {
     (async () => {
@@ -211,8 +216,6 @@ export default function EditProduct(props) {
       NAME: product.NAME,
       UNIT_TYPE: product.UNIT_TYPE,
       LOCATION: product.LOCATION,
-      // seed BarcodeGeneration as a strict boolean for UI
-      BarcodeGeneration: toBool(product.BarcodeGeneration),
     });
     previousSelectedCompany.current = selectedCompany;
     setShowProductList(false);
@@ -256,20 +259,12 @@ export default function EditProduct(props) {
     setEditedFields((prev) => ({ ...prev, [field]: value }));
 
   const handleCommitChanges = async () => {
-    const updates = [];
-
-    for (const key of Object.keys(editedFields)) {
-      if (key === "BarcodeGeneration") {
-        const prev = toBool(selectedProduct?.BarcodeGeneration);
-        const next = toBool(editedFields.BarcodeGeneration);
-        if (prev !== next) {
-          // send numeric 1/0 to be explicit for SQL tinyint(1)
-          updates.push({ field: "BarcodeGeneration", value: next ? 1 : 0 });
-        }
-      } else if (editedFields[key] !== selectedProduct[key]) {
-        updates.push({ field: key, value: editedFields[key] });
+    const updates = Object.keys(editedFields).reduce((acc, key) => {
+      if (editedFields[key] !== selectedProduct[key]) {
+        acc.push({ field: key, value: editedFields[key] });
       }
-    }
+      return acc;
+    }, []);
 
     if (updates.length === 0) return;
 
@@ -278,40 +273,16 @@ export default function EditProduct(props) {
       updates,
       section: "form",
     };
-
     const response = await props.api.commitChanges(payload);
     if (response?.status === true) {
-      // reflect saved changes locally; keep BarcodeGeneration shape consistent (1/0)
       setProductList((prevList) =>
         prevList.map((product) =>
           product.PRODUCT_ID === selectedProduct.PRODUCT_ID
-            ? {
-                ...product,
-                ...editedFields,
-                ...(updates.find((u) => u.field === "BarcodeGeneration")
-                  ? {
-                      BarcodeGeneration: updates.find(
-                        (u) => u.field === "BarcodeGeneration"
-                      ).value,
-                    }
-                  : {}),
-              }
+            ? { ...product, ...editedFields }
             : product
         )
       );
-
-      setSelectedProduct((p) => ({
-        ...p,
-        ...editedFields,
-        ...(updates.find((u) => u.field === "BarcodeGeneration")
-          ? {
-              BarcodeGeneration: updates.find(
-                (u) => u.field === "BarcodeGeneration"
-              ).value,
-            }
-          : {}),
-      }));
-
+      setSelectedProduct((p) => ({ ...p, ...editedFields }));
       setSuccess(true);
     } else {
       console.error("Failed to update product");
@@ -400,6 +371,7 @@ export default function EditProduct(props) {
         productID: selectedProduct.PRODUCT_ID,
       });
 
+      // Consider success if API signals so, otherwise treat as failure
       const ok =
         (res && (res.success === true || res.status === true || res.deleted)) ??
         false;
@@ -408,9 +380,10 @@ export default function EditProduct(props) {
         throw new Error(res?.err || res?.status || "Delete failed");
       }
 
+      // Refresh list, reset selection, close modals
       await refreshProducts();
       setSelectedProduct(null);
-      setShowProductList(false);
+      setShowProductList(false); // ensure we're back at "Select a Product" button state
       setShowDeleteConfirm(false);
     } catch (e) {
       setDeleteError(String(e?.message || e));
@@ -431,6 +404,8 @@ export default function EditProduct(props) {
         normalizeRatio,
         process: "edit",
       };
+      console.log("[linkToExistingPool] →", payload);
+
       const res = await http.virtualPoolProductAdd(payload);
 
       if (res?.linkedProduct || res?.statusCode === 10) {
@@ -468,6 +443,7 @@ export default function EditProduct(props) {
       if (created?.createdTable) {
         await refreshPools();
 
+        // Prefer API returning poolID; fallback: find by name.
         const pools = await http.getVirtualStockPools();
         const createdPool =
           (pools.arr || []).find((p) => p.name === poolName.trim()) || null;
@@ -513,6 +489,8 @@ export default function EditProduct(props) {
         productID: selectedProduct.PRODUCT_ID,
         process: "edit",
       };
+      console.log("[removeLink] →", payload);
+
       const res = await http.virtualPoolProductRemove(payload);
 
       if (res?.unlinkedProduct) {
@@ -588,12 +566,6 @@ export default function EditProduct(props) {
     route === "activation"
       ? "You can activate items; Active stock will increase. Don’t manually update Stored — the pool will adjust linked products automatically."
       : "Use receipt flows (v2) for this route. Don’t manually update Stored — the pool will automatically handle it for linked products.";
-
-  // checkbox state for BarcodeGeneration
-  const barcodeChecked =
-    editedFields.BarcodeGeneration !== undefined
-      ? toBool(editedFields.BarcodeGeneration)
-      : toBool(selectedProduct?.BarcodeGeneration);
 
   return (
     <div className="relative h-[62vh]">
@@ -718,6 +690,7 @@ export default function EditProduct(props) {
               const link = findCurrentLink(selectedProduct.PRODUCT_ID);
 
               if (link) {
+                // Linked card — mirror your create-product linked card vibe
                 return (
                   <div className="bg-green-50 border border-green-700 rounded p-4 flex items-center justify-between">
                     <div>
@@ -744,7 +717,7 @@ export default function EditProduct(props) {
                 );
               }
 
-              // Not linked — show create/link form
+              // Not linked — show create/link form (as in CustomProduct)
               return (
                 <div className="p-4 rounded border border-gray-300 bg-gray-50">
                   <div className="flex items-center gap-3 mb-3">
@@ -841,26 +814,8 @@ export default function EditProduct(props) {
             { value: "4322", label: "4322" },
           ])}
 
-          {/* NEW: Needs Barcode For Shipment toggle */}
-          <div className="mt-3 p-4 rounded border border-gray-300 bg-gray-50">
-            <label className="flex items-center gap-3 text-black">
-              <input
-                type="checkbox"
-                checked={barcodeChecked}
-                onChange={(e) =>
-                  handleFieldChange("BarcodeGeneration", e.target.checked)
-                }
-              />
-              <span className="font-medium">Needs Barcode For Shipment</span>
-            </label>
-            <p className="text-sm text-gray-600 mt-1">
-              When enabled, this product requires a generated barcode for
-              inbound shipments.
-            </p>
-          </div>
-
           {/* Actions: Save + Delete */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <button
               onClick={handleCommitChanges}
               className="w-full p-3 bg-green-600 hover:bg-green-700 text-white rounded text-md font-semibold shadow transition duration-150"
@@ -877,7 +832,7 @@ export default function EditProduct(props) {
           </div>
 
           {/* Node view */}
-          <div className="mb-4 mt-6">
+          <div className="mb-4 mt-4">
             <label className="block mb-2 text-black">Select Node View</label>
             <select
               value={route}
@@ -896,7 +851,7 @@ export default function EditProduct(props) {
             </button>
           </div>
 
-          {/* Guidance banner when product is linked to a pool */}
+          {/* ********** NEW: Guidance banner when product is linked to a pool ********** */}
           {isLinkedToPool && (
             <div className="mb-3 p-4 rounded-lg border border-blue-400 bg-blue-50 text-blue-900">
               <div className="font-semibold">
@@ -928,6 +883,7 @@ export default function EditProduct(props) {
               </ul>
             </div>
           )}
+          {/* ********** END NEW BANNER ********** */}
 
           <NodeRenderer
             selectedProduct={selectedProduct}
@@ -940,7 +896,6 @@ export default function EditProduct(props) {
             }
             setSelectedProduct={setSelectedProduct}
           />
-
           <NodeFlowGuide
             isLinked={Boolean(
               selectedProduct &&
@@ -954,7 +909,6 @@ export default function EditProduct(props) {
             route={route}
             productName={selectedProduct?.NAME}
           />
-
           <div className="w-full p-4 text-white rounded text-lg font-semibold mt-8 mb-40" />
         </div>
       )}

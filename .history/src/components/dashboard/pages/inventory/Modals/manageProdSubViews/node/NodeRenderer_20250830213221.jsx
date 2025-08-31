@@ -1,14 +1,9 @@
-// NodeRenderer.jsx — Pure client-side precheck (no backend precheck)
-// - On product select: clean tokens using props.products list (drop entries with unknown PRODUCT_ID)
+// NodeRenderer.jsx — Pure client-side precheck (no HTTP precheck)
+// - On product select: clean tokens using props.products list (remove entries with unknown productIDs)
 // - Render graph from cleaned tokens only
-// - On Save: encode token from tree and call commitChanges; keep local state in sync
+// - On Save: encode token from tree and commitChanges; then update local state
 
-import React, {
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import ReactFlow, {
   MiniMap,
   Background,
@@ -37,8 +32,7 @@ const initialTree = [
 /* -------------------- PURE token helpers (no HTTP) -------------------- */
 
 // normalize to single spaces
-const norm = (s) =>
-  typeof s === "string" ? s.trim().replace(/\s+/g, " ") : "";
+const norm = (s) => (typeof s === "string" ? s.trim().replace(/\s+/g, " ") : "");
 
 // split into raw token entries
 const splitEntries = (s) => norm(s).split(" ").filter(Boolean);
@@ -61,7 +55,8 @@ const parseEntry = (entry, fallbackPid) => {
 const cleanOneRoute = (tokenStr, validIds) => {
   const cleaned = splitEntries(tokenStr).filter((entry) => {
     const parts = entry.split(":");
-    if (parts.length < 3) return false; // must have at least CLASS:FUNC:PRODUCT_ID
+    // require at least 3 fields and a known product id
+    if (parts.length < 3) return false;
     const pid = String(parts[2] || "").trim();
     return pid && validIds.has(pid);
   });
@@ -74,22 +69,14 @@ const purePrecheckTokens = (product, products) => {
   const act = cleanOneRoute(product?.ACTIVATION_TOKEN || "", validIds);
   const red = cleanOneRoute(product?.REDUCTION_TOKEN || "", validIds);
   const shp = cleanOneRoute(product?.SHIPMENT_TOKEN || "", validIds);
-  return {
-    productID: product?.PRODUCT_ID || "",
-    activation: act,
-    reduction: red,
-    shipment: shp,
-  };
+  return { productID: product?.PRODUCT_ID || "", activation: act, reduction: red, shipment: shp };
 };
 
 // Parser that excludes maintenance classes for the graph
 const parseForGraph = (tokenStr, pid) =>
   splitEntries(tokenStr)
     .map((e) => parseEntry(e, pid))
-    .filter(
-      (t) => t.type && !["preops", "postops", "virtualops"].includes(t.type)
-    );
-
+    .filter((t) => !["preops", "postops", "virtualops"].includes(t.type));
 /* --------------------------------------------------------------------- */
 
 function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
@@ -131,8 +118,7 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
     }
 
     let currentParentId = product.id;
-
-    for (let j = 0; j < (product.children || []).length; j++) {
+    for (let j = 0; j < product.children.length; j++) {
       const action = product.children[j];
       const actionY = productY + 450 * (j + 1);
 
@@ -162,8 +148,7 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
     }
 
     const addId = `${product.id}-add`;
-    const addY = productY + 450 * ((product.children || []).length + 1);
-
+    const addY = productY + 450 * (product.children.length + 1);
     nodes.push({
       id: addId,
       type: "default",
@@ -202,12 +187,13 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
     style: {
       backgroundColor: "#000000b5",
       color: "#fff",
-      border: "5px solid #00bcd4",
+      border: "5px solid "#00bcd4",
       borderRadius: 8,
       padding: 10,
       fontSize: 23,
       width: 260,
     },
+    deletable: false,
   });
 
   if (tree.length > 0) {
@@ -228,12 +214,7 @@ const prepareRegistry = (registry) => {
   const registryMap = new Map();
   for (const item of registry || []) {
     const classKey = item.class;
-    if (
-      classKey === "PREOPS" ||
-      classKey === "POSTOPS" ||
-      classKey === "VIRTUALOPS"
-    )
-      continue;
+    if (classKey === "PREOPS" || classKey === "POSTOPS" || classKey === "VIRTUALOPS") continue;
     if (!registryMap.has(classKey)) registryMap.set(classKey, []);
     registryMap.get(classKey).push(item);
   }
@@ -244,10 +225,9 @@ const buildFirstStageFromParsed = (parsed) => {
   const firstStage = new Map();
   Object.entries(parsed).forEach(([category, tokens]) => {
     if (!firstStage.has(category)) firstStage.set(category, new Map());
-    (tokens || []).forEach((t) => {
+    tokens.forEach((t) => {
       const pid = t.productId;
-      if (!firstStage.get(category).has(pid))
-        firstStage.get(category).set(pid, []);
+      if (!firstStage.get(category).has(pid)) firstStage.get(category).set(pid, []);
       firstStage.get(category).get(pid).push(t);
     });
   });
@@ -260,14 +240,14 @@ function finalPhase(firstStage, route) {
   if (!productMap) return result;
 
   for (const [productId, tokens] of productMap.entries()) {
-    const children = (tokens || []).map((token) => ({
+    const children = tokens.map((token) => ({
       id: `action-${uuidv4()}`,
       name: token.func,
       token,
     }));
     result.push({
       id: `prod-${productId}`,
-      name: `Product ${String(productId).slice(0, 4)}`,
+      name: `Product ${productId.slice(0, 4)}`,
       type: "product",
       selectedProductId: productId,
       children,
@@ -276,7 +256,7 @@ function finalPhase(firstStage, route) {
   return result;
 }
 
-function treeToTokenEncoder(tree /*, route */) {
+function treeToTokenEncoder(tree, route) {
   const tokens = [];
   for (const product of tree) {
     if (!product.selectedProductId || !Array.isArray(product.children)) continue;
@@ -301,7 +281,7 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
   if (!Array.isArray(currentTree) || !Array.isArray(snapshotTree)) return false;
   if (currentTree.length !== snapshotTree.length) return false;
 
-  const productKeys = ["selectedProductId", "name"]; // keep minimal & safe
+  const productKeys = ["selectedProductId", "name", "price", "category"];
   const tokenKeys = ["type", "func", "productId", "param1", "param2", "param3"];
 
   for (let i = 0; i < currentTree.length; i++) {
@@ -314,11 +294,11 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
       if (curVal !== snapVal) return false;
     }
 
-    if ((currentProduct.children || []).length !== (snapshotProduct.children || []).length) {
+    if (currentProduct.children.length !== snapshotProduct.children.length) {
       return false;
     }
 
-    for (let j = 0; j < (currentProduct.children || []).length; j++) {
+    for (let j = 0; j < currentProduct.children.length; j++) {
       const curToken = currentProduct.children[j].token || {};
       const snapToken = snapshotProduct.children[j].token || {};
       for (const key of tokenKeys) {
@@ -338,22 +318,17 @@ function FlowComponentInner({ props }) {
   const [cleanedTokens, setCleanedTokens] = useState(null); // { productID, activation, reduction, shipment }
 
   const [tree, setTree] = useState(initialTree);
-  const [treeSnapshot, setTreeSnapshot] = useState(initialTree);
+  const [treeSnapshot, setTreeSnapshot] = useState(null);
   const [rfNodes, setNodes, onNodesChange] = useNodesState([]);
   const [rfEdges, setEdges, onEdgesChange] = useEdgesState([]);
-  const registryMap = useMemo(
-    () => prepareRegistry(props.registry),
-    [props.registry]
-  );
+  const registryMap = useMemo(() => prepareRegistry(props.registry), [props.registry]);
 
   const handleNodeFieldChange = (nodeId, field, value) => {
     setTree((prevTree) =>
       prevTree.map((product) => {
         if (product.id === nodeId) return { ...product, [field]: value };
-        const updatedChildren = (product.children || []).map((child) =>
-          child.id === nodeId
-            ? { ...child, token: { ...child.token, [field]: value } }
-            : child
+        const updatedChildren = product.children.map((child) =>
+          child.id === nodeId ? { ...child, token: { ...child.token, [field]: value } } : child
         );
         return { ...product, children: updatedChildren };
       })
@@ -371,8 +346,6 @@ function FlowComponentInner({ props }) {
     const p = props.selectedProduct;
     if (!p?.PRODUCT_ID) {
       setCleanedTokens(null);
-      setTree(initialTree);
-      setTreeSnapshot(initialTree);
       return;
     }
     const cleaned = purePrecheckTokens(p, props.products || []);
@@ -382,66 +355,57 @@ function FlowComponentInner({ props }) {
   /* B) Build tree strictly from cleaned tokens (pure, no HTTP) */
   useEffect(() => {
     const pid = props.selectedProduct?.PRODUCT_ID;
-    if (!pid || !cleanedTokens || cleanedTokens.productID !== pid) return;
+    if (!pid || !cleanedTokens || cleanedTokens.productID !== pid || !props.route) return;
 
     const parsed = {
       activation: parseForGraph(cleanedTokens.activation, pid),
-      reduction: parseForGraph(cleanedTokens.reduction, pid),
-      shipment: parseForGraph(cleanedTokens.shipment, pid),
+      reduction:  parseForGraph(cleanedTokens.reduction,  pid),
+      shipment:   parseForGraph(cleanedTokens.shipment,   pid),
     };
 
     const firstStage = buildFirstStageFromParsed(parsed);
-    const newTree = finalPhase(firstStage, props.route || "activation");
-
+    const newTree = finalPhase(firstStage, props.route);
     setTree(newTree);
     setTreeSnapshot(JSON.parse(JSON.stringify(newTree)));
-  }, [props.route, cleanedTokens?.productID, cleanedTokens, props.selectedProduct?.PRODUCT_ID]);
+  }, [props.route, cleanedTokens?.productID, props.selectedProduct?.PRODUCT_ID]);
 
   /* C) Rebuild RF graph on tree changes */
   useEffect(() => {
-    const { nodes, edges } = buildLayout(
-      tree,
-      props,
-      registryMap,
-      handleNodeFieldChange
-    );
+    const { nodes, edges } = buildLayout(tree, props, registryMap, handleNodeFieldChange);
     setNodes(nodes);
     setEdges(edges);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tree, registryMap, props.products, props.route]);
+  }, [tree]);
 
   /* D) Save: encode token, commit, then update local cleaned state ONLY for active route */
   const handleCommit = useCallback(async () => {
-    if (!props.selectedProduct?.PRODUCT_ID) return;
-
     const isSame = commitChangesIsValid(tree, treeSnapshot);
     if (isSame) {
       setNotification({ message: "No changes to commit.", type: "error" });
       return;
     }
 
-    // Encode new token from visual tree (for the current route)
-    const updatedToken = norm(treeToTokenEncoder(tree /*, props.route*/));
+    // Encode new token from visual tree
+    const updatedToken = norm(treeToTokenEncoder(tree, props.route));
 
-    // Commit to backend: write the new token for the active route
+    // Commit to backend (this writes the new token for the active route)
     const dataPacket = {
-      route: props.route, // "activation" | "reduction" | "shipment"
-      postops: [],        // keep if you still need; otherwise leave as []
+      route: props.route,
+      postops: [], // add if you still need them
       newToken: updatedToken,
       section: "node",
       product: props.selectedProduct.PRODUCT_ID,
     };
-
     await http.commitChanges(dataPacket);
 
-    // Update local cleanedTokens for current route (keep other routes intact)
+    // Update local cleanedTokens for current route (no re-clean needed now)
     setCleanedTokens((prev) =>
       prev && prev.productID === props.selectedProduct.PRODUCT_ID
         ? { ...prev, [props.route]: updatedToken }
         : prev
     );
 
-    // Optionally mirror into selectedProduct (UI only; not DB readback)
+    // Optionally reflect in selectedProduct (React state only; not DB)
     const columnByRoute = {
       activation: "ACTIVATION_TOKEN",
       reduction: "REDUCTION_TOKEN",
@@ -453,34 +417,23 @@ function FlowComponentInner({ props }) {
         : prev
     );
 
-    // New snapshot
-    const cloned = JSON.parse(JSON.stringify(tree));
-    setTreeSnapshot(cloned);
-
+    // capture snapshot for "no changes" detection
+    setTreeSnapshot(JSON.parse(JSON.stringify(tree)));
     setNotification({ message: "Changes committed.", type: "success" });
 
-    // Keep refTree flow if you use it elsewhere
-    props.setRefTree?.(cloned);
-  }, [tree, treeSnapshot, props.route, props.selectedProduct?.PRODUCT_ID, props.setSelectedProduct, props.setRefTree]);
+    // keep your refTree flow if you use it elsewhere
+    props.setRefTree?.(JSON.parse(JSON.stringify(tree)));
+  }, [tree, treeSnapshot, props.route, props.selectedProduct?.PRODUCT_ID]);
 
   const onNodeClick = useCallback((_, node) => {
-    if (node?.data?.label === "+ Add Product") {
+    if (node.data?.label === "+ Add Product") {
       const newProdId = uuidv4();
-      setTree((prev) => [
-        ...prev,
-        { id: newProdId, name: "New Product", type: "product", children: [] },
-      ]);
-    } else if (node?.data?.label === "+ Add Action") {
+      setTree((prev) => [...prev, { id: newProdId, name: "New Product", type: "product", children: [] }]);
+    } else if (node.data?.label === "+ Add Action") {
       setTree((prev) =>
         prev.map((product) =>
           `${product.id}-add` === node.id
-            ? {
-                ...product,
-                children: [
-                  ...(product.children || []),
-                  { id: uuidv4(), name: "New Action" },
-                ],
-              }
+            ? { ...product, children: [...product.children, { id: uuidv4(), name: "New Action" }] }
             : product
         )
       );
@@ -489,13 +442,12 @@ function FlowComponentInner({ props }) {
 
   const onKeyDown = useCallback(
     (e) => {
-      const tag = e.target.tagName?.toLowerCase?.() || "";
-      const isEditable =
-        ["input", "textarea"].includes(tag) || e.target.isContentEditable;
+      const tag = e.target.tagName.toLowerCase();
+      const isEditable = ["input", "textarea"].includes(tag) || e.target.isContentEditable;
       if (isEditable) return;
 
       if (e.key === "Backspace" || e.key === "Delete") {
-        const selected = rfNodes.find((n) => n.selected && n.deletable !== false);
+        const selected = rfNodes.find((n) => n.selected && n.deletable);
         if (!selected) return;
         const id = selected.id;
 
@@ -506,10 +458,7 @@ function FlowComponentInner({ props }) {
             next.splice(idx, 1);
             return next;
           }
-          return prev.map((p) => ({
-            ...p,
-            children: (p.children || []).filter((c) => c.id !== id),
-          }));
+          return prev.map((p) => ({ ...p, children: p.children.filter((c) => c.id !== id) }));
         });
       }
     },
@@ -593,19 +542,9 @@ function FlowComponentInner({ props }) {
             return "#90caf9";
           }}
           maskColor="rgba(255, 255, 255, 0.09)"
-          style={{
-            backgroundColor: "#121212f1",
-            border: "1px solid #444",
-            borderRadius: 6,
-          }}
+          style={{ backgroundColor: "#121212f1", border: "1px solid #444", borderRadius: 6 }}
         />
-        <Background
-          variant="dots"
-          gap={16}
-          size={5}
-          color="#4f4c4cf5"
-          style={{ opacity: 0.4 }}
-        />
+        <Background variant="dots" gap={16} size={5} color="#4f4c4cf5" style={{ opacity: 0.4 }} />
         <Controls />
       </ReactFlow>
     </div>
@@ -619,4 +558,3 @@ export default function NodeRenderer(props) {
     </ReactFlowProvider>
   );
 }
-//pure non-precheck
