@@ -133,7 +133,7 @@ function ProductNode({ data }) {
               key={e}
               title={EFFECT_HINT[e] || e}
               style={{
-                fontSize: 20,
+                fontSize: 12,
                 lineHeight: "18px",
                 padding: "2px 8px",
                 borderRadius: 999,

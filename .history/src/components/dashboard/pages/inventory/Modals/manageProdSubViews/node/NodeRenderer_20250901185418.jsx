@@ -530,9 +530,8 @@ function FlowComponentInner({ props }) {
         borderWidth: "7px",
         borderColor: "rgba(0, 28, 62, 0.75)",
         borderRadius: "10px",
-        position: "relative",     
-          width: props.containerWidth || "95%",
-      height: props.containerHeight || "600px",
+        position: "relative",       width: props.containerWidth || "95%",
++       height: props.containerHeight || "600px",
       }}
       tabIndex={0}
       onKeyDown={onKeyDown}

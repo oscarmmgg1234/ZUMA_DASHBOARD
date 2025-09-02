@@ -115,9 +115,8 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
         onFieldChange: handleNodeFieldChange,
         name: product.name || "",
          registryMap,                            // for lookup of effects
-  actions: (product.children || [])       // all action tokens in this column
-     .map((c) => c?.token)
-     .filter(Boolean),
+  actions: (product.children || [])       // all action tokens in this column+     .map((c) => c?.token)
++     .filter(Boolean),
       },
       position: { x: productX, y: productY },
       deletable: true,
@@ -530,9 +529,6 @@ function FlowComponentInner({ props }) {
         borderWidth: "7px",
         borderColor: "rgba(0, 28, 62, 0.75)",
         borderRadius: "10px",
-        position: "relative",     
-          width: props.containerWidth || "95%",
-      height: props.containerHeight || "600px",
       }}
       tabIndex={0}
       onKeyDown={onKeyDown}

@@ -1,12 +1,12 @@
 // EditProduct.jsx — full component with BarcodeGeneration toggle,
-// delete flow, pool linking, node guide, token test, and fullscreen graph.
+// delete flow, pool linking, node guide, and token test.
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch } from "react-icons/fa";
 import NodeRenderer from "./node/NodeRenderer";
 import http_handler from "../../HTTP/HTTPS_INTERFACE";
 // NOTE: adjust the import path if your file is named differently
-import NodeFlowGuide from "./node/NodeFLowGuide";
+import NodeFlowGuide from "./node/NodeFLowGuide"
 
 const http = new http_handler();
 
@@ -158,9 +158,6 @@ export default function EditProduct(props) {
     reduction: null,
     shipment: null,
   });
-
-  // fullscreen graph toggle
-  const [showGraphFullscreen, setShowGraphFullscreen] = useState(false);
 
   // ==== Virtual pools state ====
   const [virtualPools, setVirtualPools] = useState([]);
@@ -598,18 +595,17 @@ export default function EditProduct(props) {
       ? toBool(editedFields.BarcodeGeneration)
       : toBool(selectedProduct?.BarcodeGeneration);
 
-  // close fullscreen on Esc
-  useEffect(() => {
-    if (!showGraphFullscreen) return;
-    const onEsc = (e) => {
-      if (e.key === "Escape") setShowGraphFullscreen(false);
-    };
-    window.addEventListener("keydown", onEsc);
-    return () => window.removeEventListener("keydown", onEsc);
-  }, [showGraphFullscreen]);
 
-  // Unique key per product/route/view to force clean mounts
-  const graphKeyBase = `${selectedProduct?.PRODUCT_ID || "none"}:${route}`;
+  const [showGraphFullscreen, setShowGraphFullscreen] = useState(false);
+
+  useEffect(() => {
+   if (!showGraphFullscreen) return;
+  const onEsc = (e) => {
+     if (e.key === "Escape") setShowGraphFullscreen(false);
+   };
+   window.addEventListener("keydown", onEsc);
+   return () => window.removeEventListener("keydown", onEsc);
+  }, [showGraphFullscreen]);
 
   return (
     <div className="relative h-[62vh]">
@@ -910,13 +906,13 @@ export default function EditProduct(props) {
             >
               Run Token Test
             </button>
-            <button
-              onClick={() => setShowGraphFullscreen(true)}
-              className="mt-3 w-full p-3 bg-slate-800 hover:bg-slate-900 text-white rounded text-md font-semibold shadow transition duration-150 border border-cyan-400/50"
-              title="Open the node graph in fullscreen (Esc to exit)"
-            >
-              Expand Graph (Fullscreen)
-            </button>
+                        <button
+           onClick={() => setShowGraphFullscreen(true)}
++              className="mt-3 w-full p-3 bg-slate-800 hover:bg-slate-900 text-white rounded text-md font-semibold shadow transition duration-150 border border-cyan-400/50"
++              title="Open the node graph in fullscreen (Esc to exit)"
++            >
++              Expand Graph (Fullscreen)
++            </button>
           </div>
 
           {/* Guidance banner when product is linked to a pool */}
@@ -952,23 +948,17 @@ export default function EditProduct(props) {
             </div>
           )}
 
-          {/* Inline graph — render ONLY when not in fullscreen */}
-          {!showGraphFullscreen && (
-            <NodeRenderer
-              key={`${graphKeyBase}:inline`}
-              selectedProduct={selectedProduct}
-              route={route}
-              products={productList}
-              registry={registry}
-              refTree={refTrees[route]}
-              setRefTree={(updatedTree) =>
-                setRefTrees((prev) => ({ ...prev, [route]: updatedTree }))
-              }
-              containerHeight="600px"
-              containerWidth="95%"
-              setSelectedProduct={setSelectedProduct}
-            />
-          )}
+          <NodeRenderer
+            selectedProduct={selectedProduct}
+            route={route}
+            products={productList}
+            registry={registry}
+            refTree={refTrees[route]}
+            setRefTree={(updatedTree) =>
+              setRefTrees((prev) => ({ ...prev, [route]: updatedTree }))
+            }
+            setSelectedProduct={setSelectedProduct}
+          />
 
           <NodeFlowGuide
             isLinked={Boolean(
@@ -987,58 +977,6 @@ export default function EditProduct(props) {
           <div className="w-full p-4 text-white rounded text-lg font-semibold mt-8 mb-40" />
         </div>
       )}
-
-      {/* ===== Fullscreen Overlay — graph mounts as a fresh instance ===== */}
-      {showGraphFullscreen && selectedProduct && (
-        <>
-          <div
-            className="fixed inset-0 z-[100] bg-black/70"
-            onClick={() => setShowGraphFullscreen(false)}
-          />
-          <div className="fixed inset-0 z-[101] p-4 flex flex-col">
-            <div className="mx-auto w-full max-w-[1800px] bg-[#0f172a] border border-cyan-500/40 rounded-xl shadow-2xl flex-1 flex flex-col">
-              <div className="flex items-center justify-between p-3 border-b border-cyan-500/30">
-                <div className="text-cyan-100 font-semibold">
-                  {selectedProduct?.NAME} —{" "}
-                  {route.charAt(0).toUpperCase() + route.slice(1)} Graph
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-cyan-300/80 text-sm hidden md:inline">
-                    Press{" "}
-                    <kbd className="px-1.5 py-0.5 bg-slate-700 rounded">
-                      Esc
-                    </kbd>{" "}
-                    to exit
-                  </span>
-                  <button
-                    onClick={() => setShowGraphFullscreen(false)}
-                    className="px-3 py-1.5 rounded bg-cyan-600 hover:bg-cyan-700 text-white font-semibold"
-                  >
-                    Exit Fullscreen
-                  </button>
-                </div>
-              </div>
-              <div className="flex-1 p-3 overflow-hidden">
-                <NodeRenderer
-                  key={`${graphKeyBase}:full`}
-                  selectedProduct={selectedProduct}
-                  route={route}
-                  products={productList}
-                  registry={registry}
-                  refTree={refTrees[route]}
-                  setRefTree={(updatedTree) =>
-                    setRefTrees((prev) => ({ ...prev, [route]: updatedTree }))
-                  }
-                  setSelectedProduct={setSelectedProduct}
-                  containerHeight="calc(100vh - 160px)"
-                  containerWidth="100%"
-                />
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-      {/* ===== End Fullscreen Overlay ===== */}
 
       {/* ===== Delete Flow Modals ===== */}
       <Modal open={showDeleteWarn} onClose={cancelDeleteFlow}>

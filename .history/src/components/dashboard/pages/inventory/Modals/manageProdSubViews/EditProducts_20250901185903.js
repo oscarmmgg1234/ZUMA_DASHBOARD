@@ -1,5 +1,5 @@
 // EditProduct.jsx — full component with BarcodeGeneration toggle,
-// delete flow, pool linking, node guide, token test, and fullscreen graph.
+// delete flow, pool linking, node guide, and token test.
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FaSearch } from "react-icons/fa";
@@ -158,9 +158,6 @@ export default function EditProduct(props) {
     reduction: null,
     shipment: null,
   });
-
-  // fullscreen graph toggle
-  const [showGraphFullscreen, setShowGraphFullscreen] = useState(false);
 
   // ==== Virtual pools state ====
   const [virtualPools, setVirtualPools] = useState([]);
@@ -598,7 +595,8 @@ export default function EditProduct(props) {
       ? toBool(editedFields.BarcodeGeneration)
       : toBool(selectedProduct?.BarcodeGeneration);
 
-  // close fullscreen on Esc
+  const [showGraphFullscreen, setShowGraphFullscreen] = useState(false);
+
   useEffect(() => {
     if (!showGraphFullscreen) return;
     const onEsc = (e) => {
@@ -607,9 +605,6 @@ export default function EditProduct(props) {
     window.addEventListener("keydown", onEsc);
     return () => window.removeEventListener("keydown", onEsc);
   }, [showGraphFullscreen]);
-
-  // Unique key per product/route/view to force clean mounts
-  const graphKeyBase = `${selectedProduct?.PRODUCT_ID || "none"}:${route}`;
 
   return (
     <div className="relative h-[62vh]">
@@ -952,23 +947,19 @@ export default function EditProduct(props) {
             </div>
           )}
 
-          {/* Inline graph — render ONLY when not in fullscreen */}
-          {!showGraphFullscreen && (
-            <NodeRenderer
-              key={`${graphKeyBase}:inline`}
-              selectedProduct={selectedProduct}
-              route={route}
-              products={productList}
-              registry={registry}
-              refTree={refTrees[route]}
-              setRefTree={(updatedTree) =>
-                setRefTrees((prev) => ({ ...prev, [route]: updatedTree }))
-              }
-              containerHeight="600px"
-              containerWidth="95%"
-              setSelectedProduct={setSelectedProduct}
-            />
-          )}
+          <NodeRenderer
+            selectedProduct={selectedProduct}
+            route={route}
+            products={productList}
+            registry={registry}
+            refTree={refTrees[route]}
+            setRefTree={(updatedTree) =>
+              setRefTrees((prev) => ({ ...prev, [route]: updatedTree }))
+            }
+            containerHeight="600px"
+            containerWidth="95%"
+            setSelectedProduct={setSelectedProduct}
+          />
 
           <NodeFlowGuide
             isLinked={Boolean(
@@ -988,7 +979,6 @@ export default function EditProduct(props) {
         </div>
       )}
 
-      {/* ===== Fullscreen Overlay — graph mounts as a fresh instance ===== */}
       {showGraphFullscreen && selectedProduct && (
         <>
           <div
@@ -1020,7 +1010,6 @@ export default function EditProduct(props) {
               </div>
               <div className="flex-1 p-3 overflow-hidden">
                 <NodeRenderer
-                  key={`${graphKeyBase}:full`}
                   selectedProduct={selectedProduct}
                   route={route}
                   products={productList}
@@ -1039,7 +1028,6 @@ export default function EditProduct(props) {
         </>
       )}
       {/* ===== End Fullscreen Overlay ===== */}
-
       {/* ===== Delete Flow Modals ===== */}
       <Modal open={showDeleteWarn} onClose={cancelDeleteFlow}>
         <div className="p-5">
