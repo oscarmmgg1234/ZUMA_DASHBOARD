@@ -11,7 +11,6 @@ const http = new http_handler();
  * - Zebra table with sticky header; totals bar (rows + total quantity)
  * - Prev/Next: bounded probe (21 days) + stop at "today" going forward
  * - Cancellation token prevents stale loops from keeping spinner alive
- * - NEW: Revert button per row; hide reversed rows
  */
 export default function ReductionLog(props) {
   const { visible, closeHandler } = props;
@@ -27,9 +26,6 @@ export default function ReductionLog(props) {
   const skipNextFetchRef = useRef(false);
   // cancellation / in-flight marker
   const inFlightRef = useRef(0);
-
-  // ---------- Helpers ----------
-  const toBool = (v) => v === true || v === 1 || v === "1";
 
   // ---------- Time helpers (America/Los_Angeles) ----------
   const laMidnight = (d) => {
@@ -75,22 +71,6 @@ export default function ReductionLog(props) {
     return new Date(y, (m || 1) - 1, d || 1);
   };
 
-  // ---------- New: Revert handler ----------
-  const revertTransHandler = async (transID) => {
-    try {
-      setLoading(true);
-      setError("");
-      await http.revertTrans({ transactionID: transID });
-      // Optimistically remove from view; DB now marks it reversed
-      setReductions((prev) => prev.filter((r) => r.TRANSACTIONID !== transID));
-      setBanner("Transaction reverted.");
-    } catch (e) {
-      setError(e?.message || "Failed to revert transaction");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // ---------- Fetchers ----------
   const fetchReductions = async (date) => {
     const requestId = ++inFlightRef.current;
@@ -102,10 +82,8 @@ export default function ReductionLog(props) {
       const res = await http.getReductionbyDate({ date: toServerDate(date) });
       if (inFlightRef.current !== requestId) return; // stale
 
-      const raw = Array.isArray(res?.data) ? res.data : [];
-      // Safety: filter any reversed rows client-side
-      const data = raw.filter((row) => !toBool(row.REVERSED));
-
+      const data = Array.isArray(res?.data) ? res.data : [];
+      console
       setReductions(data);
       setBanner(
         data.length === 0 ? "No product reductions for this date." : ""
@@ -147,9 +125,7 @@ export default function ReductionLog(props) {
 
         if (inFlightRef.current !== requestId) return; // stale
 
-        const raw = Array.isArray(res?.data) ? res.data : [];
-        const data = raw.filter((row) => !toBool(row.REVERSED));
-
+        const data = Array.isArray(res?.data) ? res.data : [];
         if (data.length > 0) {
           skipNextFetchRef.current = true; // prevent duplicate fetch on date change
           setFilterDate(candidate);
@@ -325,7 +301,6 @@ export default function ReductionLog(props) {
                     <th className="px-4 py-2 border">Date (LA)</th>
                     <th className="px-4 py-2 border">Company ID</th>
                     <th className="px-4 py-2 border">Employee</th>
-                    <th className="px-4 py-2 border">Actions</th> {/* NEW */}
                   </tr>
                 </thead>
                 <tbody>
@@ -353,24 +328,6 @@ export default function ReductionLog(props) {
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
                         {r.EMPLOYEE_NAME || "N/A"}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        <button
-                          className="rounded-lg bg-rose-100 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-200 disabled:opacity-50"
-                          disabled={loading}
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                `Revert this reduction?\nThis will mark transaction ${r.TRANSACTIONID} as reversed.`
-                              )
-                            ) {
-                              revertTransHandler(r.TRANSACTIONID);
-                            }
-                          }}
-                          title="Mark this transaction as reversed"
-                        >
-                          Revert
-                        </button>
                       </td>
                     </tr>
                   ))}

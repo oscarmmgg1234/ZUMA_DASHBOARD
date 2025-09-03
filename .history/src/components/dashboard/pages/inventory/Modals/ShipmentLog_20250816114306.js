@@ -13,7 +13,6 @@ const http = new http_handler();
  * - Sticky controls, clean banners, loading overlay (no alerts)
  * - Table with zebra rows; totals bar (shipments + quantity)
  * - Quick nav to previous/next available date
- * - NEW: Revert button per row; hide rows whose transactions are REVERSED
  */
 export default function ShipmentLog(props) {
   const { visible, closeHandler } = props;
@@ -25,9 +24,6 @@ export default function ShipmentLog(props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [banner, setBanner] = useState("");
-
-  // ---------- Helpers ----------
-  const toBool = (v) => v === true || v === 1 || v === "1";
 
   // ---------- Time helpers (America/Los_Angeles) ----------
   const toServerDate = (date) => {
@@ -53,22 +49,6 @@ export default function ShipmentLog(props) {
     return `${yyyy}-${mm}-${dd}`;
   };
 
-  // ---------- New: Revert handler ----------
-  const revertTransHandler = async (transID) => {
-    try {
-      setLoading(true);
-      setError("");
-      await http.revertTrans({ transactionID: transID });
-      // Optimistically remove from view; server marks as reversed so it won't reappear
-      setShipments((prev) => prev.filter((s) => s.TRANSACTIONID !== transID));
-      setBanner("Transaction reverted.");
-    } catch (e) {
-      setError(e?.message || "Failed to revert transaction");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // ---------- Fetchers ----------
   const fetchShipments = async (date) => {
     setLoading(true);
@@ -76,10 +56,7 @@ export default function ShipmentLog(props) {
     try {
       const formattedDate = toServerDate(date);
       const res = await http.getShipmentByDate({ date: formattedDate });
-      const raw = Array.isArray(res?.data) ? res.data : [];
-      // Safety filter: hide reversed rows client-side too
-      const data = raw.filter((row) => !toBool(row.REVERSED));
-
+      const data = Array.isArray(res?.data) ? res.data : [];
       setShipments(data);
       if (data.length === 0) setBanner("No shipments for this date.");
       else setBanner("");
@@ -130,24 +107,16 @@ export default function ShipmentLog(props) {
 
   const findNeighborDate = (direction) => {
     if (!hasHighlights) return null;
-    const target = new Date(filterDate);
-    target.setHours(0, 0, 0, 0);
+    const target = filterDate.setHours(0, 0, 0, 0);
     const sorted = [...highlightedDates]
-      .map((d) => {
-        const dd = new Date(d);
-        dd.setHours(0, 0, 0, 0);
-        return dd;
-      })
-      .sort((a, b) => a - b);
-
+      .sort((a, b) => a - b)
+      .map((d) => d.setHours(0, 0, 0, 0));
     if (direction === "prev") {
-      for (let i = sorted.length - 1; i >= 0; i--) {
+      for (let i = sorted.length - 1; i >= 0; i--)
         if (sorted[i] < target) return new Date(sorted[i]);
-      }
     } else {
-      for (let i = 0; i < sorted.length; i++) {
+      for (let i = 0; i < sorted.length; i++)
         if (sorted[i] > target) return new Date(sorted[i]);
-      }
     }
     return null;
   };
@@ -274,7 +243,6 @@ export default function ShipmentLog(props) {
                     <th className="px-4 py-2 border">Date (LA)</th>
                     <th className="px-4 py-2 border">Company ID</th>
                     <th className="px-4 py-2 border">Employee</th>
-                    <th className="px-4 py-2 border">Actions</th> {/* NEW */}
                   </tr>
                 </thead>
                 <tbody>
@@ -290,7 +258,7 @@ export default function ShipmentLog(props) {
                         {shipment.PRODUCT_NAME || "N/A"}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {Number(shipment.QUANTITY) || 0}
+                        {shipment.QUANTITY}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
                         {formatDisplay(shipment.SHIPMENT_DATE)}
@@ -300,24 +268,6 @@ export default function ShipmentLog(props) {
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
                         {shipment.EMPLOYEE_NAME || "N/A"}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        <button
-                          className="rounded-lg bg-rose-100 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-200 disabled:opacity-50"
-                          disabled={loading}
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                `Revert this shipment?\nThis will mark transaction ${shipment.TRANSACTIONID} as reversed.`
-                              )
-                            ) {
-                              revertTransHandler(shipment.TRANSACTIONID);
-                            }
-                          }}
-                          title="Mark this transaction as reversed"
-                        >
-                          Revert
-                        </button>
                       </td>
                     </tr>
                   ))}

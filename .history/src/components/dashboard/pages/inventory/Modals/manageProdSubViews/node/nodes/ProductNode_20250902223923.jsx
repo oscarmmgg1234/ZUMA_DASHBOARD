@@ -138,7 +138,7 @@ function ProductNode({ data }) {
                 padding: "4px 8px",
                 borderRadius: 999,
                 border: "1px solid #e5e7eb",
-                background: "rgba(195, 195, 195, 0.9)",
+                background: "rgba(185, 185, 185, 0.9)",
                 color: "#111827",
                 whiteSpace: "nowrap",
                 fontWeight: "bold"

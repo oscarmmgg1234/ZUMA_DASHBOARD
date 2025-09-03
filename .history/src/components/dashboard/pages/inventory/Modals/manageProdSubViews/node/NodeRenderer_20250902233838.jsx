@@ -1,7 +1,4 @@
-// NodeRenderer.jsx — Pure client-side precheck (no backend precheck)
-// - On product select: clean tokens using props.products list (drop entries with unknown PRODUCT_ID)
-// - Render graph from cleaned tokens only
-// - On Save: encode token from tree and call commitChanges; keep local state in sync
+// NodeRenderer.jsx — Pure client-side precheck + keyboard centering nav (no node moves)
 
 import React, {
   useState,
@@ -16,6 +13,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   ReactFlowProvider,
+  useReactFlow,          // ← added
 } from "reactflow";
 import { v4 as uuidv4 } from "uuid";
 import "reactflow/dist/style.css";
@@ -36,14 +34,11 @@ const initialTree = [
 
 /* -------------------- PURE token helpers (no HTTP) -------------------- */
 
-// normalize to single spaces
 const norm = (s) =>
   typeof s === "string" ? s.trim().replace(/\s+/g, " ") : "";
 
-// split into raw token entries
 const splitEntries = (s) => norm(s).split(" ").filter(Boolean);
 
-// parse one entry (permissive)
 const parseEntry = (entry, fallbackPid) => {
   const [type, func, id, p1, p2, p3] = entry.split(":");
   return {
@@ -57,18 +52,16 @@ const parseEntry = (entry, fallbackPid) => {
   };
 };
 
-// remove entries whose 3rd field (productId) is NOT present in validIds
 const cleanOneRoute = (tokenStr, validIds) => {
   const cleaned = splitEntries(tokenStr).filter((entry) => {
     const parts = entry.split(":");
-    if (parts.length < 3) return false; // must have at least CLASS:FUNC:PRODUCT_ID
+    if (parts.length < 3) return false;
     const pid = String(parts[2] || "").trim();
     return pid && validIds.has(pid);
   });
   return cleaned.join(" ");
 };
 
-// Clean all three routes, purely client-side
 const purePrecheckTokens = (product, products) => {
   const validIds = new Set((products || []).map((p) => String(p.PRODUCT_ID)));
   const act = cleanOneRoute(product?.ACTIVATION_TOKEN || "", validIds);
@@ -82,7 +75,6 @@ const purePrecheckTokens = (product, products) => {
   };
 };
 
-// Parser that excludes maintenance classes for the graph
 const parseForGraph = (tokenStr, pid) =>
   splitEntries(tokenStr)
     .map((e) => parseEntry(e, pid))
@@ -114,10 +106,8 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
         selectedProductId: product.selectedProductId || "",
         onFieldChange: handleNodeFieldChange,
         name: product.name || "",
-         registryMap,                            // for lookup of effects
-  actions: (product.children || [])       // all action tokens in this column
-     .map((c) => c?.token)
-     .filter(Boolean),
+        registryMap,
+        actions: (product.children || []).map((c) => c?.token).filter(Boolean),
       },
       position: { x: productX, y: productY },
       deletable: true,
@@ -286,7 +276,7 @@ function treeToTokenEncoder(tree /*, route */) {
     if (!product.selectedProductId || !Array.isArray(product.children)) continue;
     for (const action of product.children) {
       const t = action.token || {};
-      const classId = t.type?.toUpperCase();
+      theconstclassId = t.type?.toUpperCase();
       const funcId = t.func;
       const productId = product.selectedProductId;
       if (!classId || !funcId || !productId) continue;
@@ -305,7 +295,7 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
   if (!Array.isArray(currentTree) || !Array.isArray(snapshotTree)) return false;
   if (currentTree.length !== snapshotTree.length) return false;
 
-  const productKeys = ["selectedProductId", "name"]; // keep minimal & safe
+  const productKeys = ["selectedProductId", "name"];
   const tokenKeys = ["type", "func", "productId", "param1", "param2", "param3"];
 
   for (let i = 0; i < currentTree.length; i++) {
@@ -335,16 +325,68 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
   return true;
 };
 
+/* -------------------- Keyboard nav helpers (center on neighbor) -------------------- */
+
+const DIRS = {
+  ArrowLeft:  { vx: -1, vy:  0 },
+  ArrowRight: { vx:  1, vy:  0 },
+  ArrowUp:    { vx:  0, vy: -1 },
+  ArrowDown:  { vx:  0, vy:  1 },
+};
+
+const getCenter = (n) => {
+  const pos = n.positionAbsolute || n.position || { x: 0, y: 0 };
+  const w = Number(n.width) || 200;
+  const h = Number(n.height) || 100;
+  return { cx: pos.x + w / 2, cy: pos.y + h / 2 };
+};
+
+function pickNeighbor(currentId, key, nodes) {
+  const dir = DIRS[key];
+  if (!dir) return null;
+  const current = nodes.find((n) => n.id === currentId) || nodes[0];
+  if (!current) return null;
+
+  const { cx: cX, cy: cY } = getCenter(current);
+  let best = null;
+  let bestScore = Infinity;
+
+  for (const n of nodes) {
+    if (n.id === current.id) continue;
+    const { cx, cy } = getCenter(n);
+    const dx = cx - cX;
+    const dy = cy - cY;
+    const len = Math.hypot(dx, dy);
+    if (len === 0) continue;
+
+    const dot = (dx / len) * dir.vx + (dy / len) * dir.vy;
+    if (dot <= 0.15) continue; // roughly in that direction
+
+    const anglePenalty = 1 - dot;
+    const dist = len;
+    const score = anglePenalty * 1000 + dist; // prefer alignment, then distance
+
+    if (score < bestScore) {
+      bestScore = score;
+      best = n.id;
+    }
+  }
+  return best;
+}
+
+/* -------------------- Main flow component -------------------- */
+
 function FlowComponentInner({ props }) {
   const [notification, setNotification] = useState({ message: "", type: "" });
 
-  // cleaned tokens for the currently selected product (client-side only)
-  const [cleanedTokens, setCleanedTokens] = useState(null); // { productID, activation, reduction, shipment }
-
+  const [cleanedTokens, setCleanedTokens] = useState(null);
   const [tree, setTree] = useState(initialTree);
   const [treeSnapshot, setTreeSnapshot] = useState(initialTree);
   const [rfNodes, setNodes, onNodesChange] = useNodesState([]);
   const [rfEdges, setEdges, onEdgesChange] = useEdgesState([]);
+  const rf = useReactFlow(); // ← access setCenter / getZoom
+  const [activeId, setActiveId] = useState(null);
+
   const registryMap = useMemo(
     () => prepareRegistry(props.registry),
     [props.registry]
@@ -370,7 +412,7 @@ function FlowComponentInner({ props }) {
     return () => clearTimeout(t);
   }, [notification]);
 
-  /* A) On product or products-list change: client-side clean, no HTTP */
+  // A) Clean tokens
   useEffect(() => {
     const p = props.selectedProduct;
     if (!p?.PRODUCT_ID) {
@@ -383,7 +425,7 @@ function FlowComponentInner({ props }) {
     setCleanedTokens(cleaned);
   }, [props.selectedProduct?.PRODUCT_ID, props.products]);
 
-  /* B) Build tree strictly from cleaned tokens (pure, no HTTP) */
+  // B) Build tree from cleaned tokens
   useEffect(() => {
     const pid = props.selectedProduct?.PRODUCT_ID;
     if (!pid || !cleanedTokens || cleanedTokens.productID !== pid) return;
@@ -401,7 +443,7 @@ function FlowComponentInner({ props }) {
     setTreeSnapshot(JSON.parse(JSON.stringify(newTree)));
   }, [props.route, cleanedTokens?.productID, cleanedTokens, props.selectedProduct?.PRODUCT_ID]);
 
-  /* C) Rebuild RF graph on tree changes */
+  // C) Rebuild RF graph on tree changes
   useEffect(() => {
     const { nodes, edges } = buildLayout(
       tree,
@@ -414,7 +456,7 @@ function FlowComponentInner({ props }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tree, registryMap, props.products, props.route]);
 
-  /* D) Save: encode token, commit, then update local cleaned state ONLY for active route */
+  // D) Commit
   const handleCommit = useCallback(async () => {
     if (!props.selectedProduct?.PRODUCT_ID) return;
 
@@ -424,13 +466,10 @@ function FlowComponentInner({ props }) {
       return;
     }
 
-    // Encode new token from visual tree (for the current route)
     const updatedToken = norm(treeToTokenEncoder(tree /*, props.route*/));
-
-    // Commit to backend: write the new token for the active route
     const dataPacket = {
-      route: props.route, // "activation" | "reduction" | "shipment"
-      postops: [],        // keep if you still need; otherwise leave as []
+      route: props.route,
+      postops: [],
       newToken: updatedToken,
       section: "node",
       product: props.selectedProduct.PRODUCT_ID,
@@ -438,14 +477,12 @@ function FlowComponentInner({ props }) {
 
     await http.commitChanges(dataPacket);
 
-    // Update local cleanedTokens for current route (keep other routes intact)
     setCleanedTokens((prev) =>
       prev && prev.productID === props.selectedProduct.PRODUCT_ID
         ? { ...prev, [props.route]: updatedToken }
         : prev
     );
 
-    // Optionally mirror into selectedProduct (UI only; not DB readback)
     const columnByRoute = {
       activation: "ACTIVATION_TOKEN",
       reduction: "REDUCTION_TOKEN",
@@ -457,17 +494,16 @@ function FlowComponentInner({ props }) {
         : prev
     );
 
-    // New snapshot
     const cloned = JSON.parse(JSON.stringify(tree));
     setTreeSnapshot(cloned);
 
     setNotification({ message: "Changes committed.", type: "success" });
-
-    // Keep refTree flow if you use it elsewhere
     props.setRefTree?.(cloned);
   }, [tree, treeSnapshot, props.route, props.selectedProduct?.PRODUCT_ID, props.setSelectedProduct, props.setRefTree]);
 
+  // E) Click to add (unchanged)
   const onNodeClick = useCallback((_, node) => {
+    // keep default behavior
     if (node?.data?.label === "+ Add Product") {
       const newProdId = uuidv4();
       setTree((prev) => [
@@ -489,15 +525,58 @@ function FlowComponentInner({ props }) {
         )
       );
     }
-  }, []);
+    // also mark selection + center
+    if (node?.id) {
+      setActiveId(node.id);
+      setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === node.id })));
+      centerOnNode(node.id);
+    }
+  }, [setNodes]);
 
+  // Center helper (smooth). If sizes aren't ready yet, retry next frame.
+  const centerOnNode = useCallback((id) => {
+    const n = rfNodes.find((x) => x.id === id);
+    if (!n) return;
+
+    const pos = n.positionAbsolute || n.position || { x: 0, y: 0 };
+    const w = Number(n.width) || 200;
+    const h = Number(n.height) || 100;
+
+    // If width/height aren't measured yet, retry shortly
+    if (!(n.width && n.height)) {
+      requestAnimationFrame(() => centerOnNode(id));
+      return;
+    }
+
+    const zoom = typeof rf.getZoom === "function" ? rf.getZoom() : undefined;
+    rf.setCenter(pos.x + w / 2, pos.y + h / 2, { zoom, duration: 250 });
+  }, [rfNodes, rf]);
+
+  // Select helper
+  const selectNodeById = useCallback((id) => {
+    if (!id) return;
+    setActiveId(id);
+    setNodes((prev) => prev.map((n) => ({ ...n, selected: n.id === id })));
+    centerOnNode(id);
+  }, [setNodes, centerOnNode]);
+
+  // Ensure a node is selected & centered when graph changes
+  useEffect(() => {
+    const anySelected = rfNodes.some((n) => n.selected);
+    if (!anySelected && rfNodes.length > 0) {
+      selectNodeById(rfNodes[0].id);
+    }
+  }, [rfNodes, selectNodeById]);
+
+  /* F) Keyboard: Delete + Arrow centering + Enter/Space activate */
   const onKeyDown = useCallback(
     (e) => {
       const tag = e.target.tagName?.toLowerCase?.() || "";
       const isEditable =
-        ["input", "textarea"].includes(tag) || e.target.isContentEditable;
+        ["input", "textarea", "select"].includes(tag) || e.target.isContentEditable;
       if (isEditable) return;
 
+      // Delete selected node (kept as-is)
       if (e.key === "Backspace" || e.key === "Delete") {
         const selected = rfNodes.find((n) => n.selected && n.deletable !== false);
         if (!selected) return;
@@ -515,9 +594,27 @@ function FlowComponentInner({ props }) {
             children: (p.children || []).filter((c) => c.id !== id),
           }));
         });
+        return;
+      }
+
+      // Arrow: pick neighbor, select + center (simulate drag-to-next)
+      if (e.key in DIRS) {
+        e.preventDefault();
+        const current = rfNodes.find((n) => n.selected) || rfNodes[0];
+        if (!current) return;
+        const nextId = pickNeighbor(current.id, e.key, rfNodes);
+        if (nextId) selectNodeById(nextId);
+        return;
+      }
+
+      // Enter/Space: activate focused node (reuse click handler)
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        const node = rfNodes.find((n) => n.selected) || rfNodes[0];
+        if (node) onNodeClick(null, node);
       }
     },
-    [rfNodes]
+    [rfNodes, setTree, selectNodeById, onNodeClick]
   );
 
   return (
@@ -530,9 +627,9 @@ function FlowComponentInner({ props }) {
         borderWidth: "7px",
         borderColor: "rgba(0, 28, 62, 0.75)",
         borderRadius: "10px",
-        position: "relative",     
-          width: props.containerWidth || "95%",
-      height: props.containerHeight || "600px",
+        position: "relative",
+        width: props.containerWidth || "95%",
+        height: props.containerHeight || "600px",
       }}
       tabIndex={0}
       onKeyDown={onKeyDown}
@@ -588,7 +685,10 @@ function FlowComponentInner({ props }) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
-        nodesDraggable={false}
+        nodesDraggable={false}        /* ← DO NOT MOVE NODES */
+        panOnDrag={true}              /* drag background to pan */
+        selectionOnDrag={true}
+        zoomOnScroll={true}
         nodeTypes={nodeTypes}
         style={{ width: "100%", height: "100%", backgroundColor: "#3e5778d4" }}
         fitView
@@ -626,4 +726,4 @@ export default function NodeRenderer(props) {
     </ReactFlowProvider>
   );
 }
-//pure non-precheck 12.34
+// pure non-precheck

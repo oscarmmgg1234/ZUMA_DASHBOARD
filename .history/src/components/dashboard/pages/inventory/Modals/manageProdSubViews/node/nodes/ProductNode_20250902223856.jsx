@@ -135,10 +135,10 @@ function ProductNode({ data }) {
               style={{
                 fontSize: 20,
                 lineHeight: "18px",
-                padding: "4px 8px",
+                padding: "2px 8px",
                 borderRadius: 999,
                 border: "1px solid #e5e7eb",
-                background: "rgba(195, 195, 195, 0.9)",
+                background: "rgba(142, 192, 150, 0.9)",
                 color: "#111827",
                 whiteSpace: "nowrap",
                 fontWeight: "bold"

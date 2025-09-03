@@ -1,7 +1,4 @@
-// NodeRenderer.jsx — Pure client-side precheck (no backend precheck)
-// - On product select: clean tokens using props.products list (drop entries with unknown PRODUCT_ID)
-// - Render graph from cleaned tokens only
-// - On Save: encode token from tree and call commitChanges; keep local state in sync
+// NodeRenderer.jsx — adds arrow-key navigation + dragging (keeps everything else the same)
 
 import React, {
   useState,
@@ -114,10 +111,8 @@ function buildLayout(tree, props, registryMap, handleNodeFieldChange) {
         selectedProductId: product.selectedProductId || "",
         onFieldChange: handleNodeFieldChange,
         name: product.name || "",
-         registryMap,                            // for lookup of effects
-  actions: (product.children || [])       // all action tokens in this column
-     .map((c) => c?.token)
-     .filter(Boolean),
+        registryMap, // for lookup of effects
+        actions: (product.children || []).map((c) => c?.token).filter(Boolean),
       },
       position: { x: productX, y: productY },
       deletable: true,
@@ -244,7 +239,7 @@ const prepareRegistry = (registry) => {
   return registryMap;
 };
 
-const buildFirstStageFromParsed = (parsed) => {
+const buildFirstStage = (parsed) => {
   const firstStage = new Map();
   Object.entries(parsed).forEach(([category, tokens]) => {
     if (!firstStage.has(category)) firstStage.set(category, new Map());
@@ -305,7 +300,7 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
   if (!Array.isArray(currentTree) || !Array.isArray(snapshotTree)) return false;
   if (currentTree.length !== snapshotTree.length) return false;
 
-  const productKeys = ["selectedProductId", "name"]; // keep minimal & safe
+  const productKeys = ["selectedProductId", "name"]; // minimal & safe
   const tokenKeys = ["type", "func", "productId", "param1", "param2", "param3"];
 
   for (let i = 0; i < currentTree.length; i++) {
@@ -334,6 +329,59 @@ const commitChangesIsValid = (currentTree, snapshotTree) => {
   }
   return true;
 };
+
+/* -------------------- Keyboard nav helpers (arrow keys) -------------------- */
+
+const DIRS = {
+  ArrowLeft:  { vx: -1, vy:  0 },
+  ArrowRight: { vx:  1, vy:  0 },
+  ArrowUp:    { vx:  0, vy: -1 },
+  ArrowDown:  { vx:  0, vy:  1 },
+};
+
+const getCenter = (n) => {
+  // React Flow gives positionAbsolute after measurement; fallback to position
+  const pos = n.positionAbsolute || n.position || { x: 0, y: 0 };
+  const w = Number(n.width) || 0;
+  const h = Number(n.height) || 0;
+  return { cx: pos.x + w / 2, cy: pos.y + h / 2 };
+};
+
+function pickNeighbor(currentId, key, nodes) {
+  const dir = DIRS[key];
+  if (!dir) return null;
+
+  const current = nodes.find((n) => n.id === currentId);
+  if (!current) return null;
+
+  const { cx: cX, cy: cY } = getCenter(current);
+  let best = null;
+  let bestScore = Infinity;
+
+  for (const n of nodes) {
+    if (n.id === currentId) continue;
+    const { cx, cy } = getCenter(n);
+    const dx = cx - cX;
+    const dy = cy - cY;
+    const len = Math.hypot(dx, dy);
+    if (len === 0) continue;
+
+    const dot = (dx / len) * dir.vx + (dy / len) * dir.vy;
+    if (dot <= 0.15) continue; // roughly in that direction
+
+    const anglePenalty = 1 - dot; // smaller is better
+    const dist = len;
+    const score = anglePenalty * 1000 + dist; // angle dominates
+
+    if (score < bestScore) {
+      best = n.id;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+/* -------------------- Main flow component -------------------- */
 
 function FlowComponentInner({ props }) {
   const [notification, setNotification] = useState({ message: "", type: "" });
@@ -394,7 +442,7 @@ function FlowComponentInner({ props }) {
       shipment: parseForGraph(cleanedTokens.shipment, pid),
     };
 
-    const firstStage = buildFirstStageFromParsed(parsed);
+    const firstStage = buildFirstStage(parsed);
     const newTree = finalPhase(firstStage, props.route || "activation");
 
     setTree(newTree);
@@ -430,7 +478,7 @@ function FlowComponentInner({ props }) {
     // Commit to backend: write the new token for the active route
     const dataPacket = {
       route: props.route, // "activation" | "reduction" | "shipment"
-      postops: [],        // keep if you still need; otherwise leave as []
+      postops: [],
       newToken: updatedToken,
       section: "node",
       product: props.selectedProduct.PRODUCT_ID,
@@ -445,7 +493,7 @@ function FlowComponentInner({ props }) {
         : prev
     );
 
-    // Optionally mirror into selectedProduct (UI only; not DB readback)
+    // Mirror into selectedProduct (UI only)
     const columnByRoute = {
       activation: "ACTIVATION_TOKEN",
       reduction: "REDUCTION_TOKEN",
@@ -457,16 +505,14 @@ function FlowComponentInner({ props }) {
         : prev
     );
 
-    // New snapshot
     const cloned = JSON.parse(JSON.stringify(tree));
     setTreeSnapshot(cloned);
 
     setNotification({ message: "Changes committed.", type: "success" });
-
-    // Keep refTree flow if you use it elsewhere
     props.setRefTree?.(cloned);
   }, [tree, treeSnapshot, props.route, props.selectedProduct?.PRODUCT_ID, props.setSelectedProduct, props.setRefTree]);
 
+  /* E) Click to add */
   const onNodeClick = useCallback((_, node) => {
     if (node?.data?.label === "+ Add Product") {
       const newProdId = uuidv4();
@@ -491,13 +537,22 @@ function FlowComponentInner({ props }) {
     }
   }, []);
 
+  /* F) Keyboard: Delete + Arrow navigation (NEW) */
+  const selectNodeById = useCallback((id) => {
+    if (!id) return;
+    setNodes((prev) =>
+      prev.map((n) => ({ ...n, selected: n.id === id }))
+    );
+  }, [setNodes]);
+
   const onKeyDown = useCallback(
     (e) => {
       const tag = e.target.tagName?.toLowerCase?.() || "";
       const isEditable =
-        ["input", "textarea"].includes(tag) || e.target.isContentEditable;
+        ["input", "textarea", "select"].includes(tag) || e.target.isContentEditable;
       if (isEditable) return;
 
+      // Delete selected node
       if (e.key === "Backspace" || e.key === "Delete") {
         const selected = rfNodes.find((n) => n.selected && n.deletable !== false);
         if (!selected) return;
@@ -515,9 +570,19 @@ function FlowComponentInner({ props }) {
             children: (p.children || []).filter((c) => c.id !== id),
           }));
         });
+        return;
+      }
+
+      // Arrow-key navigation
+      if (e.key in DIRS) {
+        e.preventDefault();
+        const current = rfNodes.find((n) => n.selected) || rfNodes[0];
+        if (!current) return;
+        const nextId = pickNeighbor(current.id, e.key, rfNodes);
+        if (nextId) selectNodeById(nextId);
       }
     },
-    [rfNodes]
+    [rfNodes, setTree, selectNodeById]
   );
 
   return (
@@ -530,9 +595,9 @@ function FlowComponentInner({ props }) {
         borderWidth: "7px",
         borderColor: "rgba(0, 28, 62, 0.75)",
         borderRadius: "10px",
-        position: "relative",     
-          width: props.containerWidth || "95%",
-      height: props.containerHeight || "600px",
+        position: "relative",
+        width: props.containerWidth || "95%",
+        height: props.containerHeight || "600px",
       }}
       tabIndex={0}
       onKeyDown={onKeyDown}
@@ -588,7 +653,7 @@ function FlowComponentInner({ props }) {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
-        nodesDraggable={false}
+        nodesDraggable={true}              /* ENABLE DRAGGING (was false) */
         nodeTypes={nodeTypes}
         style={{ width: "100%", height: "100%", backgroundColor: "#3e5778d4" }}
         fitView
@@ -606,13 +671,7 @@ function FlowComponentInner({ props }) {
             borderRadius: 6,
           }}
         />
-        <Background
-          variant="dots"
-          gap={16}
-          size={5}
-          color="#4f4c4cf5"
-          style={{ opacity: 0.4 }}
-        />
+        <Background variant="dots" gap={16} size={5} color="#4f4c4cf5" style={{ opacity: 0.4 }} />
         <Controls />
       </ReactFlow>
     </div>
@@ -626,4 +685,4 @@ export default function NodeRenderer(props) {
     </ReactFlowProvider>
   );
 }
-//pure non-precheck 12.34
+// pure non-precheck

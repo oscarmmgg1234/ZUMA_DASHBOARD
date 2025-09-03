@@ -45,11 +45,10 @@ import {
   manageTypes,
   updateProductType,
   getTypesWithProducts,
-  reverTransaction,
+  rever
 } from "./HTTPS";
 
 export default class http_handler {
-  revertTrans = async (args) => await reverTransaction(args);
   update_companyInfo = async (args) => await updateCompanyInfo(args);
   manage_companies = async (args) => await manageCompanies(args);
   update_productCompany = async (args) => await updateProductCompany(args);

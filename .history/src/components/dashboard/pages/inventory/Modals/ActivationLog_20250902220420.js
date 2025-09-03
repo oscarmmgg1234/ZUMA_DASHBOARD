@@ -4,20 +4,19 @@ import http_handler from "../HTTP/HTTPS_INTERFACE";
 const http = new http_handler();
 
 /**
- * ReductionLog — Bounded probing & cancellation
+ * ActivationLog — Shipment-style UX with bounded probing & cancellation
  * - LA-timezone dates end-to-end (server string + display)
- * - Sticky controls with Today + ← Prev/Next reduction day →
+ * - Sticky controls with Today + ← Prev/Next activation day →
  * - Slim info/error banners; loading overlay
  * - Zebra table with sticky header; totals bar (rows + total quantity)
  * - Prev/Next: bounded probe (21 days) + stop at "today" going forward
  * - Cancellation token prevents stale loops from keeping spinner alive
- * - NEW: Revert button per row; hide reversed rows
  */
-export default function ReductionLog(props) {
+export default function ActivationLog(props) {
   const { visible, closeHandler } = props;
 
   const [filterDate, setFilterDate] = useState(() => new Date());
-  const [reductions, setReductions] = useState([]);
+  const [activations, setActivations] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -25,13 +24,15 @@ export default function ReductionLog(props) {
 
   // avoid double-fetch when we already fetched during jumpTo()
   const skipNextFetchRef = useRef(false);
+
   // cancellation / in-flight marker
   const inFlightRef = useRef(0);
 
-  // ---------- Helpers ----------
-  const toBool = (v) => v === true || v === 1 || v === "1";
-
   // ---------- Time helpers (America/Los_Angeles) ----------
+
+  const revertTransHandler = async (transID) => {
+    const reponse = await http.revertTrans({transactionID: transID})
+  }
   const laMidnight = (d) => {
     const fmt = new Intl.DateTimeFormat("en-US", {
       timeZone: "America/Los_Angeles",
@@ -75,45 +76,26 @@ export default function ReductionLog(props) {
     return new Date(y, (m || 1) - 1, d || 1);
   };
 
-  // ---------- New: Revert handler ----------
-  const revertTransHandler = async (transID) => {
-    try {
-      setLoading(true);
-      setError("");
-      await http.revertTrans({ transactionID: transID });
-      // Optimistically remove from view; DB now marks it reversed
-      setReductions((prev) => prev.filter((r) => r.TRANSACTIONID !== transID));
-      setBanner("Transaction reverted.");
-    } catch (e) {
-      setError(e?.message || "Failed to revert transaction");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // ---------- Fetchers ----------
-  const fetchReductions = async (date) => {
+  const fetchActivations = async (date) => {
     const requestId = ++inFlightRef.current;
     setLoading(true);
     setError("");
     setBanner("");
 
     try {
-      const res = await http.getReductionbyDate({ date: toServerDate(date) });
+      const res = await http.getActivationByDate({ date: toServerDate(date) });
       if (inFlightRef.current !== requestId) return; // stale
 
-      const raw = Array.isArray(res?.data) ? res.data : [];
-      // Safety: filter any reversed rows client-side
-      const data = raw.filter((row) => !toBool(row.REVERSED));
-
-      setReductions(data);
+      const data = Array.isArray(res?.data) ? res.data : [];
+      setActivations(data);
       setBanner(
-        data.length === 0 ? "No product reductions for this date." : ""
+        data.length === 0 ? "No product activations for this date." : ""
       );
     } catch (e) {
       if (inFlightRef.current !== requestId) return; // stale
-      setError(e?.message || "Failed to fetch reductions");
-      setReductions([]);
+      setError(e?.message || "Failed to fetch activations");
+      setActivations([]);
     } finally {
       if (inFlightRef.current === requestId) setLoading(false);
     }
@@ -137,23 +119,21 @@ export default function ReductionLog(props) {
 
         // Hard ceiling when going forward: don't search past today (LA)
         if (direction === "next" && isAfterTodayLA(candidate)) {
-          setBanner("You’re already at the most recent reductions.");
+          setBanner("You’re already at the most recent activations.");
           break;
         }
 
-        const res = await http.getReductionbyDate({
+        const res = await http.getActivationByDate({
           date: toServerDate(candidate),
         });
 
         if (inFlightRef.current !== requestId) return; // stale
 
-        const raw = Array.isArray(res?.data) ? res.data : [];
-        const data = raw.filter((row) => !toBool(row.REVERSED));
-
+        const data = Array.isArray(res?.data) ? res.data : [];
         if (data.length > 0) {
           skipNextFetchRef.current = true; // prevent duplicate fetch on date change
           setFilterDate(candidate);
-          setReductions(data);
+          setActivations(data);
           setBanner("");
           setLoading(false);
           return;
@@ -163,8 +143,8 @@ export default function ReductionLog(props) {
       // nothing found within the bounded window
       setBanner(
         direction === "prev"
-          ? "No earlier days with reductions within the search window."
-          : "No later days with reductions within the search window."
+          ? "No earlier days with activations within the search window."
+          : "No later days with activations within the search window."
       );
     } catch (e) {
       if (inFlightRef.current !== requestId) return; // stale
@@ -177,7 +157,7 @@ export default function ReductionLog(props) {
   // ---------- Effects ----------
   useEffect(() => {
     if (!visible) return;
-    fetchReductions(filterDate);
+    fetchActivations(filterDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
@@ -187,7 +167,7 @@ export default function ReductionLog(props) {
       skipNextFetchRef.current = false;
       return; // we already set data during jump
     }
-    fetchReductions(filterDate);
+    fetchActivations(filterDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterDate]);
 
@@ -201,13 +181,13 @@ export default function ReductionLog(props) {
 
   // ---------- Derived ----------
   const totals = useMemo(() => {
-    const count = reductions.length;
-    const qty = reductions.reduce(
-      (acc, r) => acc + (Number(r.QUANTITY) || 0),
+    const count = activations.length;
+    const qty = activations.reduce(
+      (acc, a) => acc + (Number(a.QUANTITY) || 0),
       0
     );
     return { count, qty: Number.isFinite(qty) ? Number(qty.toFixed(2)) : 0 };
-  }, [reductions]);
+  }, [activations]);
 
   // ---------- UI helpers ----------
   const Spinner = () => (
@@ -229,11 +209,11 @@ export default function ReductionLog(props) {
     <BaseModal
       visible={visible}
       closeHandler={closeHandler}
-      title={"View Product Reductions"}
-      closeName={"reduction"}
+      title={"View Product Activations"}
+      closeName={"activation"}
     >
       <div className="relative">
-        <Overlay show={loading} label="Loading reductions..." />
+        <Overlay show={loading} label="Loading activations..." />
 
         <div className="p-4">
           {banner && (
@@ -274,14 +254,14 @@ export default function ReductionLog(props) {
                   onClick={() => jumpToNeighborWithData("prev")}
                   disabled={loading}
                 >
-                  ← Prev day with reductions
+                  ← Prev day with activations
                 </button>
                 <button
                   className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
                   onClick={() => jumpToNeighborWithData("next")}
                   disabled={loading}
                 >
-                  Next day with reductions →
+                  Next day with activations →
                 </button>
               </div>
             </div>
@@ -311,9 +291,9 @@ export default function ReductionLog(props) {
 
           {/* Table */}
           <div className="max-h-[65vh] overflow-auto rounded-2xl border border-gray-200">
-            {reductions.length === 0 ? (
+            {activations.length === 0 ? (
               <div className="grid place-items-center p-10 text-sm text-gray-500">
-                No reductions
+                No activations
               </div>
             ) : (
               <table className="min-w-full border-collapse text-sm">
@@ -325,52 +305,31 @@ export default function ReductionLog(props) {
                     <th className="px-4 py-2 border">Date (LA)</th>
                     <th className="px-4 py-2 border">Company ID</th>
                     <th className="px-4 py-2 border">Employee</th>
-                    <th className="px-4 py-2 border">Actions</th> {/* NEW */}
                   </tr>
                 </thead>
                 <tbody>
-                  {reductions.map((r, index) => (
+                  {activations.map((a, index) => (
                     <tr
-                      key={r.CONSUMP_ID || `${r.PRODUCT_ID}-${index}`}
+                      key={a.ACTIVATION_ID || `${a.PRODUCT_ID}-${index}`}
                       className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                     >
                       <td className="px-4 py-2 border font-mono text-xs text-gray-800">
-                        {r.PRODUCT_ID}
+                        {a.PRODUCT_ID}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {r.PRODUCT_NAME || "N/A"}
+                        {a.PRODUCT_NAME || "N/A"}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {Number.isFinite(Number(r.QUANTITY))
-                          ? Number(r.QUANTITY)
-                          : 0}
+                        {Number(a.QUANTITY) || 0}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {formatDisplay(r.DATETIME)}
+                        {formatDisplay(a.DATE)}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {r.COMPANY_ID ?? "N/A"}
+                        {a.COMPANY_ID ?? "N/A"}
                       </td>
                       <td className="px-4 py-2 border text-gray-900">
-                        {r.EMPLOYEE_NAME || "N/A"}
-                      </td>
-                      <td className="px-4 py-2 border">
-                        <button
-                          className="rounded-lg bg-rose-100 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-200 disabled:opacity-50"
-                          disabled={loading}
-                          onClick={() => {
-                            if (
-                              window.confirm(
-                                `Revert this reduction?\nThis will mark transaction ${r.TRANSACTIONID} as reversed.`
-                              )
-                            ) {
-                              revertTransHandler(r.TRANSACTIONID);
-                            }
-                          }}
-                          title="Mark this transaction as reversed"
-                        >
-                          Revert
-                        </button>
+                        {a.EMPLOYEE_NAME || "N/A"}
                       </td>
                     </tr>
                   ))}
